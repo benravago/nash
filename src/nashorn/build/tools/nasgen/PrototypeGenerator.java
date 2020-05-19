@@ -23,20 +23,20 @@
  * questions.
  */
 
-package jdk.nashorn.internal.tools.nasgen;
+package nashorn.build.tools.nasgen;
 
-import static jdk.internal.org.objectweb.asm.Opcodes.ACC_FINAL;
-import static jdk.internal.org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static jdk.internal.org.objectweb.asm.Opcodes.ACC_SUPER;
-import static jdk.internal.org.objectweb.asm.Opcodes.V1_7;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.DEFAULT_INIT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.INIT;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.OBJECT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROPERTYMAP_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROPERTYMAP_FIELD_NAME;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROTOTYPEOBJECT_TYPE;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROTOTYPE_SUFFIX;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTOBJECT_INIT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.DEFAULT_INIT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.INIT;
+import static nashorn.build.tools.nasgen.StringConstants.OBJECT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.PROPERTYMAP_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.PROPERTYMAP_FIELD_NAME;
+import static nashorn.build.tools.nasgen.StringConstants.PROTOTYPEOBJECT_TYPE;
+import static nashorn.build.tools.nasgen.StringConstants.PROTOTYPE_SUFFIX;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTOBJECT_INIT_DESC;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_SUPER;
+import static org.objectweb.asm.Opcodes.V1_7;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

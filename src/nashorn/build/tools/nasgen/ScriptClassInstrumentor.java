@@ -23,41 +23,43 @@
  * questions.
  */
 
-package jdk.nashorn.internal.tools.nasgen;
+package nashorn.build.tools.nasgen;
 
-import static jdk.internal.org.objectweb.asm.Opcodes.ALOAD;
-import static jdk.internal.org.objectweb.asm.Opcodes.DUP;
-import static jdk.internal.org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static jdk.internal.org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static jdk.internal.org.objectweb.asm.Opcodes.NEW;
-import static jdk.internal.org.objectweb.asm.Opcodes.PUTFIELD;
-import static jdk.internal.org.objectweb.asm.Opcodes.RETURN;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.$CLINIT$;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.CLINIT;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.DEFAULT_INIT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.INIT;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.OBJECT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTOBJECT_TYPE;
+import static nashorn.build.tools.nasgen.StringConstants.$CLINIT$;
+import static nashorn.build.tools.nasgen.StringConstants.CLINIT;
+import static nashorn.build.tools.nasgen.StringConstants.DEFAULT_INIT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.INIT;
+import static nashorn.build.tools.nasgen.StringConstants.OBJECT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTOBJECT_TYPE;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.NEW;
+import static org.objectweb.asm.Opcodes.PUTFIELD;
+import static org.objectweb.asm.Opcodes.RETURN;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import jdk.internal.org.objectweb.asm.AnnotationVisitor;
-import jdk.internal.org.objectweb.asm.Attribute;
-import jdk.internal.org.objectweb.asm.ClassReader;
-import jdk.internal.org.objectweb.asm.ClassVisitor;
-import jdk.internal.org.objectweb.asm.ClassWriter;
-import jdk.internal.org.objectweb.asm.FieldVisitor;
-import jdk.internal.org.objectweb.asm.MethodVisitor;
-import jdk.internal.org.objectweb.asm.util.CheckClassAdapter;
-import jdk.nashorn.internal.tools.nasgen.MemberInfo.Kind;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Attribute;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.util.CheckClassAdapter;
+
+import nashorn.build.tools.nasgen.MemberInfo.Kind;
 
 /**
  * This class instruments the java class annotated with @ScriptClass.
  *
  * Changes done are:
  *
- * 1) remove all jdk.nashorn.internal.objects.annotations.* annotations.
+ * 1) remove all nashorn.internal.objects.annotations.* annotations.
  * 2) static final @Property fields stay here. Other @Property fields moved to
  *    respective classes depending on 'where' value of annotation.
  * 2) add "Map" type static field named "$map".

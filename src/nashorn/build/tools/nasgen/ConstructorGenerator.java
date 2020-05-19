@@ -23,37 +23,37 @@
  * questions.
  */
 
-package jdk.nashorn.internal.tools.nasgen;
+package nashorn.build.tools.nasgen;
 
-import static jdk.internal.org.objectweb.asm.Opcodes.ACC_FINAL;
-import static jdk.internal.org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static jdk.internal.org.objectweb.asm.Opcodes.H_INVOKESTATIC;
-import static jdk.internal.org.objectweb.asm.Opcodes.V1_7;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.CONSTRUCTOR_SUFFIX;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.DEFAULT_INIT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.INIT;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.OBJECT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROPERTYMAP_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROPERTYMAP_FIELD_NAME;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROTOTYPEOBJECT_SETCONSTRUCTOR;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROTOTYPEOBJECT_SETCONSTRUCTOR_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.PROTOTYPEOBJECT_TYPE;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_INIT_DESC3;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_INIT_DESC4;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETARITY;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETARITY_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETDOCUMENTATIONKEY;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETDOCUMENTATIONKEY_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETPROTOTYPE;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETPROTOTYPE_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTFUNCTION_TYPE;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTOBJECT_INIT_DESC;
-import static jdk.nashorn.internal.tools.nasgen.StringConstants.SCRIPTOBJECT_TYPE;
+import static nashorn.build.tools.nasgen.StringConstants.CONSTRUCTOR_SUFFIX;
+import static nashorn.build.tools.nasgen.StringConstants.DEFAULT_INIT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.INIT;
+import static nashorn.build.tools.nasgen.StringConstants.OBJECT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.PROPERTYMAP_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.PROPERTYMAP_FIELD_NAME;
+import static nashorn.build.tools.nasgen.StringConstants.PROTOTYPEOBJECT_SETCONSTRUCTOR;
+import static nashorn.build.tools.nasgen.StringConstants.PROTOTYPEOBJECT_SETCONSTRUCTOR_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.PROTOTYPEOBJECT_TYPE;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_INIT_DESC3;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_INIT_DESC4;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETARITY;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETARITY_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETDOCUMENTATIONKEY;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETDOCUMENTATIONKEY_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETPROTOTYPE;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_SETPROTOTYPE_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTFUNCTION_TYPE;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTOBJECT_INIT_DESC;
+import static nashorn.build.tools.nasgen.StringConstants.SCRIPTOBJECT_TYPE;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.H_INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.V1_7;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
-import jdk.internal.org.objectweb.asm.Handle;
+import org.objectweb.asm.Handle;
 
 /**
  * This class generates constructor class for a @ScriptClass annotated class.

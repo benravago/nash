@@ -23,27 +23,27 @@
  * questions.
  */
 
-package jdk.nashorn.internal.tools.nasgen;
+package nashorn.build.tools.nasgen;
 
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import jdk.internal.org.objectweb.asm.Type;
+import org.objectweb.asm.Type;
 
 /**
  * String constants used for code generation/instrumentation.
  */
 @SuppressWarnings("javadoc")
 public interface StringConstants {
-    static final String NASHORN_INTERNAL = "jdk/nashorn/internal/";
+    static final String NASHORN_INTERNAL = "nashorn/internal/";
     static final String OBJ_PKG = NASHORN_INTERNAL + "objects/";
     static final String OBJ_ANNO_PKG = OBJ_PKG + "annotations/";
     static final String RUNTIME_PKG = NASHORN_INTERNAL + "runtime/";
     static final String SCRIPTS_PKG = NASHORN_INTERNAL + "scripts/";
 
-    // standard jdk types, methods
+    // standard types, methods
     static final Type TYPE_METHODHANDLE         = Type.getType(MethodHandle.class);
     static final Type TYPE_SPECIALIZATION       = Type.getType("L" + RUNTIME_PKG + "Specialization;");
     static final Type TYPE_SPECIALIZATION_ARRAY = Type.getType("[L" + RUNTIME_PKG + "Specialization;");
