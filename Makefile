@@ -26,7 +26,7 @@ bin/nashorn: ../ninja/bin ../codegen/bin lib/nasgen.jar
 	cp -rup ../codegen/bin/* bin/
 
 bin/module-info.class: bin/nashorn
-	$(JAVAC) -d bin -cp ../ninja/bin:../codegen/bin engine/module-info.java
+	$(JAVAC) -d bin -cp ../ninja/bin:../codegen/bin src/engine/module-info.java
 
 bin/nashorn/internal/runtime/resources/version.properties:
 	mkdir -p $(@D)
