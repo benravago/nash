@@ -1,2 +1,2 @@
 #
-/opt/jdk15/bin/java -p nash-14.jar -m nashorn -fullversion $*
+/opt/jdk15/bin/java -p nash.jar -m nashorn -fullversion $*
