@@ -1,6 +1,4 @@
-./bin/
-./tools/
-./tests/
-./nash.jar
-./sputnik/out
-./sputnik/err
+bin/
+tools/
+tests/
+nash.jar
