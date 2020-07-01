@@ -34,7 +34,11 @@ bin/nashorn/internal/runtime/resources/version.properties:
 
 ../ninja/bin:
 	$(eval URL := "$(shell dirname $$(git config --get remote.origin.url))")
-	pushd .. ; git clone $(URL)/ninja ; cd codegen ; make ; popd
+	pushd .. ; git clone $(URL)/ninja ; cd ninja ; make ; popd
+
+../codegen/bin:
+	$(eval URL := "$(shell dirname $$(git config --get remote.origin.url))")
+	pushd .. ; git clone $(URL)/codegen ; cd codegen ; make ; popd
 
 tools/nasgen.jar: tools
 	rm -fr bin
@@ -70,12 +74,12 @@ tests/sputnik.jar: tests nash.jar
 
 test: tests/sputnik.jar nash.jar
 	$(JAVA) -Dtest.root=sputnik/tests \
-	-cp $(shell find tests -name '*.jar' -printf %p:) \
-	-p nash.jar --add-modules nashorn \
-	org.junit.platform.console.ConsoleLauncher \
-	--disable-banner --details=summary \
-	-c sputnik.test.TestNashorn \
-	> sputnik/out 2>sputnik/err
+		-cp $(shell find tests -name '*.jar' -printf %p:) \
+		-p nash.jar --add-modules nashorn \
+		org.junit.platform.console.ConsoleLauncher \
+		--disable-banner --details=summary \
+		-c sputnik.test.TestNashorn \
+		> sputnik/out 2>sputnik/err
 
 
 clean:
