@@ -161,17 +161,6 @@ public interface JSObject {
   public boolean isArray();
 
   /**
-   * Returns this object's numeric value.
-   *
-   * @return this object's numeric value.
-   * @deprecated use {@link #getDefaultValue(Class)} with {@link Number} hint instead.
-   */
-  @Deprecated
-  default double toNumber() {
-    return JSType.toNumber(JSType.toPrimitive(this, Number.class));
-  }
-
-  /**
    * Implements this object's {@code [[DefaultValue]]} method as per ECMAScript 5.1 section 8.6.2.
    *
    * @param hint the type hint. Should be either {@code null}, {@code Number.class} or {@code String.class}.
@@ -182,4 +171,5 @@ public interface JSObject {
   default Object getDefaultValue(final Class<?> hint) throws UnsupportedOperationException {
     return DefaultValueImpl.getDefaultValue(this, hint);
   }
+
 }

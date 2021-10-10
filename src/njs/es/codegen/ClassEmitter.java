@@ -27,10 +27,6 @@ import static es.codegen.CompilerConstants.methodDescriptor;
 import static es.codegen.CompilerConstants.typeDescriptor;
 import static es.codegen.CompilerConstants.virtualCallNoLookup;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;

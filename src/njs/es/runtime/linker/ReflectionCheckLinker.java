@@ -2,11 +2,7 @@ package es.runtime.linker;
 
 import static es.runtime.ECMAErrors.typeError;
 
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import jdk.dynalink.CallSiteDescriptor;
-import jdk.dynalink.StandardNamespace;
-import jdk.dynalink.StandardOperation;
 import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
 import jdk.dynalink.linker.LinkerServices;
@@ -87,10 +83,6 @@ final class ReflectionCheckLinker implements TypeBasedGuardingDynamicLinker {
       throw typeError("no.reflection.with.classfilter");
     }
 
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null && isReflectiveCheckNeeded(clazz, isStatic)) {
-      checkReflectionPermission(sm);
-    }
   }
 
   private static void checkLinkRequest(final LinkRequest request) {
@@ -100,24 +92,6 @@ final class ReflectionCheckLinker implements TypeBasedGuardingDynamicLinker {
       throw typeError("no.reflection.with.classfilter");
     }
 
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      final Object self = request.getReceiver();
-      // allow 'static' access on Class objects representing public classes of non-restricted packages
-      if ((self instanceof Class) && Modifier.isPublic(((Class<?>) self).getModifiers())) {
-        final CallSiteDescriptor desc = request.getCallSiteDescriptor();
-        if ("static".equals(NashornCallSiteDescriptor.getOperand(desc)) && NashornCallSiteDescriptor.contains(desc, StandardOperation.GET, StandardNamespace.PROPERTY)) {
-          if (Context.isAccessibleClass((Class<?>) self) && !isReflectionClass((Class<?>) self)) {
-            // If "GET:PROPERTY:static" passes access checks, allow access.
-            return;
-          }
-        }
-      }
-      checkReflectionPermission(sm);
-    }
   }
 
-  private static void checkReflectionPermission(final SecurityManager sm) {
-    sm.checkPermission(new RuntimePermission(Context.NASHORN_JAVA_REFLECTION));
-  }
 }

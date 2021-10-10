@@ -27,8 +27,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.security.AccessControlContext;
-import java.security.AccessController;
+
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
@@ -1152,8 +1151,6 @@ final class JavaAdapterBytecodeGenerator {
     }
   }
 
-  private static final AccessControlContext GET_DECLARED_MEMBERS_ACC_CTXT = ClassAndLoader.createPermAccCtxt("accessDeclaredMembers");
-
   /**
    * Creates a collection of methods that are not final, but we still never allow them to be overridden in adapters,
    * as explicitly declaring them automatically is a bad idea. Currently, this means {@code Object.finalize()} and
@@ -1161,9 +1158,6 @@ final class JavaAdapterBytecodeGenerator {
    * @return a collection of method infos representing those methods that we never override in adapter classes.
    */
   private static Collection<MethodInfo> getExcludedMethods() {
-    return AccessController.doPrivileged(new PrivilegedAction<Collection<MethodInfo>>() {
-      @Override
-      public Collection<MethodInfo> run() {
         try {
           return Arrays.asList(
                   new MethodInfo(Object.class, "finalize"),
@@ -1171,8 +1165,6 @@ final class JavaAdapterBytecodeGenerator {
         } catch (final NoSuchMethodException e) {
           throw new AssertionError(e);
         }
-      }
-    }, GET_DECLARED_MEMBERS_ACC_CTXT);
   }
 
   private String getCommonSuperClass(final String type1, final String type2) {

@@ -1,8 +1,6 @@
 package es.runtime.logging;
 
 import java.io.PrintWriter;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.security.Permissions;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
@@ -56,9 +54,6 @@ public final class DebugLogger {
 
   private static Logger instantiateLogger(final String name, final Level level) {
     final Logger logger = java.util.logging.Logger.getLogger(name);
-    AccessController.doPrivileged(new PrivilegedAction<Void>() {
-      @Override
-      public Void run() {
         for (final Handler h : logger.getHandlers()) {
           logger.removeHandler(h);
         }
@@ -83,9 +78,6 @@ public final class DebugLogger {
         });
         logger.addHandler(c);
         c.setLevel(level);
-        return null;
-      }
-    }, createLoggerControlAccCtxt());
 
     return logger;
   }
@@ -522,16 +514,6 @@ public final class DebugLogger {
       }
       log(level, sb.toString());
     }
-  }
-
-  /**
-   * Access control context for logger level and instantiation permissions
-   * @return access control context
-   */
-  private static AccessControlContext createLoggerControlAccCtxt() {
-    final Permissions perms = new Permissions();
-    perms.add(new LoggingPermission("control", null));
-    return new AccessControlContext(new ProtectionDomain[]{new ProtectionDomain(null, perms)});
   }
 
 }

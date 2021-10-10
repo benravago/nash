@@ -19,7 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.security.AccessController;
+
 import java.security.MessageDigest;
 import java.security.PrivilegedAction;
 import java.text.SimpleDateFormat;
@@ -149,9 +149,6 @@ public final class OptimisticTypesPersistence {
     }
     final File file = ((LocationDescriptor) locationDescriptor).file;
 
-    AccessController.doPrivileged(new PrivilegedAction<Void>() {
-      @Override
-      public Void run() {
         synchronized (getFileLock(file)) {
           if (!file.exists()) {
             // If the file already exists, we aren't increasing the number of cached files, so
@@ -167,9 +164,6 @@ public final class OptimisticTypesPersistence {
             reportError("write", file, e);
           }
         }
-        return null;
-      }
-    });
   }
 
   /**
@@ -184,9 +178,7 @@ public final class OptimisticTypesPersistence {
       return null;
     }
     final File file = ((LocationDescriptor) locationDescriptor).file;
-    return AccessController.doPrivileged(new PrivilegedAction<Map<Integer, Type>>() {
-      @Override
-      public Map<Integer, Type> run() {
+    
         try {
           if (!file.isFile()) {
             return null;
@@ -202,8 +194,7 @@ public final class OptimisticTypesPersistence {
           reportError("read", file, e);
           return null;
         }
-      }
-    });
+
   }
 
   private static void reportError(final String msg, final File file, final Exception e) {
@@ -253,9 +244,6 @@ public final class OptimisticTypesPersistence {
   }
 
   private static File createBaseCacheDirPrivileged() {
-    return AccessController.doPrivileged(new PrivilegedAction<File>() {
-      @Override
-      public File run() {
         final String explicitDir = System.getProperty("nashorn.typeInfo.cacheDir");
         final File dir;
         if (explicitDir != null) {
@@ -270,8 +258,6 @@ public final class OptimisticTypesPersistence {
           }
         }
         return dir;
-      }
-    });
   }
 
   private static File createCacheDir(final File baseDir) {
@@ -287,9 +273,6 @@ public final class OptimisticTypesPersistence {
   }
 
   private static File createCacheDirPrivileged(final File baseDir) {
-    return AccessController.doPrivileged(new PrivilegedAction<File>() {
-      @Override
-      public File run() {
         final String versionDirName;
         try {
           versionDirName = getVersionDirName();
@@ -310,8 +293,6 @@ public final class OptimisticTypesPersistence {
         }
         getLogger().warning("Could not create optimistic type persistence directory " + versionDir);
         return null;
-      }
-    });
   }
 
   /**
@@ -571,12 +552,7 @@ public final class OptimisticTypesPersistence {
 
   // get the default jrt FileSystem instance
   private static FileSystem getJrtFileSystem() {
-    return AccessController.doPrivileged(
-            new PrivilegedAction<FileSystem>() {
-      @Override
-      public FileSystem run() {
         return FileSystems.getFileSystem(URI.create("jrt:/"));
-      }
-    });
   }
+
 }

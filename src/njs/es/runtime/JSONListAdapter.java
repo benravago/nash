@@ -126,13 +126,8 @@ public final class JSONListAdapter extends ListAdapter implements JSObject {
   }
 
   @Override
-  @Deprecated
-  public double toNumber() {
-    return obj.toNumber();
-  }
-
-  @Override
   public Object getDefaultValue(final Class<?> hint) throws UnsupportedOperationException {
     return obj.getDefaultValue(hint);
   }
+
 }

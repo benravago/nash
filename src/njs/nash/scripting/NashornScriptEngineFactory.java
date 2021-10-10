@@ -206,7 +206,6 @@ public final class NashornScriptEngineFactory implements ScriptEngineFactory {
   }
 
   private ScriptEngine newEngine(final String[] args, final ClassLoader appLoader, final ClassFilter classFilter) {
-    checkConfigPermission();
     try {
       return new NashornScriptEngine(this, args, appLoader, classFilter);
     } catch (final RuntimeException e) {
@@ -214,14 +213,6 @@ public final class NashornScriptEngineFactory implements ScriptEngineFactory {
         e.printStackTrace();
       }
       throw e;
-    }
-  }
-
-  // -- Internals only below this point
-  private static void checkConfigPermission() {
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      sm.checkPermission(new RuntimePermission(Context.NASHORN_SET_CONFIG));
     }
   }
 

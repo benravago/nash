@@ -58,7 +58,6 @@ import es.runtime.linker.NashornCallSiteDescriptor;
 import es.runtime.regexp.RegExpResult;
 import es.scripts.JD;
 import es.scripts.JO;
-import nash.tools.ShellFunctions;
 
 /**
  * Representation of global scope.
@@ -1116,14 +1115,7 @@ public final class Global extends Scope {
   // performs initialization checks for Global constructor and returns the
   // PropertyMap, if everything is fine.
   private static PropertyMap checkAndGetMap(final Context context) {
-    // security check first
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      sm.checkPermission(new RuntimePermission(Context.NASHORN_CREATE_GLOBAL));
-    }
-
     Objects.requireNonNull(context);
-
     return $nasgenmap$;
   }
 
@@ -1575,7 +1567,7 @@ public final class Global extends Scope {
     } else if ("engine".equals(nameStr)) {
       // expose "engine" variable only when there is no security manager
       // or when no class filter is set.
-      if (System.getSecurityManager() == null || global.getClassFilter() == null) {
+      if (global.getClassFilter() == null) {
         return global.engine;
       }
     }
@@ -2475,17 +2467,6 @@ public final class Global extends Scope {
     return invocation;
   }
 
-  /**
-   * Adds njs shell interactive mode builtin functions to global scope.
-   */
-  public void addShellBuiltins() {
-    Object value = ScriptFunction.createBuiltin("input", ShellFunctions.INPUT);
-    addOwnProperty("input", Attribute.NOT_ENUMERABLE, value);
-
-    value = ScriptFunction.createBuiltin("evalinput", ShellFunctions.EVALINPUT);
-    addOwnProperty("evalinput", Attribute.NOT_ENUMERABLE, value);
-  }
-
   private synchronized SwitchPoint getLexicalScopeSwitchPoint() {
     SwitchPoint switchPoint = lexicalScopeSwitchPoint;
     if (switchPoint == null || switchPoint.hasBeenInvalidated()) {
@@ -2632,24 +2613,7 @@ public final class Global extends Scope {
     }
 
     if (Context.DEBUG) {
-      boolean debugOkay;
-      final SecurityManager sm = System.getSecurityManager();
-      if (sm != null) {
-        try {
-          sm.checkPermission(new RuntimePermission(Context.NASHORN_DEBUG_MODE));
-          debugOkay = true;
-        } catch (final SecurityException ignored) {
-          // if no permission, don't initialize Debug object
-          debugOkay = false;
-        }
-
-      } else {
-        debugOkay = true;
-      }
-
-      if (debugOkay) {
         initDebug();
-      }
     }
 
     copyBuiltins();
@@ -2748,7 +2712,7 @@ public final class Global extends Scope {
 
     // Nashorn extension: global.$ENV (scripting-mode-only)
     final ScriptObject env = newObject();
-    if (System.getSecurityManager() == null) {
+
       // do not fill $ENV if we have a security manager around
       // Retrieve current state of ENV variables.
       env.putAll(System.getenv(), scriptEnv._strict);
@@ -2756,7 +2720,7 @@ public final class Global extends Scope {
       // Set the PWD variable to a value that is guaranteed to be understood
       // by the underlying platform.
       env.put(ScriptingFunctions.PWD_NAME, System.getProperty("user.dir"), scriptEnv._strict);
-    }
+
     addOwnProperty(ScriptingFunctions.ENV_NAME, Attribute.NOT_ENUMERABLE, env);
 
     // add other special properties for exec support

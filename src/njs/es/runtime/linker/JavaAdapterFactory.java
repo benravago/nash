@@ -7,8 +7,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Modifier;
-import java.security.AccessControlContext;
-import java.security.AccessController;
+
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.security.Permissions;
@@ -59,11 +58,6 @@ import es.runtime.linker.AdaptationResult.Outcome;
 public final class JavaAdapterFactory {
 
   private static final ProtectionDomain MINIMAL_PERMISSION_DOMAIN = createMinimalPermissionDomain();
-
-  // context with permissions needs for AdapterInfo creation
-  private static final AccessControlContext CREATE_ADAPTER_INFO_ACC_CTXT
-          = ClassAndLoader.createPermAccCtxt("createClassLoader", "getClassLoader",
-                  "accessDeclaredMembers", "accessClassInPackage.es.runtime");
 
   /**
    * A mapping from an original Class object to AdapterInfo representing the adapter for the class it represents.
@@ -116,15 +110,6 @@ public final class JavaAdapterFactory {
 
   private static StaticClass getAdapterClassFor(final Class<?>[] types, final ScriptObject classOverrides, final ProtectionDomain protectionDomain) {
     assert types != null && types.length > 0;
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      for (final Class<?> type : types) {
-        // check for restricted package access
-        Context.checkPackageAccess(type);
-        // check for classes, interfaces in reflection
-        ReflectionCheckLinker.checkReflectionAccess(type, true);
-      }
-    }
     return getAdapterInfo(types).getAdapterClass(classOverrides, protectionDomain);
   }
 
@@ -136,12 +121,7 @@ public final class JavaAdapterFactory {
   }
 
   private static ProtectionDomain getProtectionDomain(final Class<?> clazz) {
-    return AccessController.doPrivileged(new PrivilegedAction<ProtectionDomain>() {
-      @Override
-      public ProtectionDomain run() {
         return clazz.getProtectionDomain();
-      }
-    });
   }
 
   /**
@@ -240,9 +220,6 @@ public final class JavaAdapterFactory {
     }
 
     final Class<?> effectiveSuperClass = superClass == null ? Object.class : superClass;
-    return AccessController.doPrivileged(new PrivilegedAction<AdapterInfo>() {
-      @Override
-      public AdapterInfo run() {
         try {
           return new AdapterInfo(effectiveSuperClass, interfaces, definingClassAndLoader);
         } catch (final AdaptationException e) {
@@ -250,8 +227,6 @@ public final class JavaAdapterFactory {
         } catch (final RuntimeException e) {
           return new AdapterInfo(new AdaptationResult(Outcome.ERROR_OTHER, e, Arrays.toString(types), e.toString()));
         }
-      }
-    }, CREATE_ADAPTER_INFO_ACC_CTXT);
   }
 
   private static class AdapterInfo {

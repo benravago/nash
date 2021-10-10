@@ -2,8 +2,6 @@ package es.runtime.linker;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
@@ -29,9 +27,6 @@ final class JavaAdapterClassLoader {
 
   private static final Module NASHORN_MODULE = Context.class.getModule();
 
-  private static final AccessControlContext CREATE_LOADER_ACC_CTXT = ClassAndLoader.createPermAccCtxt("createClassLoader");
-  private static final AccessControlContext GET_CONTEXT_ACC_CTXT = ClassAndLoader.createPermAccCtxt(Context.NASHORN_GET_CONTEXT);
-
   private static final Collection<String> VISIBLE_INTERNAL_CLASS_NAMES = Collections.unmodifiableCollection(new HashSet<>(
           Arrays.asList(JavaAdapterServices.class.getName(), ScriptObject.class.getName(), ScriptFunction.class.getName(), JSType.class.getName())));
 
@@ -51,16 +46,11 @@ final class JavaAdapterClassLoader {
    */
   StaticClass generateClass(final ClassLoader parentLoader, final ProtectionDomain protectionDomain) {
     assert protectionDomain != null;
-    return AccessController.doPrivileged(new PrivilegedAction<StaticClass>() {
-      @Override
-      public StaticClass run() {
         try {
           return StaticClass.forClass(Class.forName(className, true, createClassLoader(parentLoader, protectionDomain)));
         } catch (final ClassNotFoundException e) {
           throw new AssertionError(e); // cannot happen
         }
-      }
-    }, CREATE_LOADER_ACC_CTXT);
   }
 
   // Note that the adapter class is created in the protection domain of the class/interface being
@@ -92,7 +82,6 @@ final class JavaAdapterClassLoader {
           final int i = name.lastIndexOf('.');
           if (i != -1) {
             final String pkgName = name.substring(0, i);
-            Context.checkPackageAccess(pkgName);
           }
           return super.loadClass(name, resolve);
         } catch (final SecurityException se) {
@@ -112,12 +101,7 @@ final class JavaAdapterClassLoader {
         if (name.equals(className)) {
           assert classBytes != null : "what? already cleared .class bytes!!";
 
-          final Context ctx = AccessController.doPrivileged(new PrivilegedAction<Context>() {
-            @Override
-            public Context run() {
-              return Context.getContext();
-            }
-          }, GET_CONTEXT_ACC_CTXT);
+          final Context ctx = Context.getContext();
 
           return defineClass(name, classBytes, 0, classBytes.length, protectionDomain);
         }

@@ -12,9 +12,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -25,10 +23,8 @@ import jdk.dynalink.CallSiteDescriptor;
 import jdk.dynalink.NamedOperation;
 import jdk.dynalink.NamespaceOperation;
 import jdk.dynalink.Operation;
-import jdk.dynalink.SecureLookupSupplier;
 import jdk.dynalink.StandardNamespace;
 import jdk.dynalink.StandardOperation;
-import es.runtime.AccessControlContextFactory;
 import es.runtime.ScriptRuntime;
 
 /**
@@ -148,9 +144,6 @@ public final class NashornCallSiteDescriptor extends CallSiteDescriptor {
       return new ConcurrentHashMap<>();
     }
   };
-
-  private static final AccessControlContext GET_LOOKUP_PERMISSION_CONTEXT
-          = AccessControlContextFactory.createAccessControlContext(SecureLookupSupplier.GET_LOOKUP_PERMISSION_NAME);
 
   @SuppressWarnings("unchecked")
   private static final Map<String, Reference<NamedOperation>>[] NAMED_OPERATIONS
@@ -275,7 +268,7 @@ public final class NashornCallSiteDescriptor extends CallSiteDescriptor {
     if (csd instanceof NashornCallSiteDescriptor) {
       return ((NashornCallSiteDescriptor) csd).getLookupPrivileged();
     }
-    return AccessController.doPrivileged((PrivilegedAction<Lookup>) () -> csd.getLookup(), GET_LOOKUP_PERMISSION_CONTEXT);
+    return csd.getLookup();
   }
 
   @Override

@@ -385,4 +385,5 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
   private MethodHandle getDynamicInvoker(final Object key, final Callable<MethodHandle> creator) {
     return global.getDynamicInvoker(key, creator);
   }
+
 }

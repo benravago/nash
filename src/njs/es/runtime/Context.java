@@ -31,8 +31,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.AccessControlContext;
-import java.security.AccessController;
+
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.security.Permissions;
@@ -185,9 +184,6 @@ public final class Context {
     @Override
     public void initialize(final Collection<Class<?>> classes, final Source source, final Object[] constants) {
       try {
-        AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-          @Override
-          public Void run() throws Exception {
             for (final Class<?> clazz : classes) {
               //use reflection to write source and constants table to installed classes
               final Field sourceField = clazz.getDeclaredField(SOURCE.symbolName());
@@ -198,10 +194,7 @@ public final class Context {
               constantsField.setAccessible(true);
               constantsField.set(null, constants);
             }
-            return null;
-          }
-        });
-      } catch (final PrivilegedActionException e) {
+      } catch (final Exception e) {
         throw new RuntimeException(e);
       }
     }
@@ -394,10 +387,6 @@ public final class Context {
    * @return current global scope's context.
    */
   public static Context getContext() {
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      sm.checkPermission(new RuntimePermission(NASHORN_GET_CONTEXT));
-    }
     return getContextTrusted();
   }
 
@@ -475,29 +464,9 @@ public final class Context {
     return theStructLoader;
   }
 
-  private static AccessControlContext createNoPermAccCtxt() {
-    return new AccessControlContext(new ProtectionDomain[]{new ProtectionDomain(null, new Permissions())});
-  }
-
-  private static AccessControlContext createPermAccCtxt(final String permName) {
-    final Permissions perms = new Permissions();
-    perms.add(new RuntimePermission(permName));
-    return new AccessControlContext(new ProtectionDomain[]{new ProtectionDomain(null, perms)});
-  }
-
-  private static final AccessControlContext NO_PERMISSIONS_ACC_CTXT = createNoPermAccCtxt();
-  private static final AccessControlContext CREATE_LOADER_ACC_CTXT = createPermAccCtxt("createClassLoader");
-  private static final AccessControlContext CREATE_GLOBAL_ACC_CTXT = createPermAccCtxt(NASHORN_CREATE_GLOBAL);
-  private static final AccessControlContext GET_LOADER_ACC_CTXT = createPermAccCtxt("getClassLoader");
-
   static {
     final ClassLoader myLoader = Context.class.getClassLoader();
-    theStructLoader = AccessController.doPrivileged(new PrivilegedAction<StructureLoader>() {
-      @Override
-      public StructureLoader run() {
-        return new StructureLoader(myLoader);
-      }
-    }, CREATE_LOADER_ACC_CTXT);
+    theStructLoader = new StructureLoader(myLoader);
   }
 
   /**
@@ -563,10 +532,6 @@ public final class Context {
    * @param classFilter class filter to use
    */
   public Context(final Options options, final ErrorManager errors, final PrintWriter out, final PrintWriter err, final ClassLoader appLoader, final ClassFilter classFilter) {
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      sm.checkPermission(new RuntimePermission(NASHORN_CREATE_CONTEXT));
-    }
 
     this.classFilter = classFilter;
     this.env = new ScriptEnvironment(options, out, err);
@@ -585,16 +550,7 @@ public final class Context {
     final String modulePath = env._module_path;
     ClassLoader appCl = null;
     if (!env._compile_only && modulePath != null && !modulePath.isEmpty()) {
-      // make sure that caller can create a class loader.
-      if (sm != null) {
-        sm.checkCreateClassLoader();
-      }
-      appCl = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
-        @Override
-        public ClassLoader run() {
-          return createModuleLoader(appLoader, modulePath, env._add_modules);
-        }
-      });
+      appCl = createModuleLoader(appLoader, modulePath, env._add_modules);
     } else {
       appCl = appLoader;
     }
@@ -603,10 +559,6 @@ public final class Context {
     // the app loader or module app loader as the parent.
     final String classPath = env._classpath;
     if (!env._compile_only && classPath != null && !classPath.isEmpty()) {
-      // make sure that caller can create a class loader.
-      if (sm != null) {
-        sm.checkCreateClassLoader();
-      }
       appCl = NashornLoader.createClassLoader(classPath, appCl);
     }
 
@@ -840,18 +792,12 @@ public final class Context {
       final String resource = resourcePath + srcStr.substring(prefix.length());
       // NOTE: even sandbox scripts should be able to load scripts in nashorn: scheme
       // These scripts are always available and are loaded from nashorn.jar's resources.
-      return AccessController.doPrivileged(
-              new PrivilegedAction<Source>() {
-        @Override
-        public Source run() {
           try {
             final InputStream resStream = Context.class.getResourceAsStream(resource);
             return resStream != null ? sourceFor(srcStr, Source.readFully(resStream)) : null;
           } catch (final IOException exp) {
             return null;
           }
-        }
-      });
     }
 
     return null;
@@ -974,19 +920,7 @@ public final class Context {
    */
   public Object loadWithNewGlobal(final Object from, final Object... args) throws IOException {
     final Global oldGlobal = getGlobal();
-    final Global newGlobal = AccessController.doPrivileged(new PrivilegedAction<Global>() {
-      @Override
-      public Global run() {
-        try {
-          return newGlobal();
-        } catch (final RuntimeException e) {
-          if (Context.DEBUG) {
-            e.printStackTrace();
-          }
-          throw e;
-        }
-      }
-    }, CREATE_GLOBAL_ACC_CTXT);
+    final Global newGlobal = newGlobal();
     // initialize newly created Global instance
     initGlobal(newGlobal);
     setGlobal(newGlobal);
@@ -1019,7 +953,7 @@ public final class Context {
    */
   @SuppressWarnings("unchecked")
   public static Class<? extends ScriptObject> forStructureClass(final String fullName) throws ClassNotFoundException {
-    if (System.getSecurityManager() != null && !StructureLoader.isStructureClass(fullName)) {
+    if (!StructureLoader.isStructureClass(fullName)) {
       throw new ClassNotFoundException(fullName);
     }
     return (Class<? extends ScriptObject>) structureClasses.computeIfAbsent(fullName, (name) -> {
@@ -1042,80 +976,13 @@ public final class Context {
   }
 
   /**
-   * Checks that the given Class can be accessed from no permissions context.
-   *
-   * @param clazz Class object
-   * @throws SecurityException if not accessible
-   */
-  public static void checkPackageAccess(final Class<?> clazz) {
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      Class<?> bottomClazz = clazz;
-      while (bottomClazz.isArray()) {
-        bottomClazz = bottomClazz.getComponentType();
-      }
-      checkPackageAccess(sm, bottomClazz.getName());
-    }
-  }
-
-  /**
-   * Checks that the given package name can be accessed from no permissions context.
-   *
-   * @param pkgName package name
-   * @throws SecurityException if not accessible
-   */
-  public static void checkPackageAccess(final String pkgName) {
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      checkPackageAccess(sm, pkgName.endsWith(".") ? pkgName : pkgName + ".");
-    }
-  }
-
-  /**
-   * Checks that the given package can be accessed from no permissions context.
-   *
-   * @param sm current security manager instance
-   * @param fullName fully qualified package name
-   * @throw SecurityException if not accessible
-   */
-  private static void checkPackageAccess(final SecurityManager sm, final String fullName) {
-    Objects.requireNonNull(sm);
-    final int index = fullName.lastIndexOf('.');
-    if (index != -1) {
-      final String pkgName = fullName.substring(0, index);
-      AccessController.doPrivileged(new PrivilegedAction<Void>() {
-        @Override
-        public Void run() {
-          sm.checkPackageAccess(pkgName);
-          return null;
-        }
-      }, NO_PERMISSIONS_ACC_CTXT);
-    }
-  }
-
-  /**
-   * Checks that the given Class can be accessed from no permissions context.
-   *
-   * @param clazz Class object
-   * @return true if package is accessible, false otherwise
-   */
-  private static boolean isAccessiblePackage(final Class<?> clazz) {
-    try {
-      checkPackageAccess(clazz);
-      return true;
-    } catch (final SecurityException se) {
-      return false;
-    }
-  }
-
-  /**
    * Checks that the given Class is public and it can be accessed from no permissions context.
    *
    * @param clazz Class object to check
    * @return true if Class is accessible, false otherwise
    */
   public static boolean isAccessibleClass(final Class<?> clazz) {
-    return Modifier.isPublic(clazz.getModifiers()) && Context.isAccessiblePackage(clazz);
+    return Modifier.isPublic(clazz.getModifiers());
   }
 
   /**
@@ -1137,12 +1004,6 @@ public final class Context {
     // give chance to ClassFilter to filter out, if present
     if (classFilter != null && !classFilter.exposeToScripts(fullName)) {
       throw new ClassNotFoundException(fullName);
-    }
-
-    // check package access as soon as possible!
-    final SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      checkPackageAccess(sm, fullName);
     }
 
     // Try finding using the "app" loader.
@@ -1337,8 +1198,7 @@ public final class Context {
     final Configuration cf = parent.configuration()
             .resolve(finder, ModuleFinder.of(), Set.of(mn));
 
-    final PrivilegedAction<ModuleLayer> pa = () -> parent.defineModules(cf, name -> loader);
-    final ModuleLayer layer = AccessController.doPrivileged(pa, GET_LOADER_ACC_CTXT);
+    final ModuleLayer layer = parent.defineModules(cf, name -> loader);
 
     final Module m = layer.findModule(mn).get();
     assert m.getLayer() == layer;
@@ -1517,13 +1377,7 @@ public final class Context {
   }
 
   private ScriptLoader createNewLoader() {
-    return AccessController.doPrivileged(
-            new PrivilegedAction<ScriptLoader>() {
-      @Override
-      public ScriptLoader run() {
         return new ScriptLoader(Context.this);
-      }
-    }, CREATE_LOADER_ACC_CTXT);
   }
 
   private long getUniqueScriptId() {

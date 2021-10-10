@@ -9,11 +9,10 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.security.AccessController;
+
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
-import java.security.PrivilegedAction;
 import java.security.Permissions;
 import java.security.SecureClassLoader;
 
@@ -74,16 +73,14 @@ abstract class NashornLoader extends SecureClassLoader {
     } catch (final Exception ex) {
       throw new RuntimeException(ex);
     }
-    final PrivilegedAction<Void> pa = () -> {
+
       try {
         addModuleExport = clazz.getDeclaredMethod("addExport", Module.class);
         addModuleExport.setAccessible(true);
       } catch (final NoSuchMethodException | SecurityException ex) {
         throw new RuntimeException(ex);
       }
-      return null;
-    };
-    AccessController.doPrivileged(pa);
+
   }
 
   final void addModuleExport(final Module to) {
@@ -93,27 +90,6 @@ abstract class NashornLoader extends SecureClassLoader {
             | IllegalArgumentException
             | InvocationTargetException ex) {
       throw new RuntimeException(ex);
-    }
-  }
-
-  protected static void checkPackageAccess(final String name) {
-    final int i = name.lastIndexOf('.');
-    if (i != -1) {
-      final SecurityManager sm = System.getSecurityManager();
-      if (sm != null) {
-        final String pkgName = name.substring(0, i);
-        switch (pkgName) {
-          case RUNTIME_PKG:
-          case RUNTIME_ARRAYS_PKG:
-          case RUNTIME_LINKER_PKG:
-          case OBJECTS_PKG:
-          case SCRIPTS_PKG:
-            // allow it.
-            break;
-          default:
-            sm.checkPackageAccess(pkgName);
-        }
-      }
     }
   }
 
@@ -192,14 +168,11 @@ abstract class NashornLoader extends SecureClassLoader {
   }
 
   private static byte[] readModuleManipulatorBytes() {
-    final PrivilegedAction<byte[]> pa = () -> {
       final String res = "/" + MODULE_MANIPULATOR_NAME.replace('.', '/') + ".class";
       try ( InputStream in = NashornLoader.class.getResourceAsStream(res)) {
         return in.readAllBytes();
       } catch (final IOException exp) {
         throw new UncheckedIOException(exp);
       }
-    };
-    return AccessController.doPrivileged(pa);
   }
 }

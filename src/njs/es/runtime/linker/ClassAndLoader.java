@@ -2,8 +2,6 @@ package es.runtime.linker;
 
 import static es.runtime.ECMAErrors.typeError;
 
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.security.Permissions;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
@@ -21,16 +19,6 @@ import java.util.Map;
  * used to determine if one loader can see the other loader's classes.
  */
 final class ClassAndLoader {
-
-  static AccessControlContext createPermAccCtxt(final String... permNames) {
-    final Permissions perms = new Permissions();
-    for (final String permName : permNames) {
-      perms.add(new RuntimePermission(permName));
-    }
-    return new AccessControlContext(new ProtectionDomain[]{new ProtectionDomain(null, perms)});
-  }
-
-  private static final AccessControlContext GET_LOADER_ACC_CTXT = createPermAccCtxt("getClassLoader");
 
   private final Class<?> representativeClass;
   // Don't access this directly; most of the time, use getRetrievedLoader(), or if you know what you're doing,
@@ -100,12 +88,7 @@ final class ClassAndLoader {
       return new ClassAndLoader(types[0], false);
     }
 
-    return AccessController.doPrivileged(new PrivilegedAction<ClassAndLoader>() {
-      @Override
-      public ClassAndLoader run() {
         return getDefiningClassAndLoaderPrivileged(types);
-      }
-    }, GET_LOADER_ACC_CTXT);
   }
 
   static ClassAndLoader getDefiningClassAndLoaderPrivileged(final Class<?>[] types) {

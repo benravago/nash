@@ -1,8 +1,7 @@
 package nash.scripting;
 
 import java.nio.ByteBuffer;
-import java.security.AccessControlContext;
-import java.security.AccessController;
+
 import java.security.Permissions;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
@@ -37,14 +36,6 @@ import es.runtime.linker.NashornCallSiteDescriptor;
  * @since 1.8u40
  */
 public final class ScriptObjectMirror extends AbstractJSObject implements Bindings {
-
-  private static AccessControlContext getContextAccCtxt() {
-    final Permissions perms = new Permissions();
-    perms.add(new RuntimePermission(Context.NASHORN_GET_CONTEXT));
-    return new AccessControlContext(new ProtectionDomain[]{new ProtectionDomain(null, perms)});
-  }
-
-  private static final AccessControlContext GET_CONTEXT_ACC_CTXT = getContextAccCtxt();
 
   private final ScriptObject sobj;
   private final Global global;
@@ -140,13 +131,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
     return inGlobal(new Callable<Object>() {
       @Override
       public Object call() {
-        final Context context = AccessController.doPrivileged(
-                new PrivilegedAction<Context>() {
-          @Override
-          public Context run() {
-            return Context.getContext();
-          }
-        }, GET_CONTEXT_ACC_CTXT);
+        final Context context = Context.getContext();
         return wrapLikeMe(context.eval(global, s, sobj, null));
       }
     });
@@ -890,17 +875,6 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
   }
 
   @Override
-  @Deprecated
-  public double toNumber() {
-    return inGlobal(new Callable<Double>() {
-      @Override
-      public Double call() {
-        return JSType.toNumber(sobj);
-      }
-    });
-  }
-
-  @Override
   public Object getDefaultValue(final Class<?> hint) {
     return inGlobal(new Callable<Object>() {
       @Override
@@ -924,4 +898,5 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
     }
     return new ScriptObjectMirror(sobj, global, true);
   }
+
 }
