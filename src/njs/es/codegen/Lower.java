@@ -78,7 +78,6 @@ import es.runtime.logging.Logger;
 final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Loggable {
 
   private final DebugLogger log;
-  private final boolean es6;
   private final Source source;
 
   // Conservative pattern to test if element names consist of characters valid for identifiers.
@@ -127,7 +126,6 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
     });
 
     this.log = initLogger(compiler.getContext());
-    this.es6 = compiler.getScriptEnvironment()._es6;
     this.source = compiler.getSource();
   }
 
@@ -243,7 +241,7 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
       }
     }
 
-    if (es6 && expressionStatement.destructuringDeclarationType() != null) {
+    if (expressionStatement.destructuringDeclarationType() != null) {
       throwNotImplementedYet("es6.destructuring", expressionStatement);
     }
 
@@ -257,7 +255,7 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
 
   @Override
   public boolean enterForNode(final ForNode forNode) {
-    if (es6 && (forNode.getInit() instanceof ObjectNode || forNode.getInit() instanceof ArrayLiteralNode)) {
+    if ((forNode.getInit() instanceof ObjectNode || forNode.getInit() instanceof ArrayLiteralNode)) {
       throwNotImplementedYet("es6.destructuring", forNode);
     }
     return super.enterForNode(forNode);
@@ -273,19 +271,12 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
     }
 
     newForNode = checkEscape(newForNode);
-    if (!es6 && newForNode.isForInOrOf()) {
-      // Wrap it in a block so its internally created iterator is restricted in scope, unless we are running
-      // in ES6 mode, in which case the parser already created a block to capture let/const declarations.
-      addStatementEnclosedInBlock(newForNode);
-    } else {
       addStatement(newForNode);
-    }
     return newForNode;
   }
 
   @Override
   public boolean enterFunctionNode(final FunctionNode functionNode) {
-    if (es6) {
       if (functionNode.getKind() == FunctionNode.Kind.MODULE) {
         throwNotImplementedYet("es6.module", functionNode);
       }
@@ -309,7 +300,6 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
           throwNotImplementedYet("es6.destructuring", functionNode);
         }
       }
-    }
 
     return super.enterFunctionNode(functionNode);
   }
@@ -623,7 +613,6 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
 
   @Override
   public boolean enterUnaryNode(final UnaryNode unaryNode) {
-    if (es6) {
       if (unaryNode.isTokenType(TokenType.YIELD)
               || unaryNode.isTokenType(TokenType.YIELD_STAR)) {
         throwNotImplementedYet("es6.yield", unaryNode);
@@ -631,14 +620,13 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
               || unaryNode.isTokenType(TokenType.SPREAD_ARRAY)) {
         throwNotImplementedYet("es6.spread", unaryNode);
       }
-    }
 
     return super.enterUnaryNode(unaryNode);
   }
 
   @Override
   public boolean enterASSIGN(BinaryNode binaryNode) {
-    if (es6 && (binaryNode.lhs() instanceof ObjectNode || binaryNode.lhs() instanceof ArrayLiteralNode)) {
+    if ((binaryNode.lhs() instanceof ObjectNode || binaryNode.lhs() instanceof ArrayLiteralNode)) {
       throwNotImplementedYet("es6.destructuring", binaryNode);
     }
     return super.enterASSIGN(binaryNode);

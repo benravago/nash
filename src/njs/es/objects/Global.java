@@ -1127,7 +1127,7 @@ public final class Global extends Scope {
   public Global(final Context context) {
     super(checkAndGetMap(context));
     this.context = context;
-    this.lexicalScope = context.getEnv()._es6 ? new LexicalScope(this) : null;
+    this.lexicalScope = new LexicalScope(this);
   }
 
   /**
@@ -2349,7 +2349,6 @@ public final class Global extends Scope {
    * @return the ES6 lexical global scope.
    */
   public final ScriptObject getLexicalScope() {
-    assert context.getEnv()._es6;
     return lexicalScope;
   }
 
@@ -2360,7 +2359,6 @@ public final class Global extends Scope {
     PropertyMap lexicalMap = null;
     boolean hasLexicalDefinitions = false;
 
-    if (context.getEnv()._es6) {
       lexScope = (LexicalScope) getLexicalScope();
       lexicalMap = lexScope.getMap();
 
@@ -2378,7 +2376,6 @@ public final class Global extends Scope {
           throw ECMAErrors.syntaxError("redeclare.variable", property.getKey().toString());
         }
       }
-    }
 
     final boolean extensible = isExtensible();
     for (final es.runtime.Property property : properties) {
@@ -2422,7 +2419,7 @@ public final class Global extends Scope {
     // We therefore check if the invocation does already have a switchpoint and the property is non-inherited,
     // assuming this only applies to global constants. If other non-inherited properties will
     // start using switchpoints some time in the future we'll have to revisit this.
-    if (isScope && context.getEnv()._es6 && (invocation.getSwitchPoints() == null || !hasOwnProperty(name))) {
+    if (isScope && (invocation.getSwitchPoints() == null || !hasOwnProperty(name))) {
       return invocation.addSwitchPoint(getLexicalScopeSwitchPoint());
     }
 
@@ -2453,7 +2450,7 @@ public final class Global extends Scope {
 
     final GuardedInvocation invocation = super.findSetMethod(desc, request);
 
-    if (isScope && context.getEnv()._es6) {
+    if (isScope) {
       return invocation.addSwitchPoint(getLexicalScopeSwitchPoint());
     }
 
@@ -2547,24 +2544,11 @@ public final class Global extends Scope {
     final ScriptObject arrayPrototype = getArrayPrototype();
     arrayPrototype.setIsArray();
 
-    if (env._es6) {
       this.symbol = LAZY_SENTINEL;
       this.map = LAZY_SENTINEL;
       this.weakMap = LAZY_SENTINEL;
       this.set = LAZY_SENTINEL;
       this.weakSet = LAZY_SENTINEL;
-    } else {
-      // We need to manually delete nasgen-generated properties we don't want
-      this.delete("Symbol");
-      this.delete("Map");
-      this.delete("WeakMap");
-      this.delete("Set");
-      this.delete("WeakSet");
-      builtinObject.delete("getOwnPropertySymbols");
-      arrayPrototype.delete("entries");
-      arrayPrototype.delete("keys");
-      arrayPrototype.delete("values");
-    }
 
     // Error stuff
     initErrorObjects();

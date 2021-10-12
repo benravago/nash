@@ -217,15 +217,15 @@ class ParserContextFunctionNode extends ParserContextBaseNode {
   }
 
   public boolean isMethod() {
-    return getFlag(FunctionNode.ES6_IS_METHOD) != 0;
+    return getFlag(FunctionNode.IS_METHOD) != 0;
   }
 
   public boolean isClassConstructor() {
-    return getFlag(FunctionNode.ES6_IS_CLASS_CONSTRUCTOR) != 0;
+    return getFlag(FunctionNode.IS_CLASS_CONSTRUCTOR) != 0;
   }
 
   public boolean isSubclassConstructor() {
-    return getFlag(FunctionNode.ES6_IS_SUBCLASS_CONSTRUCTOR) != 0;
+    return getFlag(FunctionNode.IS_SUBCLASS_CONSTRUCTOR) != 0;
   }
 
   boolean addParameterBinding(final IdentNode bindingIdentifier) {

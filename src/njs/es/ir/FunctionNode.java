@@ -191,31 +191,31 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
   /**
    * Does this function contain a super call? (cf. ES6 14.3.5 Static Semantics: HasDirectSuper)
    */
-  public static final int ES6_HAS_DIRECT_SUPER = 1 << 19;
+  public static final int HAS_DIRECT_SUPER = 1 << 19;
 
   /**
    * Does this function use the super binding?
    */
-  public static final int ES6_USES_SUPER = 1 << 20;
+  public static final int USES_SUPER = 1 << 20;
 
   /**
    * Is this function a (class or object) method?
    */
-  public static final int ES6_IS_METHOD = 1 << 21;
+  public static final int IS_METHOD = 1 << 21;
 
   /**
    * Is this the constructor method?
    */
-  public static final int ES6_IS_CLASS_CONSTRUCTOR = 1 << 22;
+  public static final int IS_CLASS_CONSTRUCTOR = 1 << 22;
 
   /** Is this the constructor of a subclass (i.e., a class with an extends declaration)? */
-  public static final int ES6_IS_SUBCLASS_CONSTRUCTOR = 1 << 23;
+  public static final int IS_SUBCLASS_CONSTRUCTOR = 1 << 23;
 
   /** is this a strong mode function? */
-  public static final int ES6_IS_STRONG = 1 << 24;
+  public static final int IS_STRONG = 1 << 24;
 
   /** Does this function use new.target? */
-  public static final int ES6_USES_NEW_TARGET = 1 << 25;
+  public static final int USES_NEW_TARGET = 1 << 25;
 
   /** Does this function have expression as its body? */
   public static final int HAS_EXPRESSION_BODY = 1 << 26;
@@ -1105,7 +1105,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if strong mode enabled for function
    */
   public boolean isStrong() {
-    return getFlag(ES6_IS_STRONG);
+    return getFlag(IS_STRONG);
   }
 
   /**
@@ -1114,7 +1114,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if the ES6 method flag is set
    */
   public boolean isMethod() {
-    return getFlag(ES6_IS_METHOD);
+    return getFlag(IS_METHOD);
   }
 
   /**
@@ -1123,7 +1123,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if the ES6 super flag is set
    */
   public boolean usesSuper() {
-    return getFlag(ES6_USES_SUPER);
+    return getFlag(USES_SUPER);
   }
 
   /**
@@ -1132,7 +1132,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if the ES6 has-direct-super flag is set
    */
   public boolean hasDirectSuper() {
-    return getFlag(ES6_HAS_DIRECT_SUPER);
+    return getFlag(HAS_DIRECT_SUPER);
   }
 
   /**
@@ -1141,7 +1141,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if the ES6 class constructor flag is set
    */
   public boolean isClassConstructor() {
-    return getFlag(ES6_IS_CLASS_CONSTRUCTOR);
+    return getFlag(IS_CLASS_CONSTRUCTOR);
   }
 
   /**
@@ -1150,7 +1150,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if the ES6 subclass constructor flag is set
    */
   public boolean isSubclassConstructor() {
-    return getFlag(ES6_IS_SUBCLASS_CONSTRUCTOR);
+    return getFlag(IS_SUBCLASS_CONSTRUCTOR);
   }
 
   /**
@@ -1159,7 +1159,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return true if the ES6 new-target flag is set
    */
   public boolean usesNewTarget() {
-    return getFlag(ES6_USES_NEW_TARGET);
+    return getFlag(USES_NEW_TARGET);
   }
 
   /**

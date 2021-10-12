@@ -81,9 +81,6 @@ public final class ScriptEnvironment {
   /** Use single Global instance per jsr223 engine instance. */
   public final boolean _global_per_engine;
 
-  /** Enable experimental ECMAScript 6 features. */
-  public final boolean _es6;
-
   /** Number of times a dynamic call site has to be relinked before it is
    * considered unstable (and thus should be linked as if it were megamorphic).
    */
@@ -312,15 +309,6 @@ public final class ScriptEnvironment {
 
     this._anonymous_classes_threshold = Options.getIntProperty(
             "nashorn.anonymous.classes.threshold", DEFAULT_ANON_CLASS_THRESHOLD);
-
-    final String language = options.getString("language");
-    if (language == null || language.equals("es5")) {
-      _es6 = false;
-    } else if (language.equals("es6")) {
-      _es6 = true;
-    } else {
-      throw new RuntimeException("Unsupported language: " + language);
-    }
 
     String dir = null;
     String func = null;
