@@ -13,4 +13,5 @@ public abstract class SimpleNodeVisitor extends NodeVisitor<LexicalContext> {
   public SimpleNodeVisitor() {
     super(new LexicalContext());
   }
+
 }

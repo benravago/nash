@@ -45,11 +45,12 @@ import es.ir.WithNode;
 
 /**
  * Visitor used to navigate the IR.
+ *
  * @param <T> lexical context class used by this visitor
  */
 public abstract class NodeVisitor<T extends LexicalContext> {
 
-  /** lexical context in use */
+  // lexical context in use
   protected final T lc;
 
   /**
@@ -57,12 +58,13 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    *
    * @param lc a custom lexical context
    */
-  public NodeVisitor(final T lc) {
+  public NodeVisitor(T lc) {
     this.lc = lc;
   }
 
   /**
    * Get the lexical context of this node visitor
+   *
    * @return lexical context
    */
   public T getLexicalContext() {
@@ -70,8 +72,8 @@ public abstract class NodeVisitor<T extends LexicalContext> {
   }
 
   /**
-   * Override this method to do a double inheritance pattern, e.g. avoid
-   * using
+   * Override this method to do a double inheritance pattern,
+   * e.g. avoid using
    * <p>
    * if (x instanceof NodeTypeA) {
    *    ...
@@ -87,13 +89,13 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param node the node to visit
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  protected boolean enterDefault(final Node node) {
+  protected boolean enterDefault(Node node) {
     return true;
   }
 
   /**
-   * Override this method to do a double inheritance pattern, e.g. avoid
-   * using
+   * Override this method to do a double inheritance pattern,
+   * e.g. avoid using
    * <p>
    * if (x instanceof NodeTypeA) {
    *    ...
@@ -109,7 +111,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param node the node to visit
    * @return the node
    */
-  protected Node leaveDefault(final Node node) {
+  protected Node leaveDefault(Node node) {
     return node;
   }
 
@@ -119,7 +121,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  accessNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterAccessNode(final AccessNode accessNode) {
+  public boolean enterAccessNode(AccessNode accessNode) {
     return enterDefault(accessNode);
   }
 
@@ -129,7 +131,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  accessNode the node
    * @return processed node, null if traversal should end
    */
-  public Node leaveAccessNode(final AccessNode accessNode) {
+  public Node leaveAccessNode(AccessNode accessNode) {
     return leaveDefault(accessNode);
   }
 
@@ -139,7 +141,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  block     the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterBlock(final Block block) {
+  public boolean enterBlock(Block block) {
     return enterDefault(block);
   }
 
@@ -149,7 +151,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  block the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveBlock(final Block block) {
+  public Node leaveBlock(Block block) {
     return leaveDefault(block);
   }
 
@@ -159,7 +161,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  binaryNode  the node
    * @return processed   node
    */
-  public boolean enterBinaryNode(final BinaryNode binaryNode) {
+  public boolean enterBinaryNode(BinaryNode binaryNode) {
     return enterDefault(binaryNode);
   }
 
@@ -169,7 +171,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  binaryNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveBinaryNode(final BinaryNode binaryNode) {
+  public Node leaveBinaryNode(BinaryNode binaryNode) {
     return leaveDefault(binaryNode);
   }
 
@@ -179,7 +181,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  breakNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterBreakNode(final BreakNode breakNode) {
+  public boolean enterBreakNode(BreakNode breakNode) {
     return enterDefault(breakNode);
   }
 
@@ -189,7 +191,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  breakNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveBreakNode(final BreakNode breakNode) {
+  public Node leaveBreakNode(BreakNode breakNode) {
     return leaveDefault(breakNode);
   }
 
@@ -199,7 +201,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  callNode  the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterCallNode(final CallNode callNode) {
+  public boolean enterCallNode(CallNode callNode) {
     return enterDefault(callNode);
   }
 
@@ -209,7 +211,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  callNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveCallNode(final CallNode callNode) {
+  public Node leaveCallNode(CallNode callNode) {
     return leaveDefault(callNode);
   }
 
@@ -219,7 +221,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  caseNode  the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterCaseNode(final CaseNode caseNode) {
+  public boolean enterCaseNode(CaseNode caseNode) {
     return enterDefault(caseNode);
   }
 
@@ -229,7 +231,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  caseNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveCaseNode(final CaseNode caseNode) {
+  public Node leaveCaseNode(CaseNode caseNode) {
     return leaveDefault(caseNode);
   }
 
@@ -239,7 +241,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  catchNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterCatchNode(final CatchNode catchNode) {
+  public boolean enterCatchNode(CatchNode catchNode) {
     return enterDefault(catchNode);
   }
 
@@ -249,7 +251,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  catchNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveCatchNode(final CatchNode catchNode) {
+  public Node leaveCatchNode(CatchNode catchNode) {
     return leaveDefault(catchNode);
   }
 
@@ -259,7 +261,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  continueNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterContinueNode(final ContinueNode continueNode) {
+  public boolean enterContinueNode(ContinueNode continueNode) {
     return enterDefault(continueNode);
   }
 
@@ -269,7 +271,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  continueNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveContinueNode(final ContinueNode continueNode) {
+  public Node leaveContinueNode(ContinueNode continueNode) {
     return leaveDefault(continueNode);
   }
 
@@ -279,7 +281,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  debuggerNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterDebuggerNode(final DebuggerNode debuggerNode) {
+  public boolean enterDebuggerNode(DebuggerNode debuggerNode) {
     return enterDefault(debuggerNode);
   }
 
@@ -289,7 +291,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  debuggerNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveDebuggerNode(final DebuggerNode debuggerNode) {
+  public Node leaveDebuggerNode(DebuggerNode debuggerNode) {
     return leaveDefault(debuggerNode);
   }
 
@@ -299,7 +301,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  emptyNode   the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterEmptyNode(final EmptyNode emptyNode) {
+  public boolean enterEmptyNode(EmptyNode emptyNode) {
     return enterDefault(emptyNode);
   }
 
@@ -309,7 +311,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  emptyNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveEmptyNode(final EmptyNode emptyNode) {
+  public Node leaveEmptyNode(EmptyNode emptyNode) {
     return leaveDefault(emptyNode);
   }
 
@@ -319,7 +321,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  errorNode   the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterErrorNode(final ErrorNode errorNode) {
+  public boolean enterErrorNode(ErrorNode errorNode) {
     return enterDefault(errorNode);
   }
 
@@ -329,7 +331,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  errorNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveErrorNode(final ErrorNode errorNode) {
+  public Node leaveErrorNode(ErrorNode errorNode) {
     return leaveDefault(errorNode);
   }
 
@@ -339,7 +341,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  expressionStatement the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterExpressionStatement(final ExpressionStatement expressionStatement) {
+  public boolean enterExpressionStatement(ExpressionStatement expressionStatement) {
     return enterDefault(expressionStatement);
   }
 
@@ -349,7 +351,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  expressionStatement the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveExpressionStatement(final ExpressionStatement expressionStatement) {
+  public Node leaveExpressionStatement(ExpressionStatement expressionStatement) {
     return leaveDefault(expressionStatement);
   }
 
@@ -359,7 +361,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  blockStatement the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterBlockStatement(final BlockStatement blockStatement) {
+  public boolean enterBlockStatement(BlockStatement blockStatement) {
     return enterDefault(blockStatement);
   }
 
@@ -369,7 +371,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  blockStatement the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveBlockStatement(final BlockStatement blockStatement) {
+  public Node leaveBlockStatement(BlockStatement blockStatement) {
     return leaveDefault(blockStatement);
   }
 
@@ -379,7 +381,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  forNode   the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterForNode(final ForNode forNode) {
+  public boolean enterForNode(ForNode forNode) {
     return enterDefault(forNode);
   }
 
@@ -389,7 +391,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  forNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveForNode(final ForNode forNode) {
+  public Node leaveForNode(ForNode forNode) {
     return leaveDefault(forNode);
   }
 
@@ -399,7 +401,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  functionNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterFunctionNode(final FunctionNode functionNode) {
+  public boolean enterFunctionNode(FunctionNode functionNode) {
     return enterDefault(functionNode);
   }
 
@@ -409,7 +411,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  functionNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveFunctionNode(final FunctionNode functionNode) {
+  public Node leaveFunctionNode(FunctionNode functionNode) {
     return leaveDefault(functionNode);
   }
 
@@ -419,7 +421,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  getSplitState the get split state expression
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterGetSplitState(final GetSplitState getSplitState) {
+  public boolean enterGetSplitState(GetSplitState getSplitState) {
     return enterDefault(getSplitState);
   }
 
@@ -429,7 +431,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  getSplitState the get split state expression
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveGetSplitState(final GetSplitState getSplitState) {
+  public Node leaveGetSplitState(GetSplitState getSplitState) {
     return leaveDefault(getSplitState);
   }
 
@@ -439,7 +441,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  identNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterIdentNode(final IdentNode identNode) {
+  public boolean enterIdentNode(IdentNode identNode) {
     return enterDefault(identNode);
   }
 
@@ -449,7 +451,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  identNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveIdentNode(final IdentNode identNode) {
+  public Node leaveIdentNode(IdentNode identNode) {
     return leaveDefault(identNode);
   }
 
@@ -459,7 +461,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  ifNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterIfNode(final IfNode ifNode) {
+  public boolean enterIfNode(IfNode ifNode) {
     return enterDefault(ifNode);
   }
 
@@ -469,7 +471,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  ifNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveIfNode(final IfNode ifNode) {
+  public Node leaveIfNode(IfNode ifNode) {
     return leaveDefault(ifNode);
   }
 
@@ -479,7 +481,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  indexNode  the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterIndexNode(final IndexNode indexNode) {
+  public boolean enterIndexNode(IndexNode indexNode) {
     return enterDefault(indexNode);
   }
 
@@ -489,7 +491,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  indexNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveIndexNode(final IndexNode indexNode) {
+  public Node leaveIndexNode(IndexNode indexNode) {
     return leaveDefault(indexNode);
   }
 
@@ -499,7 +501,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  jumpToInlinedFinally the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterJumpToInlinedFinally(final JumpToInlinedFinally jumpToInlinedFinally) {
+  public boolean enterJumpToInlinedFinally(JumpToInlinedFinally jumpToInlinedFinally) {
     return enterDefault(jumpToInlinedFinally);
   }
 
@@ -509,7 +511,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  jumpToInlinedFinally the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveJumpToInlinedFinally(final JumpToInlinedFinally jumpToInlinedFinally) {
+  public Node leaveJumpToInlinedFinally(JumpToInlinedFinally jumpToInlinedFinally) {
     return leaveDefault(jumpToInlinedFinally);
   }
 
@@ -519,7 +521,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  labelNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterLabelNode(final LabelNode labelNode) {
+  public boolean enterLabelNode(LabelNode labelNode) {
     return enterDefault(labelNode);
   }
 
@@ -529,7 +531,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  labelNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveLabelNode(final LabelNode labelNode) {
+  public Node leaveLabelNode(LabelNode labelNode) {
     return leaveDefault(labelNode);
   }
 
@@ -539,7 +541,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  literalNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterLiteralNode(final LiteralNode<?> literalNode) {
+  public boolean enterLiteralNode(LiteralNode<?> literalNode) {
     return enterDefault(literalNode);
   }
 
@@ -549,7 +551,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  literalNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveLiteralNode(final LiteralNode<?> literalNode) {
+  public Node leaveLiteralNode(LiteralNode<?> literalNode) {
     return leaveDefault(literalNode);
   }
 
@@ -559,7 +561,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  objectNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterObjectNode(final ObjectNode objectNode) {
+  public boolean enterObjectNode(ObjectNode objectNode) {
     return enterDefault(objectNode);
   }
 
@@ -569,7 +571,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  objectNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveObjectNode(final ObjectNode objectNode) {
+  public Node leaveObjectNode(ObjectNode objectNode) {
     return leaveDefault(objectNode);
   }
 
@@ -579,7 +581,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  propertyNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterPropertyNode(final PropertyNode propertyNode) {
+  public boolean enterPropertyNode(PropertyNode propertyNode) {
     return enterDefault(propertyNode);
   }
 
@@ -589,7 +591,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  propertyNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leavePropertyNode(final PropertyNode propertyNode) {
+  public Node leavePropertyNode(PropertyNode propertyNode) {
     return leaveDefault(propertyNode);
   }
 
@@ -599,7 +601,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  returnNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterReturnNode(final ReturnNode returnNode) {
+  public boolean enterReturnNode(ReturnNode returnNode) {
     return enterDefault(returnNode);
   }
 
@@ -609,7 +611,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  returnNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveReturnNode(final ReturnNode returnNode) {
+  public Node leaveReturnNode(ReturnNode returnNode) {
     return leaveDefault(returnNode);
   }
 
@@ -619,7 +621,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  runtimeNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterRuntimeNode(final RuntimeNode runtimeNode) {
+  public boolean enterRuntimeNode(RuntimeNode runtimeNode) {
     return enterDefault(runtimeNode);
   }
 
@@ -629,7 +631,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  runtimeNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveRuntimeNode(final RuntimeNode runtimeNode) {
+  public Node leaveRuntimeNode(RuntimeNode runtimeNode) {
     return leaveDefault(runtimeNode);
   }
 
@@ -639,7 +641,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  setSplitState the set split state statement
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterSetSplitState(final SetSplitState setSplitState) {
+  public boolean enterSetSplitState(SetSplitState setSplitState) {
     return enterDefault(setSplitState);
   }
 
@@ -649,7 +651,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  setSplitState the set split state expression
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveSetSplitState(final SetSplitState setSplitState) {
+  public Node leaveSetSplitState(SetSplitState setSplitState) {
     return leaveDefault(setSplitState);
   }
 
@@ -659,7 +661,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  splitNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterSplitNode(final SplitNode splitNode) {
+  public boolean enterSplitNode(SplitNode splitNode) {
     return enterDefault(splitNode);
   }
 
@@ -669,7 +671,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  splitNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveSplitNode(final SplitNode splitNode) {
+  public Node leaveSplitNode(SplitNode splitNode) {
     return leaveDefault(splitNode);
   }
 
@@ -679,7 +681,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  splitReturn the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterSplitReturn(final SplitReturn splitReturn) {
+  public boolean enterSplitReturn(SplitReturn splitReturn) {
     return enterDefault(splitReturn);
   }
 
@@ -689,7 +691,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  splitReturn the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveSplitReturn(final SplitReturn splitReturn) {
+  public Node leaveSplitReturn(SplitReturn splitReturn) {
     return leaveDefault(splitReturn);
   }
 
@@ -699,7 +701,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  switchNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterSwitchNode(final SwitchNode switchNode) {
+  public boolean enterSwitchNode(SwitchNode switchNode) {
     return enterDefault(switchNode);
   }
 
@@ -709,7 +711,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  switchNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveSwitchNode(final SwitchNode switchNode) {
+  public Node leaveSwitchNode(SwitchNode switchNode) {
     return leaveDefault(switchNode);
   }
 
@@ -719,7 +721,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  templateLiteral the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterTemplateLiteral(final TemplateLiteral templateLiteral) {
+  public boolean enterTemplateLiteral(TemplateLiteral templateLiteral) {
     return enterDefault(templateLiteral);
   }
 
@@ -729,7 +731,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  templateLiteral the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveTemplateLiteral(final TemplateLiteral templateLiteral) {
+  public Node leaveTemplateLiteral(TemplateLiteral templateLiteral) {
     return leaveDefault(templateLiteral);
   }
 
@@ -739,7 +741,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  ternaryNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterTernaryNode(final TernaryNode ternaryNode) {
+  public boolean enterTernaryNode(TernaryNode ternaryNode) {
     return enterDefault(ternaryNode);
   }
 
@@ -749,7 +751,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  ternaryNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveTernaryNode(final TernaryNode ternaryNode) {
+  public Node leaveTernaryNode(TernaryNode ternaryNode) {
     return leaveDefault(ternaryNode);
   }
 
@@ -759,7 +761,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  throwNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterThrowNode(final ThrowNode throwNode) {
+  public boolean enterThrowNode(ThrowNode throwNode) {
     return enterDefault(throwNode);
   }
 
@@ -769,7 +771,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  throwNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveThrowNode(final ThrowNode throwNode) {
+  public Node leaveThrowNode(ThrowNode throwNode) {
     return leaveDefault(throwNode);
   }
 
@@ -779,7 +781,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  tryNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterTryNode(final TryNode tryNode) {
+  public boolean enterTryNode(TryNode tryNode) {
     return enterDefault(tryNode);
   }
 
@@ -789,7 +791,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  tryNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveTryNode(final TryNode tryNode) {
+  public Node leaveTryNode(TryNode tryNode) {
     return leaveDefault(tryNode);
   }
 
@@ -799,7 +801,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  unaryNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterUnaryNode(final UnaryNode unaryNode) {
+  public boolean enterUnaryNode(UnaryNode unaryNode) {
     return enterDefault(unaryNode);
   }
 
@@ -809,7 +811,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  unaryNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveUnaryNode(final UnaryNode unaryNode) {
+  public Node leaveUnaryNode(UnaryNode unaryNode) {
     return leaveDefault(unaryNode);
   }
 
@@ -819,7 +821,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  expr the join predecessor expression
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterJoinPredecessorExpression(final JoinPredecessorExpression expr) {
+  public boolean enterJoinPredecessorExpression(JoinPredecessorExpression expr) {
     return enterDefault(expr);
   }
 
@@ -829,7 +831,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  expr the join predecessor expression
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveJoinPredecessorExpression(final JoinPredecessorExpression expr) {
+  public Node leaveJoinPredecessorExpression(JoinPredecessorExpression expr) {
     return leaveDefault(expr);
   }
 
@@ -839,7 +841,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  varNode   the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterVarNode(final VarNode varNode) {
+  public boolean enterVarNode(VarNode varNode) {
     return enterDefault(varNode);
   }
 
@@ -849,7 +851,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  varNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveVarNode(final VarNode varNode) {
+  public Node leaveVarNode(VarNode varNode) {
     return leaveDefault(varNode);
   }
 
@@ -859,7 +861,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  whileNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterWhileNode(final WhileNode whileNode) {
+  public boolean enterWhileNode(WhileNode whileNode) {
     return enterDefault(whileNode);
   }
 
@@ -869,7 +871,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  whileNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveWhileNode(final WhileNode whileNode) {
+  public Node leaveWhileNode(WhileNode whileNode) {
     return leaveDefault(whileNode);
   }
 
@@ -879,7 +881,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  withNode  the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterWithNode(final WithNode withNode) {
+  public boolean enterWithNode(WithNode withNode) {
     return enterDefault(withNode);
   }
 
@@ -889,7 +891,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  withNode  the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveWithNode(final WithNode withNode) {
+  public Node leaveWithNode(WithNode withNode) {
     return leaveDefault(withNode);
   }
 
@@ -899,7 +901,7 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  classNode  the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterClassNode(final ClassNode classNode) {
+  public boolean enterClassNode(ClassNode classNode) {
     return enterDefault(classNode);
   }
 
@@ -909,7 +911,8 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    * @param  classNode  the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveClassNode(final ClassNode classNode) {
+  public Node leaveClassNode(ClassNode classNode) {
     return leaveDefault(classNode);
   }
+
 }
