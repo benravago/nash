@@ -83,9 +83,9 @@ public final class BinaryNode extends Expression implements Assignment<Expressio
   public boolean isComparison() {
     switch (tokenType()) {
       case EQ:
-      case EQ_STRICT:
+      case EQU:
       case NE:
-      case NE_STRICT:
+      case NEQU:
       case LE:
       case LT:
       case GE:

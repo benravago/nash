@@ -681,7 +681,7 @@ public final class NativeObject {
         if (prop.isEnumerable()) {
           final Object value = sourceObj.get(prop.getKey());
           prop.setType(Object.class);
-          prop.setValue(sourceObj, sourceObj, value, false);
+          prop.setValue(sourceObj, sourceObj, value);
           propList.add(prop);
         }
       }

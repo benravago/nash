@@ -31,7 +31,7 @@ public class RuntimeNode extends Expression {
     /** Reference error type */
     REFERENCE_ERROR,
     /** === operator with at least one object */
-    EQ_STRICT(TokenType.EQ_STRICT, Type.BOOLEAN, 2, true),
+    EQUIV(TokenType.EQU, Type.BOOLEAN, 2, true),
     /** == operator with at least one object */
     EQ(TokenType.EQ, Type.BOOLEAN, 2, true),
     /** {@literal >=} operator with at least one object */
@@ -47,13 +47,13 @@ public class RuntimeNode extends Expression {
     /** {@literal <} operator with at least one object */
     LT(TokenType.LT, Type.BOOLEAN, 2, true),
     /** !== operator with at least one object */
-    NE_STRICT(TokenType.NE_STRICT, Type.BOOLEAN, 2, true),
+    NOT_EQUIV(TokenType.NEQU, Type.BOOLEAN, 2, true),
     /** != operator with at least one object */
     NE(TokenType.NE, Type.BOOLEAN, 2, true),
     /** is undefined */
-    IS_UNDEFINED(TokenType.EQ_STRICT, Type.BOOLEAN, 2),
+    IS_UNDEFINED(TokenType.EQU, Type.BOOLEAN, 2),
     /** is not undefined */
-    IS_NOT_UNDEFINED(TokenType.NE_STRICT, Type.BOOLEAN, 2),
+    IS_NOT_UNDEFINED(TokenType.NEQU, Type.BOOLEAN, 2),
     /** Get template object from raw and cooked string arrays. */
     GET_TEMPLATE_OBJECT(TokenType.TEMPLATE, Type.SCRIPT_OBJECT, 2);
 
@@ -121,22 +121,6 @@ public class RuntimeNode extends Expression {
     }
 
     /**
-     * Get the non-strict name for this request.
-     *
-     * @return the name without _STRICT suffix
-     */
-    public String nonStrictName() {
-      switch (this) {
-        case NE_STRICT:
-          return NE.name();
-        case EQ_STRICT:
-          return EQ.name();
-        default:
-          return name();
-      }
-    }
-
-    /**
      * Derive a runtime node request type for a node
      * @param node the node
      * @return request type
@@ -149,10 +133,10 @@ public class RuntimeNode extends Expression {
           return Request.IN;
         case INSTANCEOF:
           return Request.INSTANCEOF;
-        case EQ_STRICT:
-          return Request.EQ_STRICT;
-        case NE_STRICT:
-          return Request.NE_STRICT;
+        case EQU:
+          return Request.EQUIV;
+        case NEQU:
+          return Request.NOT_EQUIV;
         case EQ:
           return Request.EQ;
         case NE:
@@ -183,36 +167,36 @@ public class RuntimeNode extends Expression {
     }
 
     /**
-     * Is this an EQ or EQ_STRICT?
+     * Is this an EQ
      *
      * @param request a request
      *
-     * @return true if EQ or EQ_STRICT
+     * @return true if '==' or '==='?
      */
     public static boolean isEQ(final Request request) {
-      return request == EQ || request == EQ_STRICT;
+      return request == EQ || request == EQUIV;
     }
 
     /**
-     * Is this an NE or NE_STRICT?
+     * Is this an NE ?
      *
      * @param request a request
      *
-     * @return true if NE or NE_STRICT
+     * @return true if '!=' or '!==' 
      */
     public static boolean isNE(final Request request) {
-      return request == NE || request == NE_STRICT;
+      return request == NE || request == NOT_EQUIV;
     }
 
     /**
-     * Is this strict?
+     * Is this equivalence? '===' or '!==='
      *
      * @param request a request
      *
      * @return true if script
      */
-    public static boolean isStrict(final Request request) {
-      return request == EQ_STRICT || request == NE_STRICT;
+    public static boolean isEquiv(final Request request) {
+      return request == EQUIV || request == NOT_EQUIV;
     }
 
     /**
@@ -226,9 +210,9 @@ public class RuntimeNode extends Expression {
     public static Request reverse(final Request request) {
       switch (request) {
         case EQ:
-        case EQ_STRICT:
+        case EQUIV:
         case NE:
-        case NE_STRICT:
+        case NOT_EQUIV:
           return request;
         case LE:
           return GE;
@@ -254,12 +238,12 @@ public class RuntimeNode extends Expression {
       switch (request) {
         case EQ:
           return NE;
-        case EQ_STRICT:
-          return NE_STRICT;
+        case EQUIV:
+          return NOT_EQUIV;
         case NE:
           return EQ;
-        case NE_STRICT:
-          return EQ_STRICT;
+        case NOT_EQUIV:
+          return EQUIV;
         case LE:
           return GT;
         case LT:
@@ -283,9 +267,9 @@ public class RuntimeNode extends Expression {
     public static boolean isComparison(final Request request) {
       switch (request) {
         case EQ:
-        case EQ_STRICT:
+        case EQUIV:
         case NE:
-        case NE_STRICT:
+        case NOT_EQUIV:
         case LE:
         case LT:
         case GE:

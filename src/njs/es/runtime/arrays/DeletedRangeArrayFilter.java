@@ -105,12 +105,12 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
   }
 
   @Override
-  public ArrayData set(final int index, final Object value, final boolean strict) {
+  public ArrayData set(final int index, final Object value) {
     final long longIndex = ArrayIndex.toLongIndex(index);
     if (longIndex < lo || longIndex > hi) {
-      return super.set(index, value, strict);
+      return super.set(index, value);
     } else if (longIndex > lo && longIndex < hi) {
-      return getDeletedArrayFilter().set(index, value, strict);
+      return getDeletedArrayFilter().set(index, value);
     }
     if (longIndex == lo) {
       lo++;
@@ -119,16 +119,16 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
       hi--;
     }
 
-    return isEmpty() ? getUnderlying().set(index, value, strict) : super.set(index, value, strict);
+    return isEmpty() ? getUnderlying().set(index, value) : super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final int value, final boolean strict) {
+  public ArrayData set(final int index, final int value) {
     final long longIndex = ArrayIndex.toLongIndex(index);
     if (longIndex < lo || longIndex > hi) {
-      return super.set(index, value, strict);
+      return super.set(index, value);
     } else if (longIndex > lo && longIndex < hi) {
-      return getDeletedArrayFilter().set(index, value, strict);
+      return getDeletedArrayFilter().set(index, value);
     }
     if (longIndex == lo) {
       lo++;
@@ -137,16 +137,16 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
       hi--;
     }
 
-    return isEmpty() ? getUnderlying().set(index, value, strict) : super.set(index, value, strict);
+    return isEmpty() ? getUnderlying().set(index, value) : super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final double value, final boolean strict) {
+  public ArrayData set(final int index, final double value) {
     final long longIndex = ArrayIndex.toLongIndex(index);
     if (longIndex < lo || longIndex > hi) {
-      return super.set(index, value, strict);
+      return super.set(index, value);
     } else if (longIndex > lo && longIndex < hi) {
-      return getDeletedArrayFilter().set(index, value, strict);
+      return getDeletedArrayFilter().set(index, value);
     }
     if (longIndex == lo) {
       lo++;
@@ -155,7 +155,7 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
       hi--;
     }
 
-    return isEmpty() ? getUnderlying().set(index, value, strict) : super.set(index, value, strict);
+    return isEmpty() ? getUnderlying().set(index, value) : super.set(index, value);
   }
 
   @Override

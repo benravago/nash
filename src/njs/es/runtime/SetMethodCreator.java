@@ -100,7 +100,7 @@ final class SetMethodCreator {
       return createExistingPropertySetter();
     }
 
-    checkStrictCreateNewVariable();
+    checkCreateNewVariable();
 
     if (sobj.isScope()) {
       return createGlobalPropertySetter();
@@ -109,17 +109,16 @@ final class SetMethodCreator {
     return createNewPropertySetter(builtinSwitchPoint);
   }
 
-  private void checkStrictCreateNewVariable() {
-    // In strict mode, assignment can not create a new variable.
+  private void checkCreateNewVariable() {
+    // assignment can not create a new variable.
     // See also ECMA Annex C item 4. ReferenceError is thrown.
-    if (NashornCallSiteDescriptor.isScope(desc) && NashornCallSiteDescriptor.isStrict(desc)) {
+    if (NashornCallSiteDescriptor.isScope(desc)) {
       throw referenceError("not.defined", getName());
     }
   }
 
   private SetMethod createExistingPropertySetter() {
     final Property property = find.getProperty();
-    final boolean isStrict = NashornCallSiteDescriptor.isStrict(desc);
     final MethodHandle methodHandle;
 
     if (NashornCallSiteDescriptor.isDeclaration(desc) && property.needsDeclaration()) {
@@ -131,7 +130,7 @@ final class SetMethodCreator {
       final PropertyMap oldMap = getMap();
       final Property newProperty = property.removeFlags(Property.NEEDS_DECLARATION);
       final PropertyMap newMap = oldMap.replaceProperty(property, newProperty);
-      final MethodHandle fastSetter = find.replaceProperty(newProperty).getSetter(type, isStrict, request);
+      final MethodHandle fastSetter = find.replaceProperty(newProperty).getSetter(type, request);
       final MethodHandle slowSetter = MH.insertArguments(ScriptObject.DECLARE_AND_SET, 1, getName()).asType(fastSetter.type());
 
       // cas map used as guard, if true that means we can do the set fast
@@ -140,7 +139,7 @@ final class SetMethodCreator {
       casMap = MH.asType(casMap, casMap.type().changeParameterType(0, Object.class));
       methodHandle = MH.guardWithTest(casMap, fastSetter, slowSetter);
     } else {
-      methodHandle = find.getSetter(type, isStrict, request);
+      methodHandle = find.getSetter(type, request);
     }
 
     assert methodHandle != null;
@@ -171,7 +170,6 @@ final class SetMethodCreator {
 
     final PropertyMap oldMap = getMap();
     final PropertyMap newMap = getNewMap(property);
-    final boolean isStrict = NashornCallSiteDescriptor.isStrict(desc);
     final String name = NashornCallSiteDescriptor.getOperand(desc);
 
     //fast type specific setter
@@ -193,8 +191,8 @@ final class SetMethodCreator {
 
     //outermost level needs an extendable check. if object can be extended, guard is true and
     //we can run the cas setter. The setter goes to "nop" VOID_RETURN if false or throws an
-    //exception if we are in strict mode and object is not extensible
-    MethodHandle extCheck = MH.insertArguments(ScriptObject.EXTENSION_CHECK, 1, isStrict, name);
+    //exception if object is not extensible
+    MethodHandle extCheck = MH.insertArguments(ScriptObject.EXTENSION_CHECK, 1, true, name);
     extCheck = MH.asType(extCheck, extCheck.type().changeParameterType(0, Object.class));
     extCheck = MH.dropArguments(extCheck, 1, type);
 

@@ -103,8 +103,8 @@ public final class Undefined extends DefaultPropertyAccess {
   }
 
   private static final MethodHandle GET_METHOD = findOwnMH("get", Object.class, Object.class);
-  private static final MethodHandle SET_METHOD = MH.insertArguments(findOwnMH("set", void.class, Object.class, Object.class, int.class), 3, NashornCallSiteDescriptor.CALLSITE_STRICT);
-  private static final MethodHandle DELETE_METHOD = MH.insertArguments(findOwnMH("delete", boolean.class, Object.class, boolean.class), 2, false);
+  private static final MethodHandle SET_METHOD = MH.insertArguments(findOwnMH("set", void.class, Object.class, Object.class, int.class), 3, 0);
+  private static final MethodHandle DELETE_METHOD = findOwnMH("delete", boolean.class, Object.class);
 
   private static GuardedInvocation findGetMethod(final CallSiteDescriptor desc) {
     return new GuardedInvocation(MH.insertArguments(GET_METHOD, 1, NashornCallSiteDescriptor.getOperand(desc)), UNDEFINED_GUARD).asType(desc);
@@ -141,7 +141,7 @@ public final class Undefined extends DefaultPropertyAccess {
   }
 
   @Override
-  public boolean delete(final Object key, final boolean strict) {
+  public boolean delete(final Object key) {
     throw typeError("cant.delete.property.of.undefined", ScriptRuntime.safeToString(key));
   }
 

@@ -450,9 +450,8 @@ public abstract class Property implements Serializable {
    * @param self the this object
    * @param owner the owner object
    * @param value the new property value
-   * @param strict is this a strict setter?
    */
-  public abstract void setValue(final ScriptObject self, final ScriptObject owner, final int value, final boolean strict);
+  public abstract void setValue(final ScriptObject self, final ScriptObject owner, final int value);
 
   /**
    * Set the value of this property in {@code owner}. This allows to bypass creation of the
@@ -461,9 +460,8 @@ public abstract class Property implements Serializable {
    * @param self the this object
    * @param owner the owner object
    * @param value the new property value
-   * @param strict is this a strict setter?
    */
-  public abstract void setValue(final ScriptObject self, final ScriptObject owner, final double value, final boolean strict);
+  public abstract void setValue(final ScriptObject self, final ScriptObject owner, final double value);
 
   /**
    * Set the value of this property in {@code owner}. This allows to bypass creation of the
@@ -472,9 +470,8 @@ public abstract class Property implements Serializable {
    * @param self the this object
    * @param owner the owner object
    * @param value the new property value
-   * @param strict is this a strict setter?
    */
-  public abstract void setValue(final ScriptObject self, final ScriptObject owner, final Object value, final boolean strict);
+  public abstract void setValue(final ScriptObject self, final ScriptObject owner, final Object value);
 
   /**
    * Returns true if this property has a low-level setter handle. This can be used to determine whether a

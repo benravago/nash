@@ -123,8 +123,8 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
         return enterDIV(binaryNode);
       case EQ:
         return enterEQ(binaryNode);
-      case EQ_STRICT:
-        return enterEQ_STRICT(binaryNode);
+      case EQU:
+        return enterEQUIV(binaryNode);
       case GE:
         return enterGE(binaryNode);
       case GT:
@@ -143,8 +143,8 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
         return enterMUL(binaryNode);
       case NE:
         return enterNE(binaryNode);
-      case NE_STRICT:
-        return enterNE_STRICT(binaryNode);
+      case NEQU:
+        return enterNOT_EQUIV(binaryNode);
       case OR:
         return enterOR(binaryNode);
       case SAR:
@@ -205,8 +205,8 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
         return leaveDIV(binaryNode);
       case EQ:
         return leaveEQ(binaryNode);
-      case EQ_STRICT:
-        return leaveEQ_STRICT(binaryNode);
+      case EQU:
+        return leaveEQUIV(binaryNode);
       case GE:
         return leaveGE(binaryNode);
       case GT:
@@ -225,8 +225,8 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
         return leaveMUL(binaryNode);
       case NE:
         return leaveNE(binaryNode);
-      case NE_STRICT:
-        return leaveNE_STRICT(binaryNode);
+      case NEQU:
+        return leaveNOT_EQUIV(binaryNode);
       case OR:
         return leaveOR(binaryNode);
       case SAR:
@@ -853,7 +853,7 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
    * @param  binaryNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterEQ_STRICT(final BinaryNode binaryNode) {
+  public boolean enterEQUIV(final BinaryNode binaryNode) {
     return enterDefault(binaryNode);
   }
 
@@ -863,7 +863,7 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
    * @param  binaryNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveEQ_STRICT(final BinaryNode binaryNode) {
+  public Node leaveEQUIV(final BinaryNode binaryNode) {
     return leaveDefault(binaryNode);
   }
 
@@ -1053,7 +1053,7 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
    * @param  binaryNode the node
    * @return true if traversal should continue and node children be traversed, false otherwise
    */
-  public boolean enterNE_STRICT(final BinaryNode binaryNode) {
+  public boolean enterNOT_EQUIV(final BinaryNode binaryNode) {
     return enterDefault(binaryNode);
   }
 
@@ -1063,7 +1063,7 @@ public abstract class NodeOperatorVisitor<T extends LexicalContext> extends Node
    * @param  binaryNode the node
    * @return processed node, which will replace the original one, or the original node
    */
-  public Node leaveNE_STRICT(final BinaryNode binaryNode) {
+  public Node leaveNOT_EQUIV(final BinaryNode binaryNode) {
     return leaveDefault(binaryNode);
   }
 

@@ -445,7 +445,7 @@ final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
   }
 
   @Override
-  public Node leaveEQ_STRICT(final BinaryNode binaryNode) {
+  public Node leaveEQUIV(final BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
@@ -497,7 +497,7 @@ final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
   }
 
   @Override
-  public Node leaveNE_STRICT(final BinaryNode binaryNode) {
+  public Node leaveNOT_EQUIV(final BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 

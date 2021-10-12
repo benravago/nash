@@ -87,7 +87,7 @@ public final class Lookup {
    * @return undefined (but throws error before return point)
    */
   public static Object typeErrorThrower(final Object self) {
-    throw typeError("strict.getter.setter.poison", ScriptRuntime.safeToString(self));
+    throw typeError("getter.setter.poison", ScriptRuntime.safeToString(self));
   }
 
   /**

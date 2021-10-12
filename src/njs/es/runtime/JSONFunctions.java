@@ -85,7 +85,7 @@ public final class JSONFunctions {
           final Object newElement = walk(valueObj, key, reviver);
 
           if (newElement == ScriptRuntime.UNDEFINED) {
-            valueObj.delete(i, false);
+            valueObj.delete(i);
           } else {
             setPropertyValue(valueObj, key, newElement);
           }
@@ -96,7 +96,7 @@ public final class JSONFunctions {
           final Object newElement = walk(valueObj, key, reviver);
 
           if (newElement == ScriptRuntime.UNDEFINED) {
-            valueObj.delete(key, false);
+            valueObj.delete(key);
           } else {
             setPropertyValue(valueObj, key, newElement);
           }

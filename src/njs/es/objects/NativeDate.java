@@ -15,7 +15,7 @@ import es.objects.annotations.Function;
 import es.objects.annotations.ScriptClass;
 import es.objects.annotations.SpecializedFunction;
 import es.objects.annotations.Where;
-import es.parser.DateParser;
+
 import es.runtime.JSType;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptEnvironment;
@@ -23,6 +23,7 @@ import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.linker.Bootstrap;
 import es.runtime.linker.InvokeByName;
+import java.time.Instant;
 
 /**
  * ECMA 15.9 Date Objects
@@ -861,21 +862,9 @@ public final class NativeDate extends ScriptObject {
 
   // -- Internals below this point
   private static double parseDateString(final String str) {
-
-    final DateParser parser = new DateParser(str);
-    if (parser.parse()) {
-      final Integer[] fields = parser.getDateFields();
-      double d = makeDate(fields);
-      if (fields[DateParser.TIMEZONE] != null) {
-        d -= fields[DateParser.TIMEZONE] * 60000;
-      } else {
-        d = utc(d, Global.getEnv()._timezone);
-      }
-      d = timeClip(d);
-      return d;
-    }
-
-    return Double.NaN;
+    // ECMA 15.9.1.15 -> YYYY-MM-DDTHH:mm:ss.sssZ
+    var ts = Instant.parse(str);
+    return timeClip((double) ts.getEpochSecond());
   }
 
   private static void zeroPad(final StringBuilder sb, final int n, final int length) {

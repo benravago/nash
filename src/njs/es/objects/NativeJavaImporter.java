@@ -11,8 +11,8 @@ import es.runtime.ScriptObject;
 
 /**
  * This is "JavaImporter" constructor. This constructor allows you to use Java types omitting explicit package names.
- * Objects of this constructor are used along with {@code "with"} statements and as such are not usable in ECMAScript
- * strict mode. Example:
+ * Objects of this constructor are used along with {@code "with"} statements.
+ * Example:
  * <pre>
  *     var imports = new JavaImporter(java.util, java.io);
  *     with (imports) {

@@ -277,7 +277,7 @@ public enum JSType {
 
   /**
    * Similar to {@link #of(Object)}, but does not distinguish between {@link #FUNCTION} and {@link #OBJECT}, returning
-   * {@link #OBJECT} in both cases. The distinction is costly, and the EQ and STRICT_EQ predicates don't care about it
+   * {@link #OBJECT} in both cases. The distinction is costly, and the EQ '==' and '===' predicates don't care about it
    * so we maintain this version for their use.
    *
    * @param obj an object
@@ -338,7 +338,7 @@ public enum JSType {
 
   /**
    * Returns true if double number can be represented as an int. Note that it returns true for negative
-   * zero. If you need to exclude negative zero, use {@link #isStrictlyRepresentableAsInt(double)}.
+   * zero. If you need to exclude negative zero, use {@link #isNonNegativeZeroInt(double)}.
    *
    * @param number a double to inspect
    *
@@ -356,7 +356,7 @@ public enum JSType {
    *
    * @return true for int representable doubles
    */
-  public static boolean isStrictlyRepresentableAsInt(final double number) {
+  public static boolean isNonNegativeZeroInt(final double number) {
     return isRepresentableAsInt(number) && isNotNegativeZero(number);
   }
 
@@ -760,14 +760,14 @@ public enum JSType {
   }
 
   /**
-   * Converts an object for strict comparison with a number. Returns {@code NaN} for any object that is not
-   * a {@link Number}, so only boxed numerics can compare strictly equal to numbers.
+   * Converts an object for equivalence comparison with a number. Returns {@code NaN} for any object that is not
+   * a {@link Number}, so only boxed numerics can compare equivalently to numbers.
    *
    * @param obj  an object
    *
    * @return a number
    */
-  public static double toNumberForStrictEq(final Object obj) {
+  public static double toNumberForEquiv(final Object obj) {
     if (obj instanceof Double) {
       return (Double) obj;
     }

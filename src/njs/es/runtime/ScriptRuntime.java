@@ -61,7 +61,7 @@ public final class ScriptRuntime {
   public static final Call ADD = staticCallNoLookup(ScriptRuntime.class, "ADD", Object.class, Object.class, Object.class);
 
   /** Method handle to generic === operator, operating on objects */
-  public static final Call EQ_STRICT = staticCallNoLookup(ScriptRuntime.class, "EQ_STRICT", boolean.class, Object.class, Object.class);
+  public static final Call EQUIV = staticCallNoLookup(ScriptRuntime.class, "EQUIV", boolean.class, Object.class, Object.class);
 
   /** Method handle used to enter a {@code with} scope at runtime. */
   public static final Call OPEN_WITH = staticCallNoLookup(ScriptRuntime.class, "openWith", ScriptObject.class, ScriptObject.class, Object.class);
@@ -110,9 +110,9 @@ public final class ScriptRuntime {
   public static final Call INVALIDATE_RESERVED_BUILTIN_NAME = staticCallNoLookup(ScriptRuntime.class, "invalidateReservedBuiltinName", void.class, String.class);
 
   /**
-   * Used to perform failed delete under strict mode
+   * Used to perform failed delete
    */
-  public static final Call STRICT_FAIL_DELETE = staticCallNoLookup(ScriptRuntime.class, "strictFailDelete", boolean.class, String.class);
+  public static final Call FAIL_DELETE = staticCallNoLookup(ScriptRuntime.class, "failDelete", boolean.class, String.class);
 
   /**
    * Used to find the scope for slow delete
@@ -769,25 +769,25 @@ public final class ScriptRuntime {
     while (sobj != null && sobj.isScope()) {
       final FindProperty find = sobj.findProperty(property, false);
       if (find != null) {
-        return sobj.delete(property, false);
+        return sobj.delete(property);
       }
       sobj = sobj.getProto();
     }
-    return obj.delete(property, false);
+    return obj.delete(property);
   }
 
   /**
    * ECMA 11.4.1 - delete operator, special case
    *
-   * This is 'delete' on a scope; it always fails under strict mode.
+   * This is 'delete' on a scope; it always fails.
    * It always throws an exception, but is declared to return a boolean
    * to be compatible with the delete operator type.
    *
    * @param property  property to delete
    * @return nothing, always throws an exception.
    */
-  public static boolean strictFailDelete(final String property) {
-    throw syntaxError("strict.cant.delete", property);
+  public static boolean failDelete(final String property) {
+    throw syntaxError("cant.delete", property);
   }
 
   /**
@@ -849,7 +849,7 @@ public final class ScriptRuntime {
   }
 
   /**
-   * Extracted portion of {@link #equals(Object, Object)} and {@link #strictEquals(Object, Object)} that compares
+   * Extracted portion of {@link #equals(Object, Object)} and {@link #properEquals(Object, Object)} that compares
    * values belonging to the same JSType.
    * @param x one value
    * @param y another value
@@ -936,31 +936,31 @@ public final class ScriptRuntime {
   }
 
   /**
-   * ECMA 11.9.4 - The strict equal operator (===) - generic implementation
+   * ECMA 11.9.4 - The equivalent operator (===) - generic implementation
    *
    * @param x first object to compare
    * @param y second object to compare
    *
    * @return true if objects are equal
    */
-  public static boolean EQ_STRICT(final Object x, final Object y) {
-    return strictEquals(x, y);
+  public static boolean EQUIV(final Object x, final Object y) {
+    return properEquals(x, y);
   }
 
   /**
-   * ECMA 11.9.5 - The strict non equal operator (!==) - generic implementation
+   * ECMA 11.9.5 - The not-equivalent operator (!==) - generic implementation
    *
    * @param x first object to compare
    * @param y second object to compare
    *
    * @return true if objects are not equal
    */
-  public static boolean NE_STRICT(final Object x, final Object y) {
-    return !EQ_STRICT(x, y);
+  public static boolean NOT_EQUIV(final Object x, final Object y) {
+    return !EQUIV(x, y);
   }
 
-  /** ECMA 11.9.6 The Strict Equality Comparison Algorithm */
-  private static boolean strictEquals(final Object x, final Object y) {
+  /** ECMA 11.9.6 The Proper Equality Comparison Algorithm */
+  private static boolean properEquals(final Object x, final Object y) {
     // NOTE: you might be tempted to do a quick x == y comparison. Remember, though, that any Double object having
     // NaN value is not equal to itself by value even though it is referentially.
 
@@ -1024,7 +1024,7 @@ public final class ScriptRuntime {
   }
 
   /**
-   * ECMA 11.8.6 - The strict instanceof operator - generic implementation
+   * ECMA 11.8.6 - The proper instanceof operator - generic implementation
    *
    * @param obj first object to compare
    * @param clazz type to check against

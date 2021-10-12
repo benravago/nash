@@ -20,7 +20,6 @@ import static es.runtime.UnwarrantedOptimismException.isValid;
 import static es.runtime.arrays.ArrayIndex.getArrayIndex;
 import static es.runtime.arrays.ArrayIndex.isValidArrayIndex;
 import static es.runtime.linker.NashornCallSiteDescriptor.isScopeFlag;
-import static es.runtime.linker.NashornCallSiteDescriptor.isStrictFlag;
 import static es.runtime.linker.NashornGuards.explicitInstanceOfCheck;
 
 import java.lang.invoke.MethodHandle;
@@ -164,7 +163,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   /** Method handle for generic property setter */
   public static final Call GENERIC_SET = virtualCallNoLookup(ScriptObject.class, "set", void.class, Object.class, Object.class, int.class);
 
-  public static final Call DELETE = virtualCall(MethodHandles.lookup(), ScriptObject.class, "delete", boolean.class, Object.class, boolean.class);
+  public static final Call DELETE = virtualCall(MethodHandles.lookup(), ScriptObject.class, "delete", boolean.class, Object.class);
 
   static final MethodHandle[] SET_SLOW = new MethodHandle[]{
     findOwnMH_V("set", void.class, Object.class, int.class, int.class),
@@ -176,11 +175,10 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   public static final Call SET_MAP = virtualCallNoLookup(ScriptObject.class, "setMap", void.class, PropertyMap.class);
 
   static final MethodHandle CAS_MAP = findOwnMH_V("compareAndSetMap", boolean.class, PropertyMap.class, PropertyMap.class);
-  static final MethodHandle EXTENSION_CHECK = findOwnMH_V("extensionCheck", boolean.class, boolean.class, String.class);
+  static final MethodHandle EXTENSION_CHECK = findOwnMH_V("extensionCheck", boolean.class, String.class);
   static final MethodHandle ENSURE_SPILL_SIZE = findOwnMH_V("ensureSpillSize", Object.class, int.class);
 
-  private static final GuardedInvocation DELETE_GUARDED = new GuardedInvocation(MH.insertArguments(DELETE.methodHandle(), 2, false), NashornGuards.getScriptObjectGuard());
-  private static final GuardedInvocation DELETE_GUARDED_STRICT = new GuardedInvocation(MH.insertArguments(DELETE.methodHandle(), 2, true), NashornGuards.getScriptObjectGuard());
+  private static final GuardedInvocation DELETE_GUARDED = new GuardedInvocation(DELETE.methodHandle(), NashornGuards.getScriptObjectGuard());
 
   /**
    * Constructor
@@ -693,9 +691,9 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     final long longIndex = ArrayIndex.toLongIndex(index);
     final long oldLength = getArray().length();
     if (longIndex >= oldLength) {
-      setArray(getArray().ensure(longIndex).safeDelete(oldLength, longIndex - 1, false));
+      setArray(getArray().ensure(longIndex).safeDelete(oldLength, longIndex - 1));
     }
-    setArray(getArray().set(index, value, false));
+    setArray(getArray().set(index, value));
   }
 
   private void checkIntegerKey(final Object key) {
@@ -897,7 +895,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     // Erase the property field value with undefined. If the property is an accessor property
     // we don't want to call the setter!!
     if (property != null && !property.isAccessorProperty()) {
-      property.setValue(this, this, UNDEFINED, false);
+      property.setValue(this, this, UNDEFINED);
     }
   }
 
@@ -935,7 +933,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   }
 
   /**
-   * Fast initialization functions for ScriptFunctions that are strict, to avoid
+   * Fast initialization functions for ScriptFunctions, to avoid
    * creating setters that probably aren't used. Inject directly into the spill pool
    * the defaults for "arguments" and "caller", asserting the property is already
    * defined in the map.
@@ -1665,12 +1663,11 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
    * Clears the properties from a ScriptObject
    * (java.util.Map-like method to help ScriptObjectMirror implementation)
    *
-   * @param strict strict mode or not
    */
-  public void clear(final boolean strict) {
+  public void clear() {
     final Iterator<String> iter = propertyIterator();
     while (iter.hasNext()) {
-      delete(iter.next(), strict);
+      delete(iter.next());
     }
   }
 
@@ -1751,13 +1748,11 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
    *
    * @param key property key
    * @param value property value
-   * @param strict strict mode or not
    * @return oldValue if property with same key existed already
    */
-  public Object put(final Object key, final Object value, final boolean strict) {
+  public Object put(final Object key, final Object value) {
     final Object oldValue = get(key);
-    final int scriptObjectFlags = strict ? NashornCallSiteDescriptor.CALLSITE_STRICT : 0;
-    set(key, value, scriptObjectFlags);
+    set(key, value, 0);
     return oldValue;
   }
 
@@ -1767,12 +1762,10 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
    * (java.util.Map-like method to help ScriptObjectMirror implementation)
    *
    * @param otherMap a {@literal <key,value>} map of properties to add
-   * @param strict strict mode or not
    */
-  public void putAll(final Map<?, ?> otherMap, final boolean strict) {
-    final int scriptObjectFlags = strict ? NashornCallSiteDescriptor.CALLSITE_STRICT : 0;
+  public void putAll(final Map<?, ?> otherMap) {
     for (final Map.Entry<?, ?> entry : otherMap.entrySet()) {
-      set(entry.getKey(), entry.getValue(), scriptObjectFlags);
+      set(entry.getKey(), entry.getValue(), 0);
     }
   }
 
@@ -1781,12 +1774,11 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
    * (java.util.Map-like method to help ScriptObjectMirror implementation)
    *
    * @param key the key of the property
-   * @param strict strict mode or not
    * @return the oldValue of the removed property
    */
-  public Object remove(final Object key, final boolean strict) {
+  public Object remove(final Object key) {
     final Object oldValue = get(key);
-    delete(key, strict);
+    delete(key);
     return oldValue;
   }
 
@@ -1845,7 +1837,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
                 ? findSetMethod(desc, request)
                 : findSetIndexMethod(desc, request);
       case REMOVE:
-        final GuardedInvocation inv = NashornCallSiteDescriptor.isStrict(desc) ? DELETE_GUARDED_STRICT : DELETE_GUARDED;
+        final GuardedInvocation inv = DELETE_GUARDED;
         final Object name = NamedOperation.getName(desc.getOperation());
         if (name != null) {
           return inv.replaceMethods(MH.insertArguments(inv.getInvocation(), 1, name), inv.getGuard());
@@ -2195,7 +2187,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (find != null) {
       if (!find.getProperty().isWritable() && !NashornCallSiteDescriptor.isDeclaration(desc)) {
         if (NashornCallSiteDescriptor.isScope(desc) && find.getProperty().isLexicalBinding()) {
-          throw typeError("assign.constant", name); // Overwriting ES6 const should throw also in non-strict mode.
+          throw typeError("assign.constant", name); // Overwriting ES6 const
         }
         // Existing, non-writable data property
         return createEmptySetMethod(desc, explicitInstanceOfCheck, "property.not.writable", true);
@@ -2228,28 +2220,18 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     return GlobalConstants.GLOBAL_ONLY && !isGlobal() ? null : getContext().getGlobalConstants();
   }
 
-  private GuardedInvocation createEmptySetMethod(final CallSiteDescriptor desc, final boolean explicitInstanceOfCheck, final String strictErrorMessage, final boolean canBeFastScope) {
+  private GuardedInvocation createEmptySetMethod(final CallSiteDescriptor desc, final boolean explicitInstanceOfCheck, final String errorMessage, final boolean canBeFastScope) {
     final String name = NashornCallSiteDescriptor.getOperand(desc);
-    if (NashornCallSiteDescriptor.isStrict(desc)) {
-      throw typeError(strictErrorMessage, name, ScriptRuntime.safeToString(this));
-    }
-    assert canBeFastScope || !NashornCallSiteDescriptor.isFastScope(desc);
-    return new GuardedInvocation(
-            Lookup.EMPTY_SETTER,
-            NashornGuards.getMapGuard(getMap(), explicitInstanceOfCheck),
-            getProtoSwitchPoints(name, null),
-            explicitInstanceOfCheck ? null : ClassCastException.class);
+    throw typeError(errorMessage, name, ScriptRuntime.safeToString(this));
   }
 
   @SuppressWarnings("unused")
-  private boolean extensionCheck(final boolean isStrict, final String name) {
+  private boolean extensionCheck(final String name) {
     if (isExtensible()) {
       return true; //go on and do the set. this is our guard
-    } else if (isStrict) {
-      //throw an error for attempting to do the set in strict mode
-      throw typeError("object.non.extensible", name, ScriptRuntime.safeToString(this));
     } else {
-      //not extensible, non strict - this is a nop
+      // throw an error for attempting to do the set 
+      // throw typeError("object.non.extensible", name, ScriptRuntime.safeToString(this));
       return false;
     }
   }
@@ -2329,7 +2311,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     }
 
     final ScriptFunction func = (ScriptFunction) value;
-    final Object thiz = scopeCall && func.isStrict() ? UNDEFINED : this;
+    final Object thiz = scopeCall ? UNDEFINED : this;
     // TODO: It'd be awesome if we could bind "name" without binding "this".
     // Since we're binding this we must use an identity guard here.
     return new GuardedInvocation(
@@ -2369,7 +2351,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
 
       if (mh != null) {
         assert func != null;
-        if (scopeAccess && func.isStrict()) {
+        if (scopeAccess) {
           mh = bindTo(mh, UNDEFINED);
         }
 
@@ -2415,7 +2397,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     Object ret = UNDEFINED;
     if (func instanceof ScriptFunction) {
       final ScriptFunction sfunc = (ScriptFunction) func;
-      final Object self = isScope && sfunc.isStrict() ? UNDEFINED : this;
+      final Object self = isScope ? UNDEFINED : this;
       ret = ScriptRuntime.apply(sfunc, self, key);
     } else if (isScope) {
       throw referenceError("not.defined", key.toString());
@@ -2450,7 +2432,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     }
 
     final ScriptFunction func = (ScriptFunction) value;
-    final Object self = isScope && func.isStrict() ? UNDEFINED : this;
+    final Object self = isScope ? UNDEFINED : this;
     return func.createBound(self, new Object[]{name});
   }
 
@@ -2703,7 +2685,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     }
 
     if (newLength > arrayLength) {
-      setArray(data.ensure(newLength - 1).safeDelete(arrayLength, newLength - 1, false));
+      setArray(data.ensure(newLength - 1).safeDelete(arrayLength, newLength - 1));
       return;
     }
 
@@ -2993,10 +2975,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   private boolean doesNotHaveEnsureLength(final long longIndex, final long oldLength, final int callSiteFlags) {
     if (longIndex >= oldLength) {
       if (!isExtensible()) {
-        if (isStrictFlag(callSiteFlags)) {
           throw typeError("object.non.extensible", JSType.toString(longIndex), ScriptRuntime.safeToString(this));
-        }
-        return true;
       }
       setArray(getArray().ensure(longIndex));
     }
@@ -3007,8 +2986,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     final long oldLength = getArray().length();
     final long longIndex = ArrayIndex.toLongIndex(index);
     if (!doesNotHaveCheckArrayKeys(longIndex, value, callSiteFlags) && !doesNotHaveEnsureLength(longIndex, oldLength, callSiteFlags)) {
-      final boolean strict = isStrictFlag(callSiteFlags);
-      setArray(getArray().set(index, value, strict).safeDelete(oldLength, longIndex - 1, strict));
+      setArray(getArray().set(index, value).safeDelete(oldLength, longIndex - 1));
     }
   }
 
@@ -3016,8 +2994,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     final long oldLength = getArray().length();
     final long longIndex = ArrayIndex.toLongIndex(index);
     if (!doesNotHaveCheckArrayKeys(longIndex, value, callSiteFlags) && !doesNotHaveEnsureLength(longIndex, oldLength, callSiteFlags)) {
-      final boolean strict = isStrictFlag(callSiteFlags);
-      setArray(getArray().set(index, value, strict).safeDelete(oldLength, longIndex - 1, strict));
+      setArray(getArray().set(index, value).safeDelete(oldLength, longIndex - 1));
     }
   }
 
@@ -3025,8 +3002,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     final long oldLength = getArray().length();
     final long longIndex = ArrayIndex.toLongIndex(index);
     if (!doesNotHaveCheckArrayKeys(longIndex, value, callSiteFlags) && !doesNotHaveEnsureLength(longIndex, oldLength, callSiteFlags)) {
-      final boolean strict = isStrictFlag(callSiteFlags);
-      setArray(getArray().set(index, value, strict).safeDelete(oldLength, longIndex - 1, strict));
+      setArray(getArray().set(index, value).safeDelete(oldLength, longIndex - 1));
     }
   }
 
@@ -3067,14 +3043,11 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (f != null) {
       if ((!f.getProperty().isWritable() && !NashornCallSiteDescriptor.isDeclaration(callSiteFlags)) || !f.getProperty().hasNativeSetter()) {
         if (isScopeFlag(callSiteFlags) && f.getProperty().isLexicalBinding()) {
-          throw typeError("assign.constant", key.toString()); // Overwriting ES6 const should throw also in non-strict mode.
+          throw typeError("assign.constant", key.toString()); // Overwriting ES6 const
         }
-        if (isStrictFlag(callSiteFlags)) {
           throw typeError(
                   f.getProperty().isAccessorProperty() ? "property.has.no.setter" : "property.not.writable",
                   key.toString(), ScriptRuntime.safeToString(this));
-        }
-        return;
       }
 
       if (NashornCallSiteDescriptor.isDeclaration(callSiteFlags) && f.getProperty().needsDeclaration()) {
@@ -3082,12 +3055,10 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
         return;
       }
 
-      f.setValue(value, isStrictFlag(callSiteFlags));
+      f.setValue(value);
 
     } else if (!isExtensible()) {
-      if (isStrictFlag(callSiteFlags)) {
         throw typeError("object.non.extensible", key.toString(), ScriptRuntime.safeToString(this));
-      }
     } else {
       ScriptObject sobj = this;
       // undefined scope properties are set in the global object.
@@ -3112,7 +3083,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3132,7 +3103,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3152,7 +3123,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3171,7 +3142,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3190,7 +3161,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3209,7 +3180,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3227,7 +3198,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       if (getArray().has(index)) {
         final ArrayData data = getArray();
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3245,7 +3216,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3264,7 +3235,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     if (isValidArrayIndex(index)) {
       final ArrayData data = getArray();
       if (data.has(index)) {
-        setArray(data.set(index, value, isStrictFlag(callSiteFlags)));
+        setArray(data.set(index, value));
       } else {
         doesNotHave(index, value, callSiteFlags);
       }
@@ -3332,54 +3303,54 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   }
 
   @Override
-  public boolean delete(final int key, final boolean strict) {
+  public boolean delete(final int key) {
     final int index = getArrayIndex(key);
     final ArrayData array = getArray();
 
     if (array.has(index)) {
-      if (array.canDelete(index, strict)) {
+      if (array.canDelete(index)) {
         setArray(array.delete(index));
         return true;
       }
       return false;
     }
-    return deleteObject(JSType.toObject(key), strict);
+    return deleteObject(JSType.toObject(key));
   }
 
   @Override
-  public boolean delete(final double key, final boolean strict) {
+  public boolean delete(final double key) {
     final int index = getArrayIndex(key);
     final ArrayData array = getArray();
 
     if (array.has(index)) {
-      if (array.canDelete(index, strict)) {
+      if (array.canDelete(index)) {
         setArray(array.delete(index));
         return true;
       }
       return false;
     }
 
-    return deleteObject(JSType.toObject(key), strict);
+    return deleteObject(JSType.toObject(key));
   }
 
   @Override
-  public boolean delete(final Object key, final boolean strict) {
+  public boolean delete(final Object key) {
     final Object primitiveKey = JSType.toPrimitive(key, String.class);
     final int index = getArrayIndex(primitiveKey);
     final ArrayData array = getArray();
 
     if (array.has(index)) {
-      if (array.canDelete(index, strict)) {
+      if (array.canDelete(index)) {
         setArray(array.delete(index));
         return true;
       }
       return false;
     }
 
-    return deleteObject(primitiveKey, strict);
+    return deleteObject(primitiveKey);
   }
 
-  private boolean deleteObject(final Object key, final boolean strict) {
+  private boolean deleteObject(final Object key) {
     final Object propName = JSType.toPropertyKey(key);
     final FindProperty find = findProperty(propName, false);
 
@@ -3388,9 +3359,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
     }
 
     if (!find.getProperty().isConfigurable()) {
-      if (strict) {
-        throw typeError("cant.delete.property", propName.toString(), ScriptRuntime.safeToString(this));
-      }
+      // throw typeError("cant.delete.property", propName.toString(), ScriptRuntime.safeToString(this));
       return false;
     }
 

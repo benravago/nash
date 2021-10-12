@@ -55,8 +55,6 @@ public abstract class ScriptFunctionData implements Serializable {
 
   private static final MethodHandle BIND_VAR_ARGS = findOwnMH("bindVarArgs", Object[].class, Object[].class, Object[].class);
 
-  /** Is this a strict mode function? */
-  public static final int IS_STRICT = 1 << 0;
   /** Is this a built-in function? */
   public static final int IS_BUILTIN = 1 << 1;
   /** Is this a constructor function? */
@@ -72,8 +70,6 @@ public abstract class ScriptFunctionData implements Serializable {
   /** Is this an ES6 method? */
   public static final int IS_ES6_METHOD = 1 << 7;
 
-  /** Flag for strict or built-in functions */
-  public static final int IS_STRICT_OR_BUILTIN = IS_STRICT | IS_BUILTIN;
   /** Flag for built-in constructors */
   public static final int IS_BUILTIN_CONSTRUCTOR = IS_BUILTIN | IS_CONSTRUCTOR;
 
@@ -138,14 +134,6 @@ public abstract class ScriptFunctionData implements Serializable {
   }
 
   /**
-   * Is this a ScriptFunction generated with strict semantics?
-   * @return true if strict, false otherwise
-   */
-  public final boolean isStrict() {
-    return (flags & IS_STRICT) != 0;
-  }
-
-  /**
    * Return the complete internal function name for this
    * data, not anonymous or similar. May be identical
    * @return internal function name
@@ -169,8 +157,8 @@ public abstract class ScriptFunctionData implements Serializable {
    * according to ECMA 10.4.3.
    * @return true if this argument must be an object
    */
-  final boolean needsWrappedThis() {
-    return (flags & USES_THIS) != 0 && (flags & IS_STRICT_OR_BUILTIN) == 0;
+  final boolean needsWrappedThis() { // TODO: maybe remove
+    return (flags & USES_THIS) != 0 && (flags & IS_BUILTIN) == 0;
   }
 
   String toSource() {

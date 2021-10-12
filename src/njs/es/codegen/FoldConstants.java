@@ -334,17 +334,17 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.LT(lhs.getObject(), rhs.getObject()));
         case NE:
           return LiteralNode.newInstance(token, finish, ScriptRuntime.NE(lhs.getObject(), rhs.getObject()));
-        case NE_STRICT:
-          return LiteralNode.newInstance(token, finish, ScriptRuntime.NE_STRICT(lhs.getObject(), rhs.getObject()));
+        case NEQU:
+          return LiteralNode.newInstance(token, finish, ScriptRuntime.NOT_EQUIV(lhs.getObject(), rhs.getObject()));
         case EQ:
           return LiteralNode.newInstance(token, finish, ScriptRuntime.EQ(lhs.getObject(), rhs.getObject()));
-        case EQ_STRICT:
-          return LiteralNode.newInstance(token, finish, ScriptRuntime.EQ_STRICT(lhs.getObject(), rhs.getObject()));
+        case EQU:
+          return LiteralNode.newInstance(token, finish, ScriptRuntime.EQUIV(lhs.getObject(), rhs.getObject()));
         default:
           return null;
       }
 
-      isInteger &= JSType.isStrictlyRepresentableAsInt(value);
+      isInteger &= JSType.isNonNegativeZeroInt(value);
 
       if (isInteger) {
         return LiteralNode.newInstance(token, finish, (int) value);

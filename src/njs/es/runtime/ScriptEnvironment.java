@@ -179,9 +179,6 @@ public final class ScriptEnvironment {
   /** is this environment in scripting mode? */
   public final boolean _scripting;
 
-  /** is this environment in strict mode? */
-  public final boolean _strict;
-
   /** print version info of Nashorn */
   public final boolean _version;
 
@@ -279,7 +276,7 @@ public final class ScriptEnvironment {
     _print_lower_parse = options.getBoolean("print.lower.parse");
     _print_symbols = options.getBoolean("print.symbols");
     _scripting = options.getBoolean("scripting");
-    _strict = true; // TODO: options.getBoolean("strict");
+
     _version = options.getBoolean("version");
     _verify_code = options.getBoolean("verify.code");
 

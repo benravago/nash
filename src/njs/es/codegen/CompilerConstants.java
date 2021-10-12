@@ -35,8 +35,6 @@ public enum CompilerConstants {
   SOURCE("source", Source.class),
   /** constants name and class */
   CONSTANTS("constants", Object[].class),
-  /** strict mode field name and type */
-  STRICT_MODE("strictMode", boolean.class),
   /** default script name */
   DEFAULT_SCRIPT_NAME("Script"),
   /** function prefix for anonymous functions */

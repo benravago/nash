@@ -147,13 +147,6 @@ public interface JSObject {
   public boolean isFunction();
 
   /**
-   * Is this a 'use strict' function object?
-   *
-   * @return true if this mirror represents a ECMAScript 'use strict' function
-   */
-  public boolean isStrictFunction();
-
-  /**
    * Is this an array object?
    *
    * @return if this mirror wraps a ECMAScript array object

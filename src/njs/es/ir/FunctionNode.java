@@ -1,7 +1,6 @@
 package es.ir;
 
 import static es.runtime.linker.NashornCallSiteDescriptor.CALLSITE_PROFILE;
-import static es.runtime.linker.NashornCallSiteDescriptor.CALLSITE_STRICT;
 import static es.runtime.linker.NashornCallSiteDescriptor.CALLSITE_TRACE;
 import static es.runtime.linker.NashornCallSiteDescriptor.CALLSITE_TRACE_ENTEREXIT;
 import static es.runtime.linker.NashornCallSiteDescriptor.CALLSITE_TRACE_MISSES;
@@ -120,9 +119,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
   /** Is the function created in a function declaration (as opposed to a function expression) */
   public static final int IS_DECLARED = 1 << 1;
 
-  /** is this a strict mode function? */
-  public static final int IS_STRICT = 1 << 2;
-
   /** Does the function use the "arguments" identifier ? */
   public static final int USES_ARGUMENTS = 1 << 3;
 
@@ -238,7 +234,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
 
   /**
    * The following flags are derived from directive comments within this function.
-   * Note that even IS_STRICT is one such flag but that requires special handling.
    */
   /** parser, print parse tree */
   public static final int DEBUG_PRINT_PARSE = 1 << 0;
@@ -396,9 +391,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    */
   public int getCallSiteFlags() {
     int callsiteFlags = 0;
-    if (getFlag(IS_STRICT)) {
-      callsiteFlags |= CALLSITE_STRICT;
-    }
 
     // quick check for extension callsite flags turned on by directives.
     if ((debugFlags & DEBUG_CALLSITE_FLAGS) == 0) {
@@ -695,7 +687,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    */
   public boolean needsCallee() {
     // NOTE: we only need isSplit() here to ensure that :scope can never drop below slot 2 for splitting array units.
-    return needsParentScope() || usesSelfSymbol() || isSplit() || ((needsArguments() || hasApplyToCallSpecialization()) && !isStrict());
+    return needsParentScope() || usesSelfSymbol() || isSplit();
   }
 
   /**
@@ -780,18 +772,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    */
   public boolean inDynamicContext() {
     return getFlag(IN_DYNAMIC_CONTEXT);
-  }
-
-  /**
-   * Check whether a function would need dynamic scope, which is does if it has
-   * evals and isn't strict.
-   * @return true if dynamic scope is needed
-   */
-  public boolean needsDynamicScope() {
-    // Function has a direct eval in it (so a top-level "var ..." in the eval code can introduce a new
-    // variable into the function's scope), and it isn't strict (as evals in strict functions get an
-    // isolated scope).
-    return hasEval() && !isStrict();
   }
 
   /**
@@ -1100,14 +1080,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
                     thisProperties,
                     rootClass, source, namespace
             ));
-  }
-
-  /**
-   * Check if the function is generated in strict mode
-   * @return true if strict mode enabled for function
-   */
-  public boolean isStrict() {
-    return getFlag(IS_STRICT);
   }
 
   /**

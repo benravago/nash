@@ -257,28 +257,26 @@ public final class NativeString extends ScriptObject implements OptimisticBuilti
   }
 
   @Override
-  public boolean delete(final int key, final boolean strict) {
-    return checkDeleteIndex(key, strict) ? false : super.delete(key, strict);
+  public boolean delete(final int key) {
+    return checkDeleteIndex(key) ? false : super.delete(key);
   }
 
   @Override
-  public boolean delete(final double key, final boolean strict) {
+  public boolean delete(final double key) {
     final int index = ArrayIndex.getArrayIndex(key);
-    return checkDeleteIndex(index, strict) ? false : super.delete(key, strict);
+    return checkDeleteIndex(index) ? false : super.delete(key);
   }
 
   @Override
-  public boolean delete(final Object key, final boolean strict) {
+  public boolean delete(final Object key) {
     final Object primitiveKey = JSType.toPrimitive(key, String.class);
     final int index = ArrayIndex.getArrayIndex(primitiveKey);
-    return checkDeleteIndex(index, strict) ? false : super.delete(primitiveKey, strict);
+    return checkDeleteIndex(index) ? false : super.delete(primitiveKey);
   }
 
-  private boolean checkDeleteIndex(final int index, final boolean strict) {
+  private boolean checkDeleteIndex(final int index) {
     if (isValidStringIndex(index)) {
-      if (strict) {
-        throw typeError("cant.delete.property", Integer.toString(index), ScriptRuntime.safeToString(this));
-      }
+      // throw typeError("cant.delete.property", Integer.toString(index), ScriptRuntime.safeToString(this));
       return true;
     }
 

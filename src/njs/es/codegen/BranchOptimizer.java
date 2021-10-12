@@ -70,13 +70,13 @@ final class BranchOptimizer {
         return;
 
       case EQ:
-      case EQ_STRICT:
+      case EQU:
         codegen.loadComparisonOperands(binaryNode);
         method.conditionalJump(state ? EQ : NE, true, label);
         return;
 
       case NE:
-      case NE_STRICT:
+      case NEQU:
         codegen.loadComparisonOperands(binaryNode);
         method.conditionalJump(state ? NE : EQ, true, label);
         return;

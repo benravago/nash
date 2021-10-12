@@ -116,11 +116,6 @@ public final class JSONListAdapter extends ListAdapter implements JSObject {
   }
 
   @Override
-  public boolean isStrictFunction() {
-    return obj.isStrictFunction();
-  }
-
-  @Override
   public boolean isArray() {
     return obj.isArray();
   }

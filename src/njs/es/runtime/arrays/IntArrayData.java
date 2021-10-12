@@ -198,19 +198,19 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public ArrayData set(final int index, final Object value, final boolean strict) {
+  public ArrayData set(final int index, final Object value) {
     if (JSType.isRepresentableAsInt(value)) {
-      return set(index, JSType.toInt32(value), strict);
+      return set(index, JSType.toInt32(value));
     } else if (value == ScriptRuntime.UNDEFINED) {
-      return new UndefinedArrayFilter(this).set(index, value, strict);
+      return new UndefinedArrayFilter(this).set(index, value);
     }
 
     final ArrayData newData = convert(value == null ? Object.class : value.getClass());
-    return newData.set(index, value, strict);
+    return newData.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final int value, final boolean strict) {
+  public ArrayData set(final int index, final int value) {
     array[index] = value;
     setLength(Math.max(index + 1, length()));
 
@@ -218,14 +218,14 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public ArrayData set(final int index, final double value, final boolean strict) {
+  public ArrayData set(final int index, final double value) {
     if (JSType.isRepresentableAsInt(value)) {
       array[index] = (int) (long) value;
       setLength(Math.max(index + 1, length()));
       return this;
     }
 
-    return convert(Double.class).set(index, value, strict);
+    return convert(Double.class).set(index, value);
   }
 
   @Override

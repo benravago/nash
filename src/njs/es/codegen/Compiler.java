@@ -88,8 +88,6 @@ public final class Compiler implements Loggable {
   // optimistic assumptions (which will lead to unnecessary deoptimizing recompilations).
   private final TypeEvaluator typeEvaluator;
 
-  private final boolean strict;
-
   private final boolean onDemand;
 
   /**
@@ -330,15 +328,13 @@ public final class Compiler implements Loggable {
    * @param installer code installer
    * @param source    source to compile
    * @param errors    error manager
-   * @param isStrict  is this a strict compilation
    * @return a new compiler
    */
   public static Compiler forInitialCompilation(
           final CodeInstaller installer,
           final Source source,
-          final ErrorManager errors,
-          final boolean isStrict) {
-    return new Compiler(installer.getContext(), installer, source, errors, isStrict);
+          final ErrorManager errors) {
+    return new Compiler(installer.getContext(), installer, source, errors);
   }
 
   /**
@@ -347,14 +343,12 @@ public final class Compiler implements Loggable {
    * line option.
    * @param context  the current context
    * @param source   source to compile
-   * @param isStrict is this a strict compilation
    * @return a new compiler
    */
   public static Compiler forNoInstallerCompilation(
           final Context context,
-          final Source source,
-          final boolean isStrict) {
-    return new Compiler(context, null, source, context.getErrorManager(), isStrict);
+          final Source source) {
+    return new Compiler(context, null, source, context.getErrorManager());
   }
 
   /**
@@ -362,7 +356,6 @@ public final class Compiler implements Loggable {
    *
    * @param installer                code installer
    * @param source                   source to compile
-   * @param isStrict                 is this a strict compilation
    * @param compiledFunction         compiled function, if any
    * @param types                    parameter and return value type information, if any is known
    * @param invalidatedProgramPoints invalidated program points for recompilation
@@ -374,7 +367,6 @@ public final class Compiler implements Loggable {
   public static Compiler forOnDemandCompilation(
           final CodeInstaller installer,
           final Source source,
-          final boolean isStrict,
           final RecompilableScriptFunctionData compiledFunction,
           final TypeMap types,
           final Map<Integer, Type> invalidatedProgramPoints,
@@ -382,7 +374,7 @@ public final class Compiler implements Loggable {
           final int[] continuationEntryPoints,
           final ScriptObject runtimeScope) {
     final Context context = installer.getContext();
-    return new Compiler(context, installer, source, context.getErrorManager(), isStrict, true,
+    return new Compiler(context, installer, source, context.getErrorManager(), true,
             compiledFunction, types, invalidatedProgramPoints, typeInformationFile,
             continuationEntryPoints, runtimeScope);
   }
@@ -394,9 +386,8 @@ public final class Compiler implements Loggable {
           final Context context,
           final CodeInstaller installer,
           final Source source,
-          final ErrorManager errors,
-          final boolean isStrict) {
-    this(context, installer, source, errors, isStrict, false, null, null, null, null, null, null);
+          final ErrorManager errors) {
+    this(context, installer, source, errors, false, null, null, null, null, null, null);
   }
 
   private Compiler(
@@ -404,7 +395,6 @@ public final class Compiler implements Loggable {
           final CodeInstaller installer,
           final Source source,
           final ErrorManager errors,
-          final boolean isStrict,
           final boolean isOnDemand,
           final RecompilableScriptFunctionData compiledFunction,
           final TypeMap types,
@@ -430,7 +420,6 @@ public final class Compiler implements Loggable {
     this.continuationEntryPoints = continuationEntryPoints == null ? null : continuationEntryPoints.clone();
     this.typeEvaluator = new TypeEvaluator(this, runtimeScope);
     this.firstCompileUnitName = firstCompileUnitName();
-    this.strict = isStrict;
 
     this.optimistic = env._optimistic_types;
   }
@@ -754,7 +743,7 @@ public final class Compiler implements Loggable {
   }
 
   CompileUnit createCompileUnit(final String unitClassName, final long initialWeight) {
-    final ClassEmitter classEmitter = new ClassEmitter(context, sourceName, unitClassName, isStrict());
+    final ClassEmitter classEmitter = new ClassEmitter(sourceName, unitClassName, context);
     final CompileUnit compileUnit = new CompileUnit(unitClassName, classEmitter, initialWeight);
     classEmitter.begin();
 
@@ -763,10 +752,6 @@ public final class Compiler implements Loggable {
 
   private CompileUnit createCompileUnit(final long initialWeight) {
     return createCompileUnit(nextCompileUnitName(), initialWeight);
-  }
-
-  boolean isStrict() {
-    return strict;
   }
 
   void replaceCompileUnits(final Set<CompileUnit> newUnits) {

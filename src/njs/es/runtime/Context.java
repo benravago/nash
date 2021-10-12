@@ -4,7 +4,7 @@ import static org.objectweb.asm.Opcodes.V1_7;
 import static es.codegen.CompilerConstants.CONSTANTS;
 import static es.codegen.CompilerConstants.CREATE_PROGRAM_FUNCTION;
 import static es.codegen.CompilerConstants.SOURCE;
-import static es.codegen.CompilerConstants.STRICT_MODE;
+
 import static es.runtime.CodeStore.newCodeStore;
 import static es.runtime.ECMAErrors.typeError;
 import static es.runtime.ScriptRuntime.UNDEFINED;
@@ -429,9 +429,6 @@ public final class Context {
   /** Current environment. */
   private final ScriptEnvironment env;
 
-  /** is this context in strict mode? Cached from env. as this is used heavily. */
-  final boolean _strict;
-
   /** class loader to resolve classes from script. */
   private final ClassLoader appLoader;
 
@@ -535,7 +532,7 @@ public final class Context {
 
     this.classFilter = classFilter;
     this.env = new ScriptEnvironment(options, out, err);
-    this._strict = env._strict;
+
     if (env._loader_per_compile) {
       this.scriptLoader = null;
       this.uniqueScriptId = null;
@@ -693,7 +690,7 @@ public final class Context {
    * @return reusable compiled script across many global scopes.
    */
   public MultiGlobalCompiledScript compileScript(final Source source) {
-    final Class<?> clazz = compile(source, this.errors, this._strict, false);
+    final Class<?> clazz = compile(source, this.errors, false);
     final MethodHandle createProgramFunctionHandle = getCreateProgramFunctionHandle(clazz);
 
     return new MultiGlobalCompiledScript() {
@@ -715,7 +712,7 @@ public final class Context {
    */
   public Object eval(final ScriptObject initialScope, final String string,
           final Object callThis, final Object location) {
-    return eval(initialScope, string, callThis, location, false, false);
+    return eval(initialScope, string, callThis, location, false);
   }
 
   /**
@@ -725,13 +722,12 @@ public final class Context {
    * @param string       Evaluated code as a String
    * @param callThis     "this" to be passed to the evaluated code
    * @param location     location of the eval call
-   * @param strict       is this {@code eval} call from a strict mode code?
    * @param evalCall     is this called from "eval" builtin?
    *
    * @return the return value of the {@code eval}
    */
   public Object eval(final ScriptObject initialScope, final String string,
-          final Object callThis, final Object location, final boolean strict, final boolean evalCall) {
+          final Object callThis, final Object location, final boolean evalCall) {
     final String file = location == UNDEFINED || location == null ? "<eval>" : location.toString();
     final Source source = sourceFor(file, string, evalCall);
     // is this direct 'eval' builtin call?
@@ -739,48 +735,20 @@ public final class Context {
     final Global global = Context.getGlobal();
     ScriptObject scope = initialScope;
 
-    // ECMA section 10.1.1 point 2 says eval code is strict if it begins
-    // with "use strict" directive or eval direct call itself is made
-    // from from strict mode code. We are passed with caller's strict mode.
-    // Nashorn extension: any 'eval' is unconditionally strict when -strict is specified.
-    boolean strictFlag = strict || this._strict;
-
     Class<?> clazz;
     try {
-      clazz = compile(source, new ThrowErrorManager(), strictFlag, true);
+      clazz = compile(source, new ThrowErrorManager(), true);
     } catch (final ParserException e) {
       e.throwAsEcmaException(global);
       return null;
     }
 
-    if (!strictFlag) {
-      // We need to get strict mode flag from compiled class. This is
-      // because eval code may start with "use strict" directive.
-      try {
-        strictFlag = clazz.getField(STRICT_MODE.symbolName()).getBoolean(null);
-      } catch (final NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-        //ignored
-        strictFlag = false;
-      }
-    }
-
-    // In strict mode, eval does not instantiate variables and functions
-    // in the caller's environment. A new environment is created!
-    if (strictFlag) {
       // Create a new scope object with given scope as its prototype
       scope = newScope(scope);
-    }
 
     final ScriptFunction func = getProgramFunction(clazz, scope);
-    Object evalThis;
-    if (directEval) {
-      evalThis = (callThis != UNDEFINED && callThis != null) || strictFlag ? callThis : global;
-    } else {
-      // either indirect evalCall or non-eval (Function, engine.eval, ScriptObjectMirror.eval..)
-      evalThis = callThis;
-    }
 
-    return ScriptRuntime.apply(func, evalThis);
+    return ScriptRuntime.apply(func, callThis);
   }
 
   private static ScriptObject newScope(final ScriptObject callerScope) {
@@ -926,7 +894,7 @@ public final class Context {
     setGlobal(newGlobal);
 
     final Object[] wrapped = args == null ? ScriptRuntime.EMPTY_ARRAY : ScriptObjectMirror.wrapArray(args, oldGlobal);
-    newGlobal.put("arguments", newGlobal.wrapAsObject(wrapped), env._strict);
+    newGlobal.put("arguments", newGlobal.wrapAsObject(wrapped));
 
     try {
       // wrap objects from newGlobal's world as mirrors - but if result
@@ -1289,10 +1257,10 @@ public final class Context {
   }
 
   private ScriptFunction compileScript(final Source source, final ScriptObject scope, final ErrorManager errMan) {
-    return getProgramFunction(compile(source, errMan, this._strict, false), scope);
+    return getProgramFunction(compile(source, errMan, false), scope);
   }
 
-  private synchronized Class<?> compile(final Source source, final ErrorManager errMan, final boolean strict, final boolean isEval) {
+  private synchronized Class<?> compile(final Source source, final ErrorManager errMan, final boolean isEval) {
     // start with no errors, no warnings.
     errMan.reset();
 
@@ -1322,7 +1290,7 @@ public final class Context {
         source.dump(env._dest_dir);
       }
 
-      functionNode = new Parser(env, source, errMan, strict, getLogger(Parser.class)).parse();
+      functionNode = new Parser(env, source, errMan, getLogger(Parser.class)).parse();
 
       if (errMan.hasErrors()) {
         return null;
@@ -1358,8 +1326,7 @@ public final class Context {
       final Compiler compiler = Compiler.forInitialCompilation(
               installer,
               source,
-              errMan,
-              strict | functionNode.isStrict());
+              errMan);
 
       final FunctionNode compiledFunction = compiler.compile(functionNode, phases);
       if (errMan.hasErrors()) {

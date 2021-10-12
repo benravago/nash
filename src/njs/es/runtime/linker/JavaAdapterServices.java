@@ -55,7 +55,7 @@ public final class JavaAdapterServices {
    * @return either the passed global, or UNDEFINED if the function is strict.
    */
   public static Object getCallThis(final ScriptFunction delegate, final Object global) {
-    return delegate.isStrict() ? ScriptRuntime.UNDEFINED : global;
+    return ScriptRuntime.UNDEFINED; // TODO: remove
   }
 
   /**

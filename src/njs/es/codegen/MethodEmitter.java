@@ -2781,7 +2781,7 @@ public class MethodEmitter {
   /**
    * Invoke to enforce assertions preventing load from a local variable slot that's known to not have been written to.
    * Used by CodeGenerator, as it strictly enforces tracking of stores. Simpler uses of MethodEmitter, e.g. those
-   * for creating initializers for structure  classes, array getters, etc. don't have strict tracking of stores,
+   * for creating initializers for structure  classes, array getters, etc. don't have tracking of stores,
    * therefore they would fail if they had this assertion turned on.
    */
   void setPreventUndefinedLoad() {

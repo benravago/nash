@@ -53,12 +53,12 @@ public abstract class TypedArrayData<T extends Buffer> extends ContinuousArrayDa
   }
 
   @Override
-  public boolean canDelete(final int index, final boolean strict) {
+  public boolean canDelete(final int index) {
     return false;
   }
 
   @Override
-  public boolean canDelete(final long longIndex, final boolean strict) {
+  public boolean canDelete(final long longIndex) {
     return false;
   }
 

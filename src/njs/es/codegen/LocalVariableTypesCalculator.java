@@ -1147,7 +1147,7 @@ final class LocalVariableTypesCalculator extends SimpleNodeVisitor {
   }
 
   /**
-   * Returns the current type of the local variable represented by the symbol. This is the most strict of all
+   * Returns the current type of the local variable represented by the symbol. This is the most constrained of all
    * {@code getLocalVariableType*} methods, as it will throw an assertion if the type is null. Therefore, it is only
    * safe to be invoked on symbols known to be bytecode locals, and only after they have been initialized.
    * Regardless, it is recommended to use this method in majority of cases, as because of its strictness it is the
@@ -1351,11 +1351,11 @@ final class LocalVariableTypesCalculator extends SimpleNodeVisitor {
 
           final TokenType tt = binaryNode.tokenType();
           switch (tt) {
-            case EQ_STRICT:
-            case NE_STRICT:
+            case EQU:
+            case NEQU:
               // Specialize comparison with undefined
               final Expression undefinedNode = createIsUndefined(binaryNode, lhs, rhs,
-                      tt == TokenType.EQ_STRICT ? Request.IS_UNDEFINED : Request.IS_NOT_UNDEFINED);
+                      tt == TokenType.EQU ? Request.IS_UNDEFINED : Request.IS_NOT_UNDEFINED);
               if (undefinedNode != binaryNode) {
                 return undefinedNode;
               }
@@ -1444,10 +1444,10 @@ final class LocalVariableTypesCalculator extends SimpleNodeVisitor {
       @Override
       public Node leaveRuntimeNode(final RuntimeNode runtimeNode) {
         final Request request = runtimeNode.getRequest();
-        final boolean isEqStrict = request == Request.EQ_STRICT;
-        if (isEqStrict || request == Request.NE_STRICT) {
+        final boolean isEquivalentt = request == Request.EQUIV;
+        if (isEquivalentt || request == Request.NOT_EQUIV) {
           return createIsUndefined(runtimeNode, runtimeNode.getArgs().get(0), runtimeNode.getArgs().get(1),
-                  isEqStrict ? Request.IS_UNDEFINED : Request.IS_NOT_UNDEFINED);
+                  isEquivalentt ? Request.IS_UNDEFINED : Request.IS_NOT_UNDEFINED);
         }
         return runtimeNode;
       }

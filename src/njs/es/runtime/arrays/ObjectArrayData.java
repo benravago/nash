@@ -117,21 +117,21 @@ final class ObjectArrayData extends ContinuousArrayData implements AnyElements {
   }
 
   @Override
-  public ArrayData set(final int index, final Object value, final boolean strict) {
+  public ArrayData set(final int index, final Object value) {
     array[index] = value;
     setLength(Math.max(index + 1, length()));
     return this;
   }
 
   @Override
-  public ArrayData set(final int index, final int value, final boolean strict) {
+  public ArrayData set(final int index, final int value) {
     array[index] = value;
     setLength(Math.max(index + 1, length()));
     return this;
   }
 
   @Override
-  public ArrayData set(final int index, final double value, final boolean strict) {
+  public ArrayData set(final int index, final double value) {
     array[index] = value;
     setLength(Math.max(index + 1, length()));
     return this;
@@ -269,17 +269,6 @@ final class ObjectArrayData extends ContinuousArrayData implements AnyElements {
     final long start = from < 0 ? from + length() : from;
     final long newLength = to - start;
     return new ObjectArrayData(Arrays.copyOfRange(array, (int) from, (int) to), (int) newLength);
-  }
-
-  @Override
-  public ArrayData push(final boolean strict, final Object item) {
-    final long len = length();
-    final ArrayData newData = ensure(len);
-    if (newData == this) {
-      array[(int) len] = item;
-      return this;
-    }
-    return newData.set((int) len, item, strict);
   }
 
   @Override

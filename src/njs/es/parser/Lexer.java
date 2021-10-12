@@ -851,7 +851,7 @@ public class Lexer extends Scanner {
    * @param length Length of token.
    * @return JavaScript string object.
    */
-  private String valueOfString(final int start, final int length, final boolean strict) throws RuntimeException {
+  private String valueOfString(final int start, final int length, final boolean allow) throws RuntimeException {
     // Save the current position.
     final int savePosition = position;
     // Calculate the end position.
@@ -883,12 +883,12 @@ public class Lexer extends Scanner {
           case '5':
           case '6':
           case '7': {
-            if (strict) {
-              // "\0" itself is allowed in strict mode. Only other 'real'
+            if (allow) {
+              // "\0" itself may be allowed. Only other 'real'
               // octal escape sequences are not allowed (eg. "\02", "\31").
               // See section 7.8.4 String literals production EscapeSequence
               if (next != '0' || (ch0 >= '0' && ch0 <= '9')) {
-                error(Lexer.message("strict.no.octal"), STRING, position, limit);
+                error(Lexer.message("no.octal"), STRING, position, limit);
               }
             }
             reset(afterSlash);
@@ -1758,7 +1758,7 @@ public class Lexer extends Scanner {
    * @param token  Token descriptor.
    * @return JavaScript value.
    */
-  Object getValueOf(final long token, final boolean strict) {
+  Object getValueOf(final long token) {
     final int start = Token.descPosition(token);
     final int len = Token.descLength(token);
 
@@ -1785,14 +1785,14 @@ public class Lexer extends Scanner {
         //and new Color(float, float, float) will get ambiguous for cases like
         //new Color(1.0, 1.5, 1.5) if we don't respect the decimal point.
         //yet we don't want e.g. 1e6 to be a double unnecessarily
-        if (JSType.isStrictlyRepresentableAsInt(value)) {
+        if (JSType.isNonNegativeZeroInt(value)) {
           return (int) value;
         }
         return value;
       case STRING:
         return source.getString(start, len); // String
       case ESCSTRING:
-        return valueOfString(start, len, strict); // String
+        return valueOfString(start, len, true); // String
       case IDENT:
         return valueOfIdent(start, len); // String
       case REGEX:

@@ -334,9 +334,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
 
   private static int getDataFlags(final FunctionNode functionNode) {
     int flags = IS_CONSTRUCTOR;
-    if (functionNode.isStrict()) {
-      flags |= IS_STRICT;
-    }
     if (functionNode.needsCallee()) {
       flags |= NEEDS_CALLEE;
     }
@@ -378,7 +375,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
             context.getEnv(),
             source,
             new Context.ThrowErrorManager(),
-            isStrict(),
             // source starts at line 0, so even though lineNumber is the correct declaration line, back off
             // one to make it exclusive
             lineNumber - 1,
@@ -653,7 +649,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
     return Compiler.forOnDemandCompilation(
             getInstallerForNewCode(),
             functionNode.getSource(), // source
-            isStrict() | functionNode.isStrict(), // is strict
             this, // compiledFunction, i.e. this RecompilableScriptFunctionData
             typeMap, // type map
             getEffectiveInvalidatedProgramPoints(invalidatedProgramPoints, typeInformationFile), // invalidated program points

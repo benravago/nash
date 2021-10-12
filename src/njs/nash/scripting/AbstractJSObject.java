@@ -160,14 +160,6 @@ public abstract class AbstractJSObject implements JSObject {
    * @implSpec This implementation always returns false
    */
   @Override
-  public boolean isStrictFunction() {
-    return false;
-  }
-
-  /**
-   * @implSpec This implementation always returns false
-   */
-  @Override
   public boolean isArray() {
     return false;
   }

@@ -174,8 +174,8 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
 
   private static final Call TO_NUMBER_FOR_EQ = CompilerConstants.staticCallNoLookup(JSType.class,
           "toNumberForEq", double.class, Object.class);
-  private static final Call TO_NUMBER_FOR_STRICT_EQ = CompilerConstants.staticCallNoLookup(JSType.class,
-          "toNumberForStrictEq", double.class, Object.class);
+  private static final Call TO_NUMBER_FOR_EQUIV = CompilerConstants.staticCallNoLookup(JSType.class,
+          "toNumberForEquiv", double.class, Object.class);
 
   private static final Class<?> ITERATOR_CLASS = Iterator.class;
 
@@ -261,8 +261,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
   }
 
   /**
-   * Gets the call site flags, adding the strict flag if the current function
-   * being generated is in strict mode
+   * Gets the call site flags
    *
    * @return the correct flags for a call site in the current function
    */
@@ -431,13 +430,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
         }
         previousWasBlock = true;
       } else {
-        if (node instanceof WithNode && previousWasBlock || node instanceof FunctionNode && ((FunctionNode) node).needsDynamicScope()) {
-          // If we hit a scope that can have symbols introduced into it at run time before finding the defining
-          // block, the symbol can't be fast scoped. A WithNode only counts if we've immediately seen a block
-          // before - its block. Otherwise, we are currently processing the WithNode's expression, and that's
-          // obviously not subjected to introducing new symbols.
-          return false;
-        }
         previousWasBlock = false;
       }
     }
@@ -629,7 +621,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
    * Similar to {@link #loadBinaryOperands(BinaryNode)} but used specifically for loading operands of
    * relational and equality comparison operators where at least one argument is non-object. (When both
    * arguments are objects, we use {@link ScriptRuntime#EQ(Object, Object)}, {@link ScriptRuntime#LT(Object, Object)}
-   * etc. methods instead. Additionally, {@code ScriptRuntime} methods are used for strict (in)equality comparison
+   * etc. methods instead. Additionally, {@code ScriptRuntime} methods are used for (in)equality comparison
    * of a boolean to anything that isn't a boolean.) This method handles the special case where one argument
    * is an object and another is a primitive. Naively, these could also be delegated to {@code ScriptRuntime} methods
    * by boxing the primitive. However, in all such cases the comparison is performed on numeric values, so it is
@@ -653,7 +645,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
 
     if (lhsType.isObject() || rhsType.isObject()) {
       // We can reorder CONVERT LEFT and LOAD RIGHT only if either the left is a primitive, or the right
-      // is a local. This is more strict than loadBinaryNode reorder criteria, as it can allow JS primitive
+      // is a local. This is more constrained than loadBinaryNode reorder criteria, as it can allow JS primitive
       // types too (notably: String is a JS primitive, but not a JVM primitive). We disallow String otherwise
       // we would prematurely convert it to number when comparing to an optimistic expression, e.g. in
       // "Hello" === String("Hello") the RHS starts out as an optimistic-int function call. If we allowed
@@ -662,7 +654,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
       // If reordering is allowed, and we're using a relational operator (that is, <, <=, >, >=) and not an
       // (in)equality operator, then we encourage combining of LOAD and CONVERT into a single operation.
       // This is because relational operators' semantics prescribes vanilla ToNumber() conversion, while
-      // (in)equality operators need the specialized JSType.toNumberFor[Strict]Equals. E.g. in the code snippet
+      // (in)equality operators need the specialized JSType.toNumberForEquals. E.g. in the code snippet
       // "i < obj.size" (where i is primitive and obj.size is statically an object), ".size" will thus be allowed
       // to compile as:
       //   invokedynamic GET_PROPERTY:size(Object;)D
@@ -710,10 +702,10 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
           return;
         }
         break;
-      case EQ_STRICT:
-      case NE_STRICT:
+      case EQU:
+      case NEQU:
         if (method.peekType().isObject()) {
-          TO_NUMBER_FOR_STRICT_EQ.invoke(method);
+          TO_NUMBER_FOR_EQUIV.invoke(method);
           return;
         }
         break;
@@ -1128,7 +1120,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
       }
 
       @Override
-      public boolean enterEQ_STRICT(final BinaryNode binaryNode) {
+      public boolean enterEQUIV(final BinaryNode binaryNode) {
         loadCmp(binaryNode, Condition.EQ);
         return false;
       }
@@ -1164,7 +1156,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
       }
 
       @Override
-      public boolean enterNE_STRICT(final BinaryNode binaryNode) {
+      public boolean enterNOT_EQUIV(final BinaryNode binaryNode) {
         loadCmp(binaryNode, Condition.NE);
         return false;
       }
@@ -1536,7 +1528,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
             // them can ever be optimistic.
             method.loadCompilerConstant(THIS);
             method.load(callNode.getEvalArgs().getLocation());
-            method.load(CodeGenerator.this.lc.getCurrentFunction().isStrict());
             // direct call to Global.directEval
             globalDirectEval();
             convertOptimisticReturnValue();
@@ -1612,11 +1603,8 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
           @Override
           void loadStack() {
             callee = (FunctionNode) origCallee.accept(CodeGenerator.this);
-            if (callee.isStrict()) { // "this" is undefined
+            // "this" is undefined
               method.loadUndefined(Type.OBJECT);
-            } else { // get global from scope (which is the self)
-              globalInstance();
-            }
             argsCount = loadArgs(args);
           }
 
@@ -2042,9 +2030,8 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     if (function.needsCallee()) {
       method.loadCompilerConstant(CALLEE);
     } else {
-      // If function is strict mode, "arguments.callee" is not populated, so we don't necessarily need the
+      // "arguments.callee" is not populated, so we don't necessarily need the
       // caller.
-      assert function.isStrict();
       method.loadNull();
     }
     method.load(function.getParameters().size());
@@ -2750,7 +2737,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
 
     loadExpressionUnbounded(lhs);    //lhs
     final Label popLabel;
-    if (!Request.isStrict(request)) {
+    if (!Request.isEquiv(request)) {
       method.dup(); //lhs lhs
       popLabel = new Label("pop");
     } else {
@@ -2758,15 +2745,15 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     }
 
     if (Request.isEQ(request)) {
-      method.ifnull(!Request.isStrict(request) ? popLabel : trueLabel);
-      if (!Request.isStrict(request)) {
+      method.ifnull(!Request.isEquiv(request) ? popLabel : trueLabel);
+      if (!Request.isEquiv(request)) {
         method.loadUndefined(Type.OBJECT);
         method.if_acmpeq(trueLabel);
       }
       method.label(falseLabel);
       method.load(false);
       method._goto(endLabel);
-      if (!Request.isStrict(request)) {
+      if (!Request.isEquiv(request)) {
         method.label(popLabel);
         method.pop();
       }
@@ -2774,15 +2761,15 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
       method.load(true);
       method.label(endLabel);
     } else if (Request.isNE(request)) {
-      method.ifnull(!Request.isStrict(request) ? popLabel : falseLabel);
-      if (!Request.isStrict(request)) {
+      method.ifnull(!Request.isEquiv(request) ? popLabel : falseLabel);
+      if (!Request.isEquiv(request)) {
         method.loadUndefined(Type.OBJECT);
         method.if_acmpeq(falseLabel);
       }
       method.label(trueLabel);
       method.load(true);
       method._goto(endLabel);
-      if (!Request.isStrict(request)) {
+      if (!Request.isEquiv(request)) {
         method.label(popLabel);
         method.pop();
       }
@@ -2840,11 +2827,11 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     } else if (undefinedCheck(runtimeNode, args)) {
       return;
     }
-    // Revert a false undefined check to a strict equality check
+    // Revert a false undefined check to a proper equality check
     final RuntimeNode newRuntimeNode;
     final Request request = runtimeNode.getRequest();
     if (Request.isUndefinedCheck(request)) {
-      newRuntimeNode = runtimeNode.setRequest(request == Request.IS_UNDEFINED ? Request.EQ_STRICT : Request.NE_STRICT);
+      newRuntimeNode = runtimeNode.setRequest(request == Request.IS_UNDEFINED ? Request.EQUIV : Request.NOT_EQUIV);
     } else {
       newRuntimeNode = runtimeNode;
     }
@@ -3091,7 +3078,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
         if (test != null) {
           method.load(Type.OBJECT, tagSlot);
           loadExpressionAsObject(test);
-          method.invoke(ScriptRuntime.EQ_STRICT);
+          method.invoke(ScriptRuntime.EQUIV);
           method.ifne(caseNode.getEntry());
         }
       }
@@ -3795,24 +3782,10 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
         if (!lc.popDiscardIfCurrent(unaryNode)) {
           method.load(true);
         }
-      } else if (lc.getCurrentFunction().isStrict()) {
-        // All other scope identifier delete attempts fail for strict mode
-        method.load(name);
-        method.invoke(ScriptRuntime.STRICT_FAIL_DELETE);
-      } else if (!symbol.isScope() && (symbol.isParam() || (symbol.isVar() && !symbol.isProgramLevel()))) {
-        // If symbol is a function parameter, or a declared non-global variable, delete is a no-op and returns false.
-        if (!lc.popDiscardIfCurrent(unaryNode)) {
-          method.load(false);
-        }
       } else {
-        method.loadCompilerConstant(SCOPE);
+        // All other scope identifier delete attempts fail
         method.load(name);
-        if ((symbol.isGlobal() && !symbol.isFunctionDeclaration()) || symbol.isProgramLevel()) {
-          method.invoke(ScriptRuntime.SLOW_DELETE);
-        } else {
-          method.load(false); // never strict here; that was handled with STRICT_FAIL_DELETE above.
-          method.invoke(ScriptObject.DELETE);
-        }
+        method.invoke(ScriptRuntime.FAIL_DELETE);
       }
     } else if (expression instanceof BaseNode) {
       loadExpressionAsObject(((BaseNode) expression).getBase());
@@ -4856,7 +4829,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
         method.load(lvarType, lvarSlot);
         if (isLoad) {
           // Conversion operators (I2L etc.) preserve "load"-ness of the value despite the fact that, in the
-          // strict sense they are creating a derived value from the loaded value. This special behavior of
+          // proper sense they are creating a derived value from the loaded value. This special behavior of
           // on-stack conversion operators is necessary to accommodate for differences in local variable types
           // after deoptimization; having a conversion operator throw away "load"-ness would create different
           // local variable table shapes between optimism-failed code and its deoptimized rest-of method).

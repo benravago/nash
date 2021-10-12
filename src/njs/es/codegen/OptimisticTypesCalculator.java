@@ -77,8 +77,8 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
         }
       }
     } else if (binaryNode.isTokenType(TokenType.INSTANCEOF)
-            || binaryNode.isTokenType(TokenType.EQ_STRICT)
-            || binaryNode.isTokenType(TokenType.NE_STRICT)) {
+            || binaryNode.isTokenType(TokenType.EQU)
+            || binaryNode.isTokenType(TokenType.NEQU)) {
       tagNeverOptimistic(binaryNode.lhs());
       tagNeverOptimistic(binaryNode.rhs());
     }

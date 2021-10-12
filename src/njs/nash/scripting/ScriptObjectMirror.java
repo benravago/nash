@@ -39,7 +39,6 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
 
   private final ScriptObject sobj;
   private final Global global;
-  private final boolean strict;
   private final boolean jsonCompatible;
 
   @Override
@@ -232,7 +231,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
     inGlobal(new Callable<Void>() {
       @Override
       public Void call() {
-        sobj.set(index, unwrap(value, global), getCallSiteFlags());
+        sobj.set(index, unwrap(value, global), 0);
         return null;
       }
     });
@@ -285,11 +284,6 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
   }
 
   @Override
-  public boolean isStrictFunction() {
-    return isFunction() && ((ScriptFunction) sobj).isStrict();
-  }
-
-  @Override
   public boolean isArray() {
     return sobj.isArray();
   }
@@ -300,7 +294,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
     inGlobal(new Callable<Object>() {
       @Override
       public Object call() {
-        sobj.clear(strict);
+        sobj.clear();
         return null;
       }
     });
@@ -393,7 +387,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
       @Override
       public Object call() {
         final Object modValue = globalChanged ? wrapLikeMe(value, oldGlobal) : value;
-        return translateUndefined(wrapLikeMe(sobj.put(key, unwrap(modValue, global), strict)));
+        return translateUndefined(wrapLikeMe(sobj.put(key, unwrap(modValue, global))));
       }
     });
   }
@@ -411,7 +405,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
           final Object modValue = globalChanged ? wrapLikeMe(value, oldGlobal) : value;
           final String key = entry.getKey();
           checkKey(key);
-          sobj.set(key, unwrap(modValue, global), getCallSiteFlags());
+          sobj.set(key, unwrap(modValue, global), 0);
         }
         return null;
       }
@@ -424,7 +418,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
     return inGlobal(new Callable<Object>() {
       @Override
       public Object call() {
-        return translateUndefined(wrapLikeMe(sobj.remove(key, strict)));
+        return translateUndefined(wrapLikeMe(sobj.remove(key)));
       }
     });
   }
@@ -440,7 +434,7 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
     return inGlobal(new Callable<Boolean>() {
       @Override
       public Boolean call() {
-        return sobj.delete(unwrap(key, global), strict);
+        return sobj.delete(unwrap(key, global));
       }
     });
   }
@@ -813,7 +807,6 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
 
     this.sobj = sobj;
     this.global = global;
-    this.strict = global.isStrictContext();
     this.jsonCompatible = jsonCompatible;
   }
 
@@ -828,10 +821,6 @@ public final class ScriptObjectMirror extends AbstractJSObject implements Bindin
 
   static Object translateUndefined(final Object obj) {
     return (obj == ScriptRuntime.UNDEFINED) ? null : obj;
-  }
-
-  private int getCallSiteFlags() {
-    return strict ? NashornCallSiteDescriptor.CALLSITE_STRICT : 0;
   }
 
   // internals only below this.

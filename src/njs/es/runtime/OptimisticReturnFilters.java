@@ -149,7 +149,7 @@ public final class OptimisticReturnFilters {
 
   @SuppressWarnings("unused")
   private static int ensureInt(final double arg, final int programPoint) {
-    if (JSType.isStrictlyRepresentableAsInt(arg)) {
+    if (JSType.isNonNegativeZeroInt(arg)) {
       return (int) arg;
     }
     throw new UnwarrantedOptimismException(arg, programPoint, Type.NUMBER);
@@ -171,7 +171,7 @@ public final class OptimisticReturnFilters {
     // Long into the exception.
     if (isPrimitiveNumberWrapper(arg)) {
       final double d = ((Number) arg).doubleValue();
-      if (JSType.isStrictlyRepresentableAsInt(d)) {
+      if (JSType.isNonNegativeZeroInt(d)) {
         return (int) d;
       }
     }

@@ -221,7 +221,7 @@ final class JSObjectLinker implements TypeBasedGuardingDynamicLinker {
   @SuppressWarnings("unused")
   private static Object jsObjectScopeCall(final JSObject jsObj, final Object thiz, final Object[] args) {
     final Object modifiedThiz;
-    if (thiz == ScriptRuntime.UNDEFINED && !jsObj.isStrictFunction()) {
+    if (thiz == ScriptRuntime.UNDEFINED && !jsObj.isFunction()) {
       final Global global = Context.getGlobal();
       modifiedThiz = ScriptObjectMirror.wrap(global, global);
     } else {

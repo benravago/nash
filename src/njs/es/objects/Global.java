@@ -1188,14 +1188,6 @@ public final class Global extends Scope {
   }
 
   /**
-   * Does this global belong to a strict Context?
-   * @return true if this global belongs to a strict Context
-   */
-  public boolean isStrictContext() {
-    return context.getEnv()._strict;
-  }
-
-  /**
    * Initialize standard builtin objects like "Object", "Array", "Function" etc.
    * as well as our extension builtin objects like "Java", "JSAdapter" as properties
    * of the global scope object.
@@ -1486,11 +1478,11 @@ public final class Global extends Scope {
     final AccessorPropertyDescriptor desc = new AccessorPropertyDescriptor(configurable, enumerable, get == null ? UNDEFINED : get, set == null ? UNDEFINED : set, this);
 
     if (get == null) {
-      desc.delete(PropertyDescriptor.GET, false);
+      desc.delete(PropertyDescriptor.GET);
     }
 
     if (set == null) {
-      desc.delete(PropertyDescriptor.SET, false);
+      desc.delete(PropertyDescriptor.SET);
     }
 
     return desc;
@@ -1592,7 +1584,7 @@ public final class Global extends Scope {
    * @return the result of eval
    */
   public static Object eval(final Object self, final Object str) {
-    return directEval(self, str, Global.instanceFrom(self), UNDEFINED, false);
+    return directEval(self, str, Global.instanceFrom(self), UNDEFINED);
   }
 
   /**
@@ -1602,20 +1594,19 @@ public final class Global extends Scope {
    * @param str      Evaluated code
    * @param callThis "this" to be passed to the evaluated code
    * @param location location of the eval call
-   * @param strict   is eval called from a strict mode code?
    *
    * @return the return value of the eval
    *
    * This is directly invoked from generated when eval(code) is called in user code
    */
-  public static Object directEval(final Object self, final Object str, final Object callThis, final Object location, final boolean strict) {
+  public static Object directEval(final Object self, final Object str, final Object callThis, final Object location) {
     if (!isString(str)) {
       return str;
     }
     final Global global = Global.instanceFrom(self);
     final ScriptObject scope = self instanceof ScriptObject && ((ScriptObject) self).isScope() ? (ScriptObject) self : global;
 
-    return global.getContext().eval(scope, str.toString(), callThis, location, strict, true);
+    return global.getContext().eval(scope, str.toString(), callThis, location, true);
   }
 
   /**
@@ -2258,7 +2249,9 @@ public final class Global extends Scope {
    * @return the new array
    */
   public static ScriptObject allocateArguments(final Object[] arguments, final Object callee, final int numParams) {
-    return NativeArguments.allocate(arguments, (ScriptFunction) callee, numParams);
+    final Global global = Global.instance();
+    final ScriptObject proto = global.getObjectPrototype();
+    return new NativeArguments(arguments, numParams, proto);
   }
 
   /**
@@ -2562,15 +2555,15 @@ public final class Global extends Scope {
       this.weakSet = LAZY_SENTINEL;
     } else {
       // We need to manually delete nasgen-generated properties we don't want
-      this.delete("Symbol", false);
-      this.delete("Map", false);
-      this.delete("WeakMap", false);
-      this.delete("Set", false);
-      this.delete("WeakSet", false);
-      builtinObject.delete("getOwnPropertySymbols", false);
-      arrayPrototype.delete("entries", false);
-      arrayPrototype.delete("keys", false);
-      arrayPrototype.delete("values", false);
+      this.delete("Symbol");
+      this.delete("Map");
+      this.delete("WeakMap");
+      this.delete("Set");
+      this.delete("WeakSet");
+      builtinObject.delete("getOwnPropertySymbols");
+      arrayPrototype.delete("entries");
+      arrayPrototype.delete("keys");
+      arrayPrototype.delete("values");
     }
 
     // Error stuff
@@ -2583,15 +2576,15 @@ public final class Global extends Scope {
       initJavaAccess();
     } else {
       // delete nasgen-created global properties related to java access
-      this.delete("Java", false);
-      this.delete("JavaImporter", false);
-      this.delete("Packages", false);
-      this.delete("com", false);
-      this.delete("edu", false);
-      this.delete("java", false);
-      this.delete("javafx", false);
-      this.delete("javax", false);
-      this.delete("org", false);
+      this.delete("Java");
+      this.delete("JavaImporter");
+      this.delete("Packages");
+      this.delete("com");
+      this.delete("edu");
+      this.delete("java");
+      this.delete("javafx");
+      this.delete("javax");
+      this.delete("org");
     }
 
     if (!env._no_typed_arrays) {
@@ -2629,7 +2622,7 @@ public final class Global extends Scope {
       // default file name
       addOwnProperty(ScriptEngine.FILENAME, Attribute.NOT_ENUMERABLE, null);
       // __noSuchProperty__ hook for ScriptContext search of missing variables
-      final ScriptFunction noSuchProp = ScriptFunction.createStrictBuiltin(NO_SUCH_PROPERTY_NAME, NO_SUCH_PROPERTY);
+      final ScriptFunction noSuchProp = ScriptFunction.createBuiltin(NO_SUCH_PROPERTY_NAME, NO_SUCH_PROPERTY);
       addOwnProperty(NO_SUCH_PROPERTY_NAME, Attribute.NOT_ENUMERABLE, noSuchProp);
     }
   }
@@ -2715,11 +2708,11 @@ public final class Global extends Scope {
 
       // do not fill $ENV if we have a security manager around
       // Retrieve current state of ENV variables.
-      env.putAll(System.getenv(), scriptEnv._strict);
+      env.putAll(System.getenv());
 
       // Set the PWD variable to a value that is guaranteed to be understood
       // by the underlying platform.
-      env.put(ScriptingFunctions.PWD_NAME, System.getProperty("user.dir"), scriptEnv._strict);
+      env.put(ScriptingFunctions.PWD_NAME, System.getProperty("user.dir"));
 
     addOwnProperty(ScriptingFunctions.ENV_NAME, Attribute.NOT_ENUMERABLE, env);
 

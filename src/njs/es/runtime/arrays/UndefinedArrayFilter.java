@@ -86,7 +86,7 @@ final class UndefinedArrayFilter extends ArrayFilter {
   }
 
   @Override
-  public ArrayData set(final int index, final Object value, final boolean strict) {
+  public ArrayData set(final int index, final Object value) {
     undefined.clear(index);
 
     if (value == UNDEFINED) {
@@ -94,21 +94,21 @@ final class UndefinedArrayFilter extends ArrayFilter {
       return this;
     }
 
-    return super.set(index, value, strict);
+    return super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final int value, final boolean strict) {
+  public ArrayData set(final int index, final int value) {
     undefined.clear(index);
 
-    return super.set(index, value, strict);
+    return super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final double value, final boolean strict) {
+  public ArrayData set(final int index, final double value) {
     undefined.clear(index);
 
-    return super.set(index, value, strict);
+    return super.set(index, value);
   }
 
   @Override

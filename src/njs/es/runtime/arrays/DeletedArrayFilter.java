@@ -85,21 +85,21 @@ final class DeletedArrayFilter extends ArrayFilter {
   }
 
   @Override
-  public ArrayData set(final int index, final Object value, final boolean strict) {
+  public ArrayData set(final int index, final Object value) {
     deleted.clear(ArrayIndex.toLongIndex(index));
-    return super.set(index, value, strict);
+    return super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final int value, final boolean strict) {
+  public ArrayData set(final int index, final int value) {
     deleted.clear(ArrayIndex.toLongIndex(index));
-    return super.set(index, value, strict);
+    return super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final double value, final boolean strict) {
+  public ArrayData set(final int index, final double value) {
     deleted.clear(ArrayIndex.toLongIndex(index));
-    return super.set(index, value, strict);
+    return super.set(index, value);
   }
 
   @Override

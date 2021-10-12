@@ -274,7 +274,7 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
   private static IfNode makeIfStateEquals(final int lineNumber, final long token, final int finish,
           final int value, final Block pass, final Statement fail) {
     return new IfNode(lineNumber, token, finish,
-            new BinaryNode(Token.recast(token, TokenType.EQ_STRICT),
+            new BinaryNode(Token.recast(token, TokenType.EQU),
                     GetSplitState.INSTANCE, intLiteral(value)),
             pass,
             fail == null ? null : new Block(NO_TOKEN, NO_FINISH, fail));

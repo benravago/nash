@@ -3,7 +3,6 @@ package es.parser;
 import static es.parser.TokenKind.BINARY;
 import static es.parser.TokenKind.BRACKET;
 import static es.parser.TokenKind.FUTURE;
-import static es.parser.TokenKind.FUTURESTRICT;
 import static es.parser.TokenKind.IR;
 import static es.parser.TokenKind.KEYWORD;
 import static es.parser.TokenKind.LITERAL;
@@ -27,7 +26,7 @@ public enum TokenType {
   DIRECTIVE_COMMENT(SPECIAL, null),
   NOT(UNARY, "!", 14, false),
   NE(BINARY, "!=", 9, true),
-  NE_STRICT(BINARY, "!==", 9, true),
+  NEQU(BINARY, "!==", 9, true),
   MOD(BINARY, "%", 13, true),
   ASSIGN_MOD(BINARY, "%=", 2, false),
   BIT_AND(BINARY, "&", 8, true),
@@ -57,7 +56,7 @@ public enum TokenType {
   LE(BINARY, "<=", 10, true),
   ASSIGN(BINARY, "=", 2, false),
   EQ(BINARY, "==", 9, true),
-  EQ_STRICT(BINARY, "===", 9, true),
+  EQU(BINARY, "===", 9, true),
   ARROW(BINARY, "=>", 2, true),
   GT(BINARY, ">", 10, true),
   GE(BINARY, ">=", 10, true),
@@ -109,25 +108,25 @@ public enum TokenType {
   //  GET            (KEYWORD,  "get"), // Contextual.
   //  GOTO           (FUTURE,   "goto"),
   IF(KEYWORD, "if"),
-  IMPLEMENTS(FUTURESTRICT, "implements"),
+  IMPLEMENTS(FUTURE, "implements"),
   IMPORT(FUTURE, "import"),
   IN(BINARY, "in", 10, true),
   INSTANCEOF(BINARY, "instanceof", 10, true),
   //  INT            (FUTURE,   "int"),
-  INTERFACE(FUTURESTRICT, "interface"),
-  LET(FUTURESTRICT, "let"),
+  INTERFACE(FUTURE, "interface"),
+  LET(FUTURE, "let"),
   //  LONG           (FUTURE,   "long"),
   //  NATIVE         (FUTURE,   "native"),
   NEW(UNARY, "new", 17, false),
   NULL(LITERAL, "null"),
-  PACKAGE(FUTURESTRICT, "package"),
-  PRIVATE(FUTURESTRICT, "private"),
-  PROTECTED(FUTURESTRICT, "protected"),
-  PUBLIC(FUTURESTRICT, "public"),
+  PACKAGE(FUTURE, "package"),
+  PRIVATE(FUTURE, "private"),
+  PROTECTED(FUTURE, "protected"),
+  PUBLIC(FUTURE, "public"),
   RETURN(KEYWORD, "return"),
   //  SET            (KEYWORD,  "set"), // Contextual.
   //  SHORT          (FUTURE,   "short"),
-  STATIC(FUTURESTRICT, "static"),
+  STATIC(FUTURE, "static"),
   SUPER(FUTURE, "super"),
   SWITCH(KEYWORD, "switch"),
   //  SYNCHRONIZED   (FUTURE,   "synchronized"),
@@ -143,7 +142,7 @@ public enum TokenType {
   //  VOLATILE       (FUTURE,   "volatile"),
   WHILE(KEYWORD, "while"),
   WITH(KEYWORD, "with"),
-  YIELD(FUTURESTRICT, "yield"),
+  YIELD(FUTURE, "yield"),
   DECIMAL(LITERAL, null),
   HEXADECIMAL(LITERAL, null),
   OCTAL_LEGACY(LITERAL, null),
