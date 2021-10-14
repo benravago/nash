@@ -6,21 +6,12 @@ import jdk.dynalink.linker.LinkerServices;
 import es.runtime.Context;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
-import es.runtime.ScriptRuntime;
 import es.runtime.linker.Bootstrap;
 
 /**
  * Utilities that are to be called from script code.
- *
- *
- * @since 1.8u40
  */
 public final class ScriptUtils {
-
-  private ScriptUtils() {
-  }
-
-  // public static String parse(final String code, final String name, final boolean includeLoc) {
 
   /**
    * Method which converts javascript types to java types for the
@@ -30,7 +21,7 @@ public final class ScriptUtils {
    * @param args arguments referenced by the format specifiers in format
    * @return a formatted string
    */
-  public static String format(final String format, final Object[] args) {
+  public static String format(String format, Object[] args) {
     return Formatter.format(format, args);
   }
 
@@ -43,10 +34,10 @@ public final class ScriptUtils {
    * @return a synchronizing wrapper function
    * @throws IllegalArgumentException if func does not represent a script function
    */
-  public static Object makeSynchronizedFunction(final Object func, final Object sync) {
-    final Object unwrapped = unwrap(func);
-    if (unwrapped instanceof ScriptFunction) {
-      return ((ScriptFunction) unwrapped).createSynchronized(unwrap(sync));
+  public static Object makeSynchronizedFunction(Object func, Object sync) {
+    var unwrapped = unwrap(func);
+    if (unwrapped instanceof ScriptFunction sf) {
+      return sf.createSynchronized(unwrap(sync));
     }
 
     throw new IllegalArgumentException();
@@ -59,13 +50,12 @@ public final class ScriptUtils {
    * @return wrapped object
    * @throws IllegalArgumentException if obj cannot be wrapped
    */
-  public static ScriptObjectMirror wrap(final Object obj) {
-    if (obj instanceof ScriptObjectMirror) {
-      return (ScriptObjectMirror) obj;
+  public static ScriptObjectMirror wrap(Object obj) {
+    if (obj instanceof ScriptObjectMirror som) {
+      return som;
     }
 
-    if (obj instanceof ScriptObject) {
-      final ScriptObject sobj = (ScriptObject) obj;
+    if (obj instanceof ScriptObject sobj) {
       return (ScriptObjectMirror) ScriptObjectMirror.wrap(sobj, Context.getGlobal());
     }
 
@@ -78,12 +68,8 @@ public final class ScriptUtils {
    * @param obj object to be unwrapped
    * @return unwrapped object
    */
-  public static Object unwrap(final Object obj) {
-    if (obj instanceof ScriptObjectMirror) {
-      return ScriptObjectMirror.unwrap(obj, Context.getGlobal());
-    }
-
-    return obj;
+  public static Object unwrap(Object obj) {
+    return (obj instanceof ScriptObjectMirror) ? ScriptObjectMirror.unwrap(obj, Context.getGlobal()) : obj;
   }
 
   /**
@@ -92,12 +78,8 @@ public final class ScriptUtils {
    * @param args array to be unwrapped
    * @return wrapped array
    */
-  public static Object[] wrapArray(final Object[] args) {
-    if (args == null || args.length == 0) {
-      return args;
-    }
-
-    return ScriptObjectMirror.wrapArray(args, Context.getGlobal());
+  public static Object[] wrapArray(Object[] args) {
+    return (args == null || args.length == 0) ? args : ScriptObjectMirror.wrapArray(args, Context.getGlobal());
   }
 
   /**
@@ -106,39 +88,35 @@ public final class ScriptUtils {
    * @param args array to be unwrapped
    * @return unwrapped array
    */
-  public static Object[] unwrapArray(final Object[] args) {
-    if (args == null || args.length == 0) {
-      return args;
-    }
-
-    return ScriptObjectMirror.unwrapArray(args, Context.getGlobal());
+  public static Object[] unwrapArray(Object[] args) {
+    return (args == null || args.length == 0) ? args : ScriptObjectMirror.unwrapArray(args, Context.getGlobal());
   }
 
   /**
    * Convert the given object to the given type.
    *
    * @param obj object to be converted
-   * @param type destination type to convert to. type is either a Class
-   * or nashorn representation of a Java type returned by Java.type() call in script.
+   * @param type destination type to convert to.
+   *    type is either a Class or nashorn representation of a Java type returned by Java.type() call in script.
    * @return converted object
    */
-  public static Object convert(final Object obj, final Object type) {
+  public static Object convert(Object obj, Object type) {
     if (obj == null) {
       return null;
     }
 
-    final Class<?> clazz;
-    if (type instanceof Class) {
-      clazz = (Class<?>) type;
-    } else if (type instanceof StaticClass) {
-      clazz = ((StaticClass) type).getRepresentedClass();
+    Class<?> objType;
+    if (type instanceof Class c) {
+      objType = c;
+    } else if (type instanceof StaticClass sc) {
+      objType = sc.getRepresentedClass();
     } else {
       throw new IllegalArgumentException("type expected");
     }
 
-    final LinkerServices linker = Bootstrap.getLinkerServices();
-    final Object objToConvert = unwrap(obj);
-    final MethodHandle converter = linker.getTypeConverter(objToConvert.getClass(), clazz);
+    var linker = Bootstrap.getLinkerServices();
+    var objToConvert = unwrap(obj);
+    var converter = linker.getTypeConverter(objToConvert.getClass(), objType);
     if (converter == null) {
       // no supported conversion!
       throw new UnsupportedOperationException("conversion not supported");
@@ -146,10 +124,11 @@ public final class ScriptUtils {
 
     try {
       return converter.invoke(objToConvert);
-    } catch (final RuntimeException | Error e) {
+    } catch (RuntimeException | Error e) {
       throw e;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
+
 }

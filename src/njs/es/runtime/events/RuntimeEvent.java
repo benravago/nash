@@ -23,7 +23,7 @@ public class RuntimeEvent<T> {
    * @param level  log level for runtime event to create
    * @param object object to wrap
    */
-  public RuntimeEvent(final Level level, final T object) {
+  public RuntimeEvent(Level level, T object) {
     this.level = level;
     this.value = object;
   }

@@ -9,15 +9,13 @@ import java.util.Objects;
 import es.runtime.Source;
 
 /**
- * A Reader that reads from a URL. Used to make sure that the reader
- * reads content from given URL and can be trusted to do so.
+ * A Reader that reads from a URL.
  *
- *
- * @since 1.8u40
+ * Used to make sure that the reader reads content from given URL and can be trusted to do so.
  */
 public final class URLReader extends Reader {
-  // underlying URL
 
+  // underlying URL
   private final URL url;
   // Charset used to convert
   private final Charset cs;
@@ -31,7 +29,7 @@ public final class URLReader extends Reader {
    * @param url URL for this URLReader
    * @throws NullPointerException if url is null
    */
-  public URLReader(final URL url) {
+  public URLReader(URL url) {
     this(url, (Charset) null);
   }
 
@@ -42,7 +40,7 @@ public final class URLReader extends Reader {
    * @param charsetName  Name of the Charset used to convert bytes to chars
    * @throws NullPointerException if url is null
    */
-  public URLReader(final URL url, final String charsetName) {
+  public URLReader(URL url, String charsetName) {
     this(url, Charset.forName(charsetName));
   }
 
@@ -53,13 +51,13 @@ public final class URLReader extends Reader {
    * @param cs  Charset used to convert bytes to chars
    * @throws NullPointerException if url is null
    */
-  public URLReader(final URL url, final Charset cs) {
+  public URLReader(URL url, Charset cs) {
     this.url = Objects.requireNonNull(url);
     this.cs = cs;
   }
 
   @Override
-  public int read(final char cbuf[], final int off, final int len) throws IOException {
+  public int read(char cbuf[], int off, int len) throws IOException {
     return getReader().read(cbuf, off, len);
   }
 
@@ -70,6 +68,7 @@ public final class URLReader extends Reader {
 
   /**
    * URL of this reader
+   *
    * @return the URL from which this reader reads.
    */
   public URL getURL() {
@@ -95,4 +94,5 @@ public final class URLReader extends Reader {
 
     return reader;
   }
+
 }

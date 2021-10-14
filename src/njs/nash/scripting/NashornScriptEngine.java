@@ -1,17 +1,15 @@
 package nash.scripting;
 
-import static es.runtime.Source.sourceFor;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
+
 import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -22,30 +20,27 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
+
 import es.objects.Global;
 import es.runtime.Context;
-import es.runtime.ErrorManager;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.Source;
 import es.runtime.linker.JavaAdapterFactory;
 import es.runtime.options.Options;
+import static es.runtime.Source.sourceFor;
 
 /**
- * JSR-223 compliant script engine for Nashorn. Instances are not created directly, but rather returned through
- * {@link NashornScriptEngineFactory#getScriptEngine()}. Note that this engine implements the {@link Compilable} and
- * {@link Invocable} interfaces, allowing for efficient precompilation and repeated execution of scripts.
+ * JSR-223 compliant script engine for Nashorn.
+ *
+ * Instances are not created directly, but rather returned through {@link NashornScriptEngineFactory#getScriptEngine()}.
+ * Note that this engine implements the {@link Compilable} and {@link Invocable} interfaces, allowing for efficient pre-compilation and repeated execution of scripts.
  * @see NashornScriptEngineFactory
- *
- *
- * @since 1.8u40
  */
 public final class NashornScriptEngine extends AbstractScriptEngine implements Compilable, Invocable {
 
-  /**
-   * Key used to associate Nashorn global object mirror with arbitrary Bindings instance.
-   */
+  // Key used to associate Nashorn global object mirror with arbitrary Bindings instance.
   public static final String NASHORN_GLOBAL = "nashorn.global";
 
   // the factory that created this engine
@@ -54,8 +49,7 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
   private final Context nashornContext;
   // do we want to share single Nashorn global instance across ENGINE_SCOPEs?
   private final boolean _global_per_engine;
-  // This is the initial default Nashorn global object.
-  // This is used as "shared" global if above option is true.
+  // the initial default Nashorn global object; used as "shared" global if above option is true.
   private final Global global;
 
   // Nashorn script engine error message management
@@ -68,26 +62,26 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
   }
 
   // helper to get Nashorn script engine error message
-  private static String getMessage(final String msgId, final String... args) {
+  static String getMessage(String msgId, String... args) {
     try {
       return new MessageFormat(MESSAGES_BUNDLE.getString(msgId)).format(args);
-    } catch (final java.util.MissingResourceException e) {
+    } catch (java.util.MissingResourceException e) {
       throw new RuntimeException("no message resource found for message id: " + msgId);
     }
   }
 
-  NashornScriptEngine(final NashornScriptEngineFactory factory, final String[] args, final ClassLoader appLoader, final ClassFilter classFilter) {
+  NashornScriptEngine(NashornScriptEngineFactory factory, String[] args, ClassLoader appLoader, ClassFilter classFilter) {
     assert args != null : "null argument array";
     this.factory = factory;
-    final Options options = new Options("nashorn");
+    var options = new Options("nashorn");
     options.process(args);
 
     // throw ParseException on first error from script
-    final ErrorManager errMgr = new Context.ThrowErrorManager();
+    var errMgr = new Context.ThrowErrorManager();
     // create new Nashorn Context
         try {
           this.nashornContext = new Context(options, errMgr, appLoader, classFilter);
-        } catch (final RuntimeException e) {
+        } catch (RuntimeException e) {
           if (Context.DEBUG) {
             e.printStackTrace();
           }
@@ -104,12 +98,12 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
   }
 
   @Override
-  public Object eval(final Reader reader, final ScriptContext ctxt) throws ScriptException {
+  public Object eval(Reader reader, ScriptContext ctxt) throws ScriptException {
     return evalImpl(makeSource(reader, ctxt), ctxt);
   }
 
   @Override
-  public Object eval(final String script, final ScriptContext ctxt) throws ScriptException {
+  public Object eval(String script, ScriptContext ctxt) throws ScriptException {
     return evalImpl(makeSource(script, ctxt), ctxt);
   }
 
@@ -130,76 +124,73 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
 
   // Compilable methods
   @Override
-  public CompiledScript compile(final Reader reader) throws ScriptException {
+  public CompiledScript compile(Reader reader) throws ScriptException {
     return asCompiledScript(makeSource(reader, context));
   }
 
   @Override
-  public CompiledScript compile(final String str) throws ScriptException {
+  public CompiledScript compile(String str) throws ScriptException {
     return asCompiledScript(makeSource(str, context));
   }
 
   // Invocable methods
   @Override
-  public Object invokeFunction(final String name, final Object... args)
-          throws ScriptException, NoSuchMethodException {
+  public Object invokeFunction(String name, Object... args) throws ScriptException, NoSuchMethodException {
     return invokeImpl(null, name, args);
   }
 
   @Override
-  public Object invokeMethod(final Object thiz, final String name, final Object... args)
-          throws ScriptException, NoSuchMethodException {
-    if (thiz == null) {
+  public Object invokeMethod(Object self, String name, Object... args) throws ScriptException, NoSuchMethodException {
+    if (self == null) {
       throw new IllegalArgumentException(getMessage("thiz.cannot.be.null"));
     }
-    return invokeImpl(thiz, name, args);
+    return invokeImpl(self, name, args);
   }
 
   @Override
-  public <T> T getInterface(final Class<T> clazz) {
-    return getInterfaceInner(null, clazz);
+  public <T> T getInterface(Class<T> type) {
+    return getInterfaceInner(null, type);
   }
 
   @Override
-  public <T> T getInterface(final Object thiz, final Class<T> clazz) {
-    if (thiz == null) {
+  public <T> T getInterface(Object self, Class<T> type) {
+    if (self == null) {
       throw new IllegalArgumentException(getMessage("thiz.cannot.be.null"));
     }
-    return getInterfaceInner(thiz, clazz);
+    return getInterfaceInner(self, type);
   }
 
   // Implementation only below this point
-  private static Source makeSource(final Reader reader, final ScriptContext ctxt) throws ScriptException {
+  static Source makeSource(Reader reader, ScriptContext ctxt) throws ScriptException {
     try {
       return sourceFor(getScriptName(ctxt), reader);
-    } catch (final IOException e) {
+    } catch (IOException e) {
       throw new ScriptException(e);
     }
   }
 
-  private static Source makeSource(final String src, final ScriptContext ctxt) {
+  static Source makeSource(String src, ScriptContext ctxt) {
     return sourceFor(getScriptName(ctxt), src);
   }
 
-  private static String getScriptName(final ScriptContext ctxt) {
-    final Object val = ctxt.getAttribute(ScriptEngine.FILENAME);
+  static String getScriptName(ScriptContext ctxt) {
+    var val = ctxt.getAttribute(ScriptEngine.FILENAME);
     return (val != null) ? val.toString() : "<eval>";
   }
 
-  private <T> T getInterfaceInner(final Object thiz, final Class<T> clazz) {
-    assert !(thiz instanceof ScriptObject) : "raw ScriptObject not expected here";
+  <T> T getInterfaceInner(Object self, Class<T> type) {
+    assert !(self instanceof ScriptObject) : "raw ScriptObject not expected here";
 
-    if (clazz == null || !clazz.isInterface()) {
+    if (type == null || !type.isInterface()) {
       throw new IllegalArgumentException(getMessage("interface.class.expected"));
     }
 
     ScriptObject realSelf = null;
     Global realGlobal = null;
-    if (thiz == null) {
+    if (self == null) {
       // making interface out of global functions
       realSelf = realGlobal = getNashornGlobalFrom(context);
-    } else if (thiz instanceof ScriptObjectMirror) {
-      final ScriptObjectMirror mirror = (ScriptObjectMirror) thiz;
+    } else if (self instanceof ScriptObjectMirror mirror) {
       realSelf = mirror.getScriptObject();
       realGlobal = mirror.getHomeGlobal();
       if (!isOfContext(realGlobal, nashornContext)) {
@@ -212,50 +203,52 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     }
 
     try {
-      final Global oldGlobal = Context.getGlobal();
-      final boolean globalChanged = (oldGlobal != realGlobal);
+      var oldGlobal = Context.getGlobal();
+      var globalChanged = (oldGlobal != realGlobal);
       try {
         if (globalChanged) {
           Context.setGlobal(realGlobal);
         }
 
-        if (!isInterfaceImplemented(clazz, realSelf)) {
+        if (!isInterfaceImplemented(type, realSelf)) {
           return null;
         }
-        return clazz.cast(JavaAdapterFactory.getConstructor(realSelf.getClass(), clazz,
-                MethodHandles.publicLookup()).invoke(realSelf));
+        return type.cast(
+          JavaAdapterFactory.getConstructor(realSelf.getClass(),
+          type, MethodHandles.publicLookup()).invoke(realSelf)
+        );
       } finally {
         if (globalChanged) {
           Context.setGlobal(oldGlobal);
         }
       }
-    } catch (final RuntimeException | Error e) {
+    } catch (RuntimeException | Error e) {
       throw e;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
   // Retrieve nashorn Global object for a given ScriptContext object
-  private Global getNashornGlobalFrom(final ScriptContext ctxt) {
+  Global getNashornGlobalFrom(ScriptContext ctxt) {
     if (_global_per_engine) {
       // shared single global object for all ENGINE_SCOPE Bindings
       return global;
     }
 
-    final Bindings bindings = ctxt.getBindings(ScriptContext.ENGINE_SCOPE);
+    var bindings = ctxt.getBindings(ScriptContext.ENGINE_SCOPE);
     // is this Nashorn's own Bindings implementation?
-    if (bindings instanceof ScriptObjectMirror) {
-      final Global glob = globalFromMirror((ScriptObjectMirror) bindings);
+    if (bindings instanceof ScriptObjectMirror som) {
+      var glob = globalFromMirror(som);
       if (glob != null) {
         return glob;
       }
     }
 
     // Arbitrary user Bindings implementation. Look for NASHORN_GLOBAL in it!
-    final Object scope = bindings.get(NASHORN_GLOBAL);
-    if (scope instanceof ScriptObjectMirror) {
-      final Global glob = globalFromMirror((ScriptObjectMirror) scope);
+    var scope = bindings.get(NASHORN_GLOBAL);
+    if (scope instanceof ScriptObjectMirror som) {
+      var glob = globalFromMirror(som);
       if (glob != null) {
         return glob;
       }
@@ -263,62 +256,62 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
 
     // We didn't find associated nashorn global mirror in the Bindings given!
     // Create new global instance mirror and associate with the Bindings.
-    final ScriptObjectMirror mirror = createGlobalMirror();
+    var mirror = createGlobalMirror();
     bindings.put(NASHORN_GLOBAL, mirror);
     // Since we created this global explicitly for the non-default script context we set the
-    // current script context in global permanently so that invokes work as expected. See JDK-8150219
+    // current script context in global permanently so that invokes work as expected.
     mirror.getHomeGlobal().setInitScriptContext(ctxt);
     return mirror.getHomeGlobal();
   }
 
   // Retrieve nashorn Global object from a given ScriptObjectMirror
-  private Global globalFromMirror(final ScriptObjectMirror mirror) {
-    final ScriptObject sobj = mirror.getScriptObject();
-    if (sobj instanceof Global && isOfContext((Global) sobj, nashornContext)) {
-      return (Global) sobj;
+  Global globalFromMirror(ScriptObjectMirror mirror) {
+    var sobj = mirror.getScriptObject();
+    if (sobj instanceof Global g && isOfContext(g, nashornContext)) {
+      return g;
     }
 
     return null;
   }
 
   // Create a new ScriptObjectMirror wrapping a newly created Nashorn Global object
-  private ScriptObjectMirror createGlobalMirror() {
-    final Global newGlobal = createNashornGlobal();
+  ScriptObjectMirror createGlobalMirror() {
+    var newGlobal = createNashornGlobal();
     return new ScriptObjectMirror(newGlobal, newGlobal);
   }
 
   // Create a new Nashorn Global object
-  private Global createNashornGlobal() {
+  Global createNashornGlobal() {
     Global newGlobal = null;
-        try {
-          newGlobal = nashornContext.newGlobal();
-        } catch (final RuntimeException e) {
-          if (Context.DEBUG) {
-            e.printStackTrace();
-          }
-          throw e;
-        }
+    try {
+      newGlobal = nashornContext.newGlobal();
+    } catch (RuntimeException e) {
+      if (Context.DEBUG) {
+        e.printStackTrace();
+      }
+      throw e;
+    }
 
     nashornContext.initGlobal(newGlobal, this);
 
     return newGlobal;
   }
 
-  private Object invokeImpl(final Object selfObject, final String name, final Object... args) throws ScriptException, NoSuchMethodException {
+  Object invokeImpl(Object selfObject, String name, Object... args) throws ScriptException, NoSuchMethodException {
     Objects.requireNonNull(name);
     assert !(selfObject instanceof ScriptObject) : "raw ScriptObject not expected here";
 
     Global invokeGlobal = null;
     ScriptObjectMirror selfMirror = null;
-    if (selfObject instanceof ScriptObjectMirror) {
-      selfMirror = (ScriptObjectMirror) selfObject;
+    if (selfObject instanceof ScriptObjectMirror som) {
+      selfMirror = som;
       if (!isOfContext(selfMirror.getHomeGlobal(), nashornContext)) {
         throw new IllegalArgumentException(getMessage("script.object.from.another.engine"));
       }
       invokeGlobal = selfMirror.getHomeGlobal();
     } else if (selfObject == null) {
       // selfObject is null => global function call
-      final Global ctxtGlobal = getNashornGlobalFrom(context);
+      var ctxtGlobal = getNashornGlobalFrom(context);
       invokeGlobal = ctxtGlobal;
       selfMirror = (ScriptObjectMirror) ScriptObjectMirror.wrap(ctxtGlobal, ctxtGlobal);
     }
@@ -326,10 +319,10 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     if (selfMirror != null) {
       try {
         return ScriptObjectMirror.translateUndefined(selfMirror.callMember(name, args));
-      } catch (final Exception e) {
-        final Throwable cause = e.getCause();
-        if (cause instanceof NoSuchMethodException) {
-          throw (NoSuchMethodException) cause;
+      } catch (Exception e) {
+        var cause = e.getCause();
+        if (cause instanceof NoSuchMethodException nsme) {
+          throw nsme;
         }
         throwAsScriptException(e, invokeGlobal);
         throw new AssertionError("should not reach here");
@@ -340,31 +333,31 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     throw new IllegalArgumentException(getMessage("interface.on.non.script.object"));
   }
 
-  private Object evalImpl(final Source src, final ScriptContext ctxt) throws ScriptException {
+  Object evalImpl(Source src, ScriptContext ctxt) throws ScriptException {
     return evalImpl(compileImpl(src, ctxt), ctxt);
   }
 
-  private Object evalImpl(final ScriptFunction script, final ScriptContext ctxt) throws ScriptException {
+  Object evalImpl(ScriptFunction script, ScriptContext ctxt) throws ScriptException {
     return evalImpl(script, ctxt, getNashornGlobalFrom(ctxt));
   }
 
-  private Object evalImpl(final Context.MultiGlobalCompiledScript mgcs, final ScriptContext ctxt, final Global ctxtGlobal) throws ScriptException {
-    final Global oldGlobal = Context.getGlobal();
-    final boolean globalChanged = (oldGlobal != ctxtGlobal);
+  Object evalImpl(Context.MultiGlobalCompiledScript mgcs, ScriptContext ctxt, Global ctxtGlobal) throws ScriptException {
+    var oldGlobal = Context.getGlobal();
+    var globalChanged = (oldGlobal != ctxtGlobal);
     try {
       if (globalChanged) {
         Context.setGlobal(ctxtGlobal);
       }
 
-      final ScriptFunction script = mgcs.getFunction(ctxtGlobal);
-      final ScriptContext oldCtxt = ctxtGlobal.getScriptContext();
+      var script = mgcs.getFunction(ctxtGlobal);
+      var oldCtxt = ctxtGlobal.getScriptContext();
       ctxtGlobal.setScriptContext(ctxt);
       try {
         return ScriptObjectMirror.translateUndefined(ScriptObjectMirror.wrap(ScriptRuntime.apply(script, ctxtGlobal), ctxtGlobal));
       } finally {
         ctxtGlobal.setScriptContext(oldCtxt);
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throwAsScriptException(e, ctxtGlobal);
       throw new AssertionError("should not reach here");
     } finally {
@@ -374,12 +367,12 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     }
   }
 
-  private Object evalImpl(final ScriptFunction script, final ScriptContext ctxt, final Global ctxtGlobal) throws ScriptException {
+  Object evalImpl(ScriptFunction script, ScriptContext ctxt, Global ctxtGlobal) throws ScriptException {
     if (script == null) {
       return null;
     }
-    final Global oldGlobal = Context.getGlobal();
-    final boolean globalChanged = (oldGlobal != ctxtGlobal);
+    var oldGlobal = Context.getGlobal();
+    var globalChanged = (oldGlobal != ctxtGlobal);
     try {
       if (globalChanged) {
         Context.setGlobal(ctxtGlobal);
@@ -392,7 +385,7 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
       } finally {
         ctxtGlobal.setScriptContext(oldCtxt);
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throwAsScriptException(e, ctxtGlobal);
       throw new AssertionError("should not reach here");
     } finally {
@@ -402,31 +395,29 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     }
   }
 
-  private static void throwAsScriptException(final Exception e, final Global global) throws ScriptException {
-    if (e instanceof ScriptException) {
-      throw (ScriptException) e;
-    } else if (e instanceof NashornException) {
-      final NashornException ne = (NashornException) e;
-      final ScriptException se = new ScriptException(
-              ne.getMessage(), ne.getFileName(),
-              ne.getLineNumber(), ne.getColumnNumber());
+  static void throwAsScriptException(Exception e, Global global) throws ScriptException {
+    if (e instanceof ScriptException se) {
+      throw se;
+    } else if (e instanceof NashornException ne) {
+      var se = new ScriptException(ne.getMessage(), ne.getFileName(), ne.getLineNumber(), ne.getColumnNumber());
       ne.initEcmaError(global);
       se.initCause(e);
       throw se;
-    } else if (e instanceof RuntimeException) {
-      throw (RuntimeException) e;
+    } else if (e instanceof RuntimeException re) {
+      throw re;
     } else {
       // wrap any other exception as ScriptException
       throw new ScriptException(e);
     }
   }
 
-  private CompiledScript asCompiledScript(final Source source) throws ScriptException {
+  CompiledScript asCompiledScript(Source source) throws ScriptException {
     final Context.MultiGlobalCompiledScript mgcs;
     final ScriptFunction func;
-    final Global oldGlobal = Context.getGlobal();
-    final Global newGlobal = getNashornGlobalFrom(context);
-    final boolean globalChanged = (oldGlobal != newGlobal);
+
+    var oldGlobal = Context.getGlobal();
+    var newGlobal = getNashornGlobalFrom(context);
+    var globalChanged = (oldGlobal != newGlobal);
     try {
       if (globalChanged) {
         Context.setGlobal(newGlobal);
@@ -434,7 +425,7 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
 
       mgcs = nashornContext.compileScript(source);
       func = mgcs.getFunction(newGlobal);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throwAsScriptException(e, newGlobal);
       throw new AssertionError("should not reach here");
     } finally {
@@ -445,8 +436,8 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
 
     return new CompiledScript() {
       @Override
-      public Object eval(final ScriptContext ctxt) throws ScriptException {
-        final Global globalObject = getNashornGlobalFrom(ctxt);
+      public Object eval(ScriptContext ctxt) throws ScriptException {
+        var globalObject = getNashornGlobalFrom(ctxt);
         // Are we running the script in the same global in which it was compiled?
         if (func.getScope() == globalObject) {
           return evalImpl(func, ctxt, globalObject);
@@ -455,7 +446,6 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
         // different global
         return evalImpl(mgcs, ctxt, globalObject);
       }
-
       @Override
       public ScriptEngine getEngine() {
         return NashornScriptEngine.this;
@@ -463,20 +453,20 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     };
   }
 
-  private ScriptFunction compileImpl(final Source source, final ScriptContext ctxt) throws ScriptException {
+  ScriptFunction compileImpl(Source source, ScriptContext ctxt) throws ScriptException {
     return compileImpl(source, getNashornGlobalFrom(ctxt));
   }
 
-  private ScriptFunction compileImpl(final Source source, final Global newGlobal) throws ScriptException {
-    final Global oldGlobal = Context.getGlobal();
-    final boolean globalChanged = (oldGlobal != newGlobal);
+  ScriptFunction compileImpl(Source source, Global newGlobal) throws ScriptException {
+    var oldGlobal = Context.getGlobal();
+    var globalChanged = (oldGlobal != newGlobal);
     try {
       if (globalChanged) {
         Context.setGlobal(newGlobal);
       }
 
       return nashornContext.compileScript(source, newGlobal);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throwAsScriptException(e, newGlobal);
       throw new AssertionError("should not reach here");
     } finally {
@@ -486,8 +476,8 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     }
   }
 
-  private static boolean isInterfaceImplemented(final Class<?> iface, final ScriptObject sobj) {
-    for (final Method method : iface.getMethods()) {
+  static boolean isInterfaceImplemented(Class<?> iface, ScriptObject sobj) {
+    for (var method : iface.getMethods()) {
       // ignore methods of java.lang.Object class
       if (method.getDeclaringClass() == Object.class) {
         continue;
@@ -498,7 +488,7 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
         continue;
       }
 
-      final Object obj = sobj.get(method.getName());
+      var obj = sobj.get(method.getName());
       if (!(obj instanceof ScriptFunction)) {
         return false;
       }
@@ -506,7 +496,8 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     return true;
   }
 
-  private static boolean isOfContext(final Global global, final Context context) {
+  static boolean isOfContext(Global global, Context context) {
     return global.isOfContext(context);
   }
+
 }

@@ -1,5 +1,6 @@
 /**
  * This package provides the {@code javax.script} integration, which is the preferred way to use Nashorn.
+ *
  * You will ordinarily do this to obtain an instance of a Nashorn script engine:
  * <pre>
  * import javax.script.*;
