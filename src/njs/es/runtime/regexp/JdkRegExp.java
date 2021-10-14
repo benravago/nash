@@ -1,12 +1,10 @@
 package es.runtime.regexp;
 
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
-import static java.util.regex.Pattern.MULTILINE;
-import static java.util.regex.Pattern.UNICODE_CASE;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import static java.util.regex.Pattern.*;
+
 import es.runtime.ParserException;
 
 /**
@@ -17,7 +15,7 @@ import es.runtime.ParserException;
  */
 public class JdkRegExp extends RegExp {
 
-  /** Java regexp pattern to use for match. We compile to one of these */
+  // Java regexp pattern to use for match. We compile to one of these
   private Pattern pattern;
 
   /**
@@ -27,10 +25,10 @@ public class JdkRegExp extends RegExp {
    * @param flags RegExp flag string
    * @throws ParserException if flags is invalid or source string has syntax error.
    */
-  public JdkRegExp(final String source, final String flags) throws ParserException {
+  public JdkRegExp(String source, String flags) throws ParserException {
     super(source, flags);
 
-    int intFlags = 0;
+    var intFlags = 0;
 
     if (isIgnoreCase()) {
       intFlags |= CASE_INSENSITIVE | UNICODE_CASE;
@@ -44,9 +42,9 @@ public class JdkRegExp extends RegExp {
 
       try {
         parsed = RegExpScanner.scan(source);
-      } catch (final PatternSyntaxException e) {
-        // refine the exception with a better syntax error, if this
-        // passes, just rethrow what we have
+      } catch (PatternSyntaxException e) {
+        // refine the exception with a better syntax error,
+        // if this passes, just rethrow what we have
         Pattern.compile(source, intFlags);
         throw e;
       }
@@ -55,7 +53,7 @@ public class JdkRegExp extends RegExp {
         this.pattern = Pattern.compile(parsed.getJavaPattern(), intFlags);
         this.groupsInNegativeLookahead = parsed.getGroupsInNegativeLookahead();
       }
-    } catch (final PatternSyntaxException e2) {
+    } catch (PatternSyntaxException e2) {
       throwParserException("syntax", e2.getMessage());
     } catch (StackOverflowError e3) {
       throw new RuntimeException(e3);
@@ -63,12 +61,8 @@ public class JdkRegExp extends RegExp {
   }
 
   @Override
-  public RegExpMatcher match(final String str) {
-    if (pattern == null) {
-      return null; // never matches or similar, e.g. a[]
-    }
-
-    return new DefaultMatcher(str);
+  public RegExpMatcher match(String str) {
+    return (pattern == null) ? null : new DefaultMatcher(str);
   }
 
   class DefaultMatcher implements RegExpMatcher {
@@ -76,13 +70,13 @@ public class JdkRegExp extends RegExp {
     final String input;
     final Matcher defaultMatcher;
 
-    DefaultMatcher(final String input) {
+    DefaultMatcher(String input) {
       this.input = input;
       this.defaultMatcher = pattern.matcher(input);
     }
 
     @Override
-    public boolean search(final int start) {
+    public boolean search(int start) {
       return defaultMatcher.find(start);
     }
 
@@ -97,7 +91,7 @@ public class JdkRegExp extends RegExp {
     }
 
     @Override
-    public int start(final int group) {
+    public int start(int group) {
       return defaultMatcher.start(group);
     }
 
@@ -107,7 +101,7 @@ public class JdkRegExp extends RegExp {
     }
 
     @Override
-    public int end(final int group) {
+    public int end(int group) {
       return defaultMatcher.end(group);
     }
 
@@ -117,7 +111,7 @@ public class JdkRegExp extends RegExp {
     }
 
     @Override
-    public String group(final int group) {
+    public String group(int group) {
       return defaultMatcher.group(group);
     }
 

@@ -1,6 +1,7 @@
 package es.runtime.regexp;
 
 import java.util.regex.MatchResult;
+
 import es.runtime.BitVector;
 import es.runtime.ECMAErrors;
 import es.runtime.ParserException;
@@ -33,31 +34,32 @@ public abstract class RegExp {
    * @param source the source string
    * @param flags the flags string
    */
-  protected RegExp(final String source, final String flags) {
+  protected RegExp(String source, String flags) {
     this.source = source.length() == 0 ? "(?:)" : source;
-    for (int i = 0; i < flags.length(); i++) {
-      final char ch = flags.charAt(i);
+    for (var i = 0; i < flags.length(); i++) {
+      var ch = flags.charAt(i);
       switch (ch) {
-        case 'g':
+        case 'g' -> {
           if (this.global) {
             throwParserException("repeated.flag", "g");
           }
           this.global = true;
-          break;
-        case 'i':
+        }
+        case 'i' -> {
           if (this.ignoreCase) {
             throwParserException("repeated.flag", "i");
           }
           this.ignoreCase = true;
-          break;
-        case 'm':
+        }
+        case 'm' -> {
           if (this.multiline) {
             throwParserException("repeated.flag", "m");
           }
           this.multiline = true;
-          break;
-        default:
+        }
+        default -> {
           throwParserException("unsupported.flag", Character.toString(ch));
+        }
       }
     }
   }
@@ -76,7 +78,7 @@ public abstract class RegExp {
    *
    * @param global the new global flag
    */
-  public void setGlobal(final boolean global) {
+  public void setGlobal(boolean global) {
     this.global = global;
   }
 
@@ -132,7 +134,8 @@ public abstract class RegExp {
    * @param str string argument
    * @throws es.runtime.ParserException unconditionally
    */
-  protected static void throwParserException(final String key, final String str) throws ParserException {
+  protected static void throwParserException(String key, String str) throws ParserException {
     throw new ParserException(ECMAErrors.getMessage("parser.error.regex." + key, str));
   }
+
 }

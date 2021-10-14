@@ -5,7 +5,7 @@ public interface Hex {
   /**
    * Return the system identity hashcode for an object as a human readable string.
    */
-  static String id(final Object x) {
+  static String id(Object x) {
     return String.format("0x%08x", System.identityHashCode(x));
   }
 

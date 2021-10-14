@@ -12,9 +12,9 @@ public class IntDeque {
    * Push an int value
    * @param value value
    */
-  public void push(final int value) {
+  public void push(int value) {
     if (nextFree == deque.length) {
-      final int[] newDeque = new int[nextFree * 2];
+      var newDeque = new int[nextFree * 2];
       System.arraycopy(deque, 0, newDeque, 0, nextFree);
       deque = newDeque;
     }
@@ -60,4 +60,5 @@ public class IntDeque {
   public boolean isEmpty() {
     return nextFree == 0;
   }
+
 }

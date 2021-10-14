@@ -23,7 +23,7 @@ public class JO extends ScriptObject {
    *
    * @param map the property map
    */
-  public JO(final PropertyMap map) {
+  public JO(PropertyMap map) {
     super(map);
   }
 
@@ -32,20 +32,19 @@ public class JO extends ScriptObject {
    *
    * @param proto the prototype object
    */
-  public JO(final ScriptObject proto) {
+  public JO(ScriptObject proto) {
     super(proto, getInitialMap());
   }
 
   /**
-   * Constructor that takes a pre-initialized spill pool. Used by
-   * {@link es.codegen.SpillObjectCreator} and
-   * {@link es.parser.JSONParser} for initializing object literals
+   * Constructor that takes a pre-initialized spill pool.
+   * Used by {@link es.codegen.SpillObjectCreator} and {@link es.parser.JSONParser} for initializing object literals
    *
    * @param map            property map
    * @param primitiveSpill primitive spill pool
    * @param objectSpill    reference spill pool
    */
-  public JO(final PropertyMap map, final long[] primitiveSpill, final Object[] objectSpill) {
+  public JO(PropertyMap map, long[] primitiveSpill, Object[] objectSpill) {
     super(map, primitiveSpill, objectSpill);
   }
 
@@ -53,10 +52,10 @@ public class JO extends ScriptObject {
    * A method handle of this method is passed to the ScriptFunction constructor.
    *
    * @param map  the property map to use for allocatorMap
-   *
    * @return newly allocated ScriptObject
    */
-  public static ScriptObject allocate(final PropertyMap map) {
+  public static ScriptObject allocate(PropertyMap map) {
     return new JO(map);
   }
+
 }

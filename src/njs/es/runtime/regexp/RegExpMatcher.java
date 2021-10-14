@@ -3,8 +3,8 @@ package es.runtime.regexp;
 import java.util.regex.MatchResult;
 
 /**
- * Interface for matching a regular expression against a string and retrieving the
- * match result. Extends {@link MatchResult}.
+ * Interface for matching a regular expression against a string and retrieving the match result.
+ * Extends {@link MatchResult}.
  */
 public interface RegExpMatcher extends MatchResult {
 

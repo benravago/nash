@@ -16,7 +16,7 @@ public final class RegExpResult {
    * @param index  index of match
    * @param groups groups vector
    */
-  public RegExpResult(final String input, final int index, final Object[] groups) {
+  public RegExpResult(String input, int index, Object[] groups) {
     this.input = input;
     this.index = index;
     this.groups = groups;
@@ -59,7 +59,7 @@ public final class RegExpResult {
    * @param groupIndex the group index
    * @return the group or ""
    */
-  public Object getGroup(final int groupIndex) {
+  public Object getGroup(int groupIndex) {
     return groupIndex >= 0 && groupIndex < groups.length ? groups[groupIndex] : "";
   }
 

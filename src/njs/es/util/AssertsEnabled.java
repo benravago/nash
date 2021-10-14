@@ -18,4 +18,5 @@ public final class AssertsEnabled {
   public static boolean assertsEnabled() {
     return assertsEnabled;
   }
+
 }

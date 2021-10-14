@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 /**
- * This class provides a map based cache with weakly referenced values. Cleared references are
- * purged from the underlying map when values are retrieved or created.
+ * This class provides a map based cache with weakly referenced values.
+
+ * Cleared references are purged from the underlying map when values are retrieved or created.
  * It uses a {@link java.util.HashMap} to store values and needs to be externally synchronized.
  *
  * @param <K> the key type
@@ -24,17 +25,17 @@ public final class WeakValueCache<K, V> {
    * @param key the key
    * @return the value or null if none exists
    */
-  public V get(final K key) {
+  public V get(K key) {
     // Remove cleared entries
     for (;;) {
-      final KeyValueReference<?, ?> ref = (KeyValueReference) refQueue.poll();
+      var ref = (KeyValueReference) refQueue.poll();
       if (ref == null) {
         break;
       }
       map.remove(ref.key, ref);
     }
 
-    final KeyValueReference<K, V> ref = map.get(key);
+    var ref = map.get(key);
     if (ref != null) {
       return ref.get();
     }
@@ -42,15 +43,15 @@ public final class WeakValueCache<K, V> {
   }
 
   /**
-   * Returns the value associated with {@code key}, or creates and returns a new value if
-   * no value exists using the {@code creator} function.
+   * Returns the value associated with {@code key},
+   * or creates and returns a new value if no value exists using the {@code creator} function.
    *
    * @param key the key
    * @param creator function to create a new value
    * @return the existing value, or a new one if none existed
    */
-  public V getOrCreate(final K key, final Function<? super K, ? extends V> creator) {
-    V value = get(key);
+  public V getOrCreate(K key, Function<? super K, ? extends V> creator) {
+    var value = get(key);
 
     if (value == null) {
       // Define a new value if it does not exist
@@ -61,11 +62,11 @@ public final class WeakValueCache<K, V> {
     return value;
   }
 
-  private static class KeyValueReference<K, V> extends WeakReference<V> {
+  static class KeyValueReference<K, V> extends WeakReference<V> {
 
     final K key;
 
-    KeyValueReference(final K key, final V value) {
+    KeyValueReference(K key, V value) {
       super(value);
       this.key = key;
     }
