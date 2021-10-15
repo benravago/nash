@@ -5,11 +5,15 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * This annotation is associated with a class that has a logger.
- * It contains a name property of the logger name. e.g. a class
- * whose logger can be initialized by --log:fields, should be
- * annotated @Logger(name="fields"). Multiple classes can have
- * the same annotation, which will make them use the same logger
- * object. Usually a class with this annotation is also a Loggable,
+ *
+ * It contains a name property of the logger name.
+ * e.g. a class whose logger can be initialized by --log:fields,
+ * should be annotated @Logger(name="fields").
+ *
+ * Multiple classes can have the same annotation,
+ * which will make them use the same logger object.
+ * 
+ * Usually a class with this annotation is also a Loggable,
  * but it is not a hard demand
  *
  * @see Loggable
@@ -22,4 +26,5 @@ public @interface Logger {
    * @return logger name
    */
   public String name() default "";
+
 }

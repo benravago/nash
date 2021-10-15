@@ -1,28 +1,23 @@
 package es.runtime.options;
 
 import java.io.PrintWriter;
-
-import java.security.Permissions;
-import java.security.PrivilegedAction;
-import java.security.ProtectionDomain;
 import java.text.MessageFormat;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Objects;
-import java.util.PropertyPermission;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import es.runtime.QuotedStringTokenizer;
 
 /**
@@ -30,25 +25,25 @@ import es.runtime.QuotedStringTokenizer;
  */
 public final class Options {
 
-  /** Resource tag. */
+  // Resource tag.
   private final String resource;
 
-  /** Error writer. */
+  // Error writer.
   private final PrintWriter err;
 
-  /** File list. */
+  // File list.
   private final List<String> files;
 
-  /** Arguments list */
+  // Arguments list
   private final List<String> arguments;
 
-  /** The options map of enabled options */
+  // The options map of enabled options
   private final TreeMap<String, Option<?>> options;
 
-  /** System property that can be used to prepend options to the explicitly specified command line. */
+  // System property that can be used to prepend options to the explicitly specified command line.
   private static final String NASHORN_ARGS_PREPEND_PROPERTY = "nashorn.args.prepend";
 
-  /** System property that can be used to append options to the explicitly specified command line. */
+  // System property that can be used to append options to the explicitly specified command line.
   private static final String NASHORN_ARGS_PROPERTY = "nashorn.args";
 
   /**
@@ -58,7 +53,7 @@ public final class Options {
    *
    * @param resource resource prefix for options e.g. "nashorn"
    */
-  public Options(final String resource) {
+  public Options(String resource) {
     this(resource, new PrintWriter(System.err, true));
   }
 
@@ -68,7 +63,7 @@ public final class Options {
    * @param resource resource prefix for options e.g. "nashorn"
    * @param err      error stream for reporting parse errors
    */
-  public Options(final String resource, final PrintWriter err) {
+  public Options(String resource, PrintWriter err) {
     this.resource = resource;
     this.err = err;
     this.files = new ArrayList<>();
@@ -76,10 +71,10 @@ public final class Options {
     this.options = new TreeMap<>();
 
     // set all default values
-    for (final OptionTemplate t : Options.validOptions) {
+    for (var t : Options.validOptions) {
       if (t.getDefaultValue() != null) {
         // populate from system properties
-        final String v = getStringProperty(t.getKey(), null);
+        var v = getStringProperty(t.getKey(), null);
         if (v != null) {
           set(t.getKey(), createOption(t, v));
         } else if (t.getDefaultValue() != null) {
@@ -102,7 +97,7 @@ public final class Options {
     return options.toString();
   }
 
-  private static void checkPropertyName(final String name) {
+  static void checkPropertyName(String name) {
     if (!Objects.requireNonNull(name).startsWith("nashorn.")) {
       throw new IllegalArgumentException(name);
     }
@@ -115,18 +110,18 @@ public final class Options {
    * @param defValue default value of boolean property
    * @return true if set to true, default value if unset or set to false
    */
-  public static boolean getBooleanProperty(final String name, final Boolean defValue) {
+  public static boolean getBooleanProperty(String name, Boolean defValue) {
     checkPropertyName(name);
-        try {
-          final String property = System.getProperty(name);
-          if (property == null && defValue != null) {
-            return defValue;
-          }
-          return property != null && !"false".equalsIgnoreCase(property);
-        } catch (final SecurityException e) {
-          // if no permission to read, assume false
-          return false;
-        }
+    try {
+      var property = System.getProperty(name);
+      if (property == null && defValue != null) {
+        return defValue;
+      }
+      return property != null && !"false".equalsIgnoreCase(property);
+    } catch (SecurityException e) {
+      // if no permission to read, assume false
+      return false;
+    }
   }
 
   /**
@@ -135,7 +130,7 @@ public final class Options {
    * @param name of boolean property
    * @return true if set to true, false if unset or set to false
    */
-  public static boolean getBooleanProperty(final String name) {
+  public static boolean getBooleanProperty(String name) {
     return getBooleanProperty(name, null);
   }
 
@@ -146,14 +141,14 @@ public final class Options {
    * @param defValue the default value if unset
    * @return string property if set or default value
    */
-  public static String getStringProperty(final String name, final String defValue) {
+  public static String getStringProperty(String name, String defValue) {
     checkPropertyName(name);
-        try {
-          return System.getProperty(name, defValue);
-        } catch (final SecurityException e) {
-          // if no permission to read, assume the default value
-          return defValue;
-        }
+    try {
+      return System.getProperty(name, defValue);
+    } catch (SecurityException e) {
+      // if no permission to read, assume the default value
+      return defValue;
+    }
   }
 
   /**
@@ -163,14 +158,14 @@ public final class Options {
    * @param defValue the default value if unset
    * @return integer property if set or default value
    */
-  public static int getIntProperty(final String name, final int defValue) {
+  public static int getIntProperty(String name, int defValue) {
     checkPropertyName(name);
-        try {
-          return Integer.getInteger(name, defValue);
-        } catch (final SecurityException e) {
-          // if no permission to read, assume the default value
-          return defValue;
-        }
+    try {
+      return Integer.getInteger(name, defValue);
+    } catch (SecurityException e) {
+      // if no permission to read, assume the default value
+      return defValue;
+    }
   }
 
   /**
@@ -181,7 +176,7 @@ public final class Options {
    * @param key key for option
    * @return an option value
    */
-  public Option<?> get(final String key) {
+  public Option<?> get(String key) {
     return options.get(key(key));
   }
 
@@ -191,8 +186,8 @@ public final class Options {
    * @param key key for option
    * @return an option value
    */
-  public boolean getBoolean(final String key) {
-    final Option<?> option = get(key);
+  public boolean getBoolean(String key) {
+    var option = get(key);
     return option != null ? (Boolean) option.getValue() : false;
   }
 
@@ -202,8 +197,8 @@ public final class Options {
    * @param key key for option
    * @return an option value
    */
-  public int getInteger(final String key) {
-    final Option<?> option = get(key);
+  public int getInteger(String key) {
+    var option = get(key);
     return option != null ? (Integer) option.getValue() : 0;
   }
 
@@ -213,10 +208,10 @@ public final class Options {
    * @param key key for option
    * @return an option value
    */
-  public String getString(final String key) {
-    final Option<?> option = get(key);
+  public String getString(String key) {
+    var option = get(key);
     if (option != null) {
-      final String value = (String) option.getValue();
+      var value = (String) option.getValue();
       if (value != null) {
         return value.intern();
       }
@@ -230,7 +225,7 @@ public final class Options {
    * @param key    option key
    * @param option option
    */
-  public void set(final String key, final Option<?> option) {
+  public void set(String key, Option<?> option) {
     options.put(key(key), option);
   }
 
@@ -240,7 +235,7 @@ public final class Options {
    * @param key    option key
    * @param option option
    */
-  public void set(final String key, final boolean option) {
+  public void set(String key, boolean option) {
     set(key, new Option<>(option));
   }
 
@@ -250,7 +245,7 @@ public final class Options {
    * @param key    option key
    * @param option option
    */
-  public void set(final String key, final String option) {
+  public void set(String key, String option) {
     set(key, new Option<>(option));
   }
 
@@ -288,27 +283,27 @@ public final class Options {
    * @param shortKey key for option
    * @return fully qualified key
    */
-  private String key(final String shortKey) {
-    String key = shortKey;
+  private String key(String shortKey) {
+    var key = shortKey;
     while (key.startsWith("-")) {
       key = key.substring(1, key.length());
     }
     key = key.replace("-", ".");
-    final String keyPrefix = this.resource + ".option.";
+    var keyPrefix = this.resource + ".option.";
     if (key.startsWith(keyPrefix)) {
       return key;
     }
     return keyPrefix + key;
   }
 
-  static String getMsg(final String msgId, final String... args) {
+  static String getMsg(String msgId, String... args) {
     try {
-      final String msg = Options.bundle.getString(msgId);
+      var msg = Options.bundle.getString(msgId);
       if (args.length == 0) {
         return msg;
       }
       return new MessageFormat(msg).format(args);
-    } catch (final MissingResourceException e) {
+    } catch (MissingResourceException e) {
       throw new IllegalArgumentException(e);
     }
   }
@@ -318,23 +313,22 @@ public final class Options {
    *
    * @param e  exception that caused a parse error
    */
-  public void displayHelp(final IllegalArgumentException e) {
-    if (e instanceof IllegalOptionException) {
-      final OptionTemplate template = ((IllegalOptionException) e).getTemplate();
+  public void displayHelp(IllegalArgumentException e) {
+    if (e instanceof IllegalOptionException ioe) {
+      var template = ioe.getTemplate();
       if (template.isXHelp()) {
         // display extended help information
         displayHelp(true);
       } else {
-        err.println(((IllegalOptionException) e).getTemplate());
+        err.println(ioe.getTemplate());
       }
       return;
     }
 
     if (e != null && e.getMessage() != null) {
       err.println(getMsg("option.error.invalid.option",
-              e.getMessage(),
-              helpOptionTemplate.getShortName(),
-              helpOptionTemplate.getName()));
+        e.getMessage(), helpOptionTemplate.getShortName(), helpOptionTemplate.getName())
+      );
       err.println();
       return;
     }
@@ -347,8 +341,8 @@ public final class Options {
    *
    * @param extended show the extended help for all options, including undocumented ones
    */
-  public void displayHelp(final boolean extended) {
-    for (final OptionTemplate t : Options.validOptions) {
+  public void displayHelp(boolean extended) {
+    for (var t : Options.validOptions) {
       if ((extended || !t.isUndocumented()) && t.getResource().equals(resource)) {
         err.println(t);
         err.println();
@@ -363,8 +357,8 @@ public final class Options {
    *
    * @param args arguments from command line
    */
-  public void process(final String[] args) {
-    final LinkedList<String> argList = new LinkedList<>();
+  public void process(String[] args) {
+    var argList = new LinkedList<String>();
     addSystemProperties(NASHORN_ARGS_PREPEND_PROPERTY, argList);
     processArgList(argList);
     assert argList.isEmpty();
@@ -376,9 +370,9 @@ public final class Options {
     assert argList.isEmpty();
   }
 
-  private void processArgList(final LinkedList<String> argList) {
+  void processArgList(LinkedList<String> argList) {
     while (!argList.isEmpty()) {
-      final String arg = argList.remove(0);
+      var arg = argList.remove(0);
       Objects.requireNonNull(arg);
 
       // skip empty args
@@ -393,16 +387,16 @@ public final class Options {
         continue;
       }
 
-      // If it doesn't start with -, it's a file. But, if it is just "-",
-      // then it is a file representing standard input.
+      // If it doesn't start with -, it's a file.
+      // But, if it is just "-", then it is a file representing standard input.
       if (!arg.startsWith("-") || arg.length() == 1) {
         files.add(arg);
         continue;
       }
 
       if (arg.startsWith(definePropPrefix)) {
-        final String value = arg.substring(definePropPrefix.length());
-        final int eq = value.indexOf('=');
+        var value = arg.substring(definePropPrefix.length());
+        var eq = value.indexOf('=');
         if (eq != -1) {
           // -Dfoo=bar Set System property "foo" with value "bar"
           System.setProperty(value.substring(0, eq), value.substring(eq + 1));
@@ -419,7 +413,7 @@ public final class Options {
       }
 
       // it is an argument,  it and assign key, value and template
-      final ParsedArg parg = new ParsedArg(arg);
+      var parg = new ParsedArg(arg);
 
       // check if the value of this option is passed as next argument
       if (parg.template.isValueNextArg()) {
@@ -434,9 +428,9 @@ public final class Options {
         // check if someone wants help on an explicit arg
         if (!argList.isEmpty()) {
           try {
-            final OptionTemplate t = new ParsedArg(argList.get(0)).template;
+            var t = new ParsedArg(argList.get(0)).template;
             throw new IllegalOptionException(t);
-          } catch (final IllegalArgumentException e) {
+          } catch (IllegalArgumentException e) {
             throw e;
           }
         }
@@ -451,26 +445,26 @@ public final class Options {
       if (parg.template.isRepeated()) {
         assert parg.template.getType().equals("string");
 
-        final String key = key(parg.template.getKey());
-        final String value = options.containsKey(key)
-                ? (options.get(key).getValue() + "," + parg.value) : Objects.toString(parg.value);
+        var key = key(parg.template.getKey());
+        var value = options.containsKey(key)
+          ? (options.get(key).getValue() + "," + parg.value)
+          : Objects.toString(parg.value);
         options.put(key, new Option<>(value));
       } else {
         set(parg.template.getKey(), createOption(parg.template, parg.value));
       }
 
-      // Arg may have a dependency to set other args, e.g.
-      // scripting->anon.functions
+      // Arg may have a dependency to set other args, e.g. scripting->anon.functions
       if (parg.template.getDependency() != null) {
         argList.addFirst(parg.template.getDependency());
       }
     }
   }
 
-  private static void addSystemProperties(final String sysPropName, final List<String> argList) {
-    final String sysArgs = getStringProperty(sysPropName, null);
+  static void addSystemProperties(String sysPropName, List<String> argList) {
+    var sysArgs = getStringProperty(sysPropName, null);
     if (sysArgs != null) {
-      final StringTokenizer st = new StringTokenizer(sysArgs);
+      var st = new StringTokenizer(sysArgs);
       while (st.hasMoreTokens()) {
         argList.add(st.nextToken());
       }
@@ -483,9 +477,9 @@ public final class Options {
    * @return the option template identified by the key
    * @throws IllegalArgumentException if the key doesn't specify an existing template
    */
-  public OptionTemplate getOptionTemplateByKey(final String shortKey) {
-    final String fullKey = key(shortKey);
-    for (final OptionTemplate t : validOptions) {
+  public OptionTemplate getOptionTemplateByKey(String shortKey) {
+    var fullKey = key(shortKey);
+    for (var t : validOptions) {
       if (t.getKey().equals(fullKey)) {
         return t;
       }
@@ -493,8 +487,8 @@ public final class Options {
     throw new IllegalArgumentException(shortKey);
   }
 
-  private static OptionTemplate getOptionTemplateByName(final String name) {
-    for (final OptionTemplate t : Options.validOptions) {
+  static OptionTemplate getOptionTemplateByName(String name) {
+    for (var t : Options.validOptions) {
       if (t.nameMatches(name)) {
         return t;
       }
@@ -502,77 +496,62 @@ public final class Options {
     return null;
   }
 
-  private static Option<?> createOption(final OptionTemplate t, final String value) {
-    switch (t.getType()) {
-      case "string":
-        // default value null
-        return new Option<>(value);
-      case "timezone":
-        // default value "TimeZone.getDefault()"
-        return new Option<>(TimeZone.getTimeZone(value));
-      case "locale":
-        return new Option<>(Locale.forLanguageTag(value));
-      case "keyvalues":
-        return new KeyValueOption(value);
-      case "log":
-        return new LoggingOption(value);
-      case "boolean":
-        return new Option<>(value != null && Boolean.parseBoolean(value));
-      case "integer":
-            try {
-        return new Option<>(value == null ? 0 : Integer.parseInt(value));
-      } catch (final NumberFormatException nfe) {
-        throw new IllegalOptionException(t);
+  static Option<?> createOption(OptionTemplate t, String value) {
+    return switch (t.getType()) {
+
+      case "string" -> new Option<>(value); // default value null
+      case "timezone" -> new Option<>(TimeZone.getTimeZone(value)); // default value "TimeZone.getDefault()"
+      case "locale" -> new Option<>(Locale.forLanguageTag(value));
+      case "keyvalues" -> new KeyValueOption(value);
+      case "log" -> new LoggingOption(value);
+      case "boolean" -> new Option<>(value != null && Boolean.parseBoolean(value));
+
+      case "integer" -> {
+        try {
+          yield new Option<>(value == null ? 0 : Integer.parseInt(value));
+        } catch (NumberFormatException nfe) {
+          throw new IllegalOptionException(t);
+        }
       }
-      case "properties":
-        //swallow the properties and set them
+
+      case "properties" -> {
+        // swallow the properties and set them
         initProps(new KeyValueOption(value));
-        return null;
-      default:
-        break;
-    }
-    throw new IllegalArgumentException(value);
+        yield null;
+      }
+
+      default -> {
+        throw new IllegalArgumentException(value);
+      }
+    };
+
   }
 
-  private static void initProps(final KeyValueOption kv) {
-    for (final Map.Entry<String, String> entry : kv.getValues().entrySet()) {
+  static void initProps(KeyValueOption kv) {
+    for (var entry : kv.getValues().entrySet()) {
       System.setProperty(entry.getKey(), entry.getValue());
     }
   }
 
-  /**
-   * Resource name for properties file
-   */
+  // Resource name for properties file
   private static final String MESSAGES_RESOURCE = "es.runtime.resources.Options";
 
-  /**
-   * Resource bundle for properties file
-   */
+  // Resource bundle for properties file
   private static ResourceBundle bundle;
 
-  /**
-   * Usages per resource from properties file
-   */
+  // Usages per resource from properties file
   private static HashMap<Object, Object> usage;
 
-  /**
-   * Valid options from templates in properties files
-   */
+  // Valid options from templates in properties files
   private static Collection<OptionTemplate> validOptions;
 
-  /**
-   * Help option
-   */
+  // Help option
   private static OptionTemplate helpOptionTemplate;
 
-  /**
-   * Define property option template.
-   */
+  // Define property option template.
   private static OptionTemplate definePropTemplate;
 
-  /**
-   * Prefix of "define property" option.
-   */
+  // Prefix of "define property" option.
   private static String definePropPrefix;
 
   static {
@@ -580,9 +559,9 @@ public final class Options {
     Options.validOptions = new TreeSet<>();
     Options.usage = new HashMap<>();
 
-    for (final Enumeration<String> keys = Options.bundle.getKeys(); keys.hasMoreElements();) {
-      final String key = keys.nextElement();
-      final StringTokenizer st = new StringTokenizer(key, ".");
+    for (var keys = Options.bundle.getKeys(); keys.hasMoreElements();) {
+      var key = keys.nextElement();
+      var st = new StringTokenizer(key, ".");
       String resource = null;
       String type = null;
 
@@ -602,12 +581,12 @@ public final class Options {
           helpKey = Options.bundle.getString(resource + ".options.help.key");
           xhelpKey = Options.bundle.getString(resource + ".options.xhelp.key");
           definePropKey = Options.bundle.getString(resource + ".options.D.key");
-        } catch (final MissingResourceException e) {
+        } catch (MissingResourceException e) {
           //ignored: no help
         }
-        final boolean isHelp = key.equals(helpKey);
-        final boolean isXHelp = key.equals(xhelpKey);
-        final OptionTemplate t = new OptionTemplate(resource, key, Options.bundle.getString(key), isHelp, isXHelp);
+        var isHelp = key.equals(helpKey);
+        var isXHelp = key.equals(xhelpKey);
+        var t = new OptionTemplate(resource, key, Options.bundle.getString(key), isHelp, isXHelp);
 
         Options.validOptions.add(t);
         if (isHelp) {
@@ -624,12 +603,11 @@ public final class Options {
     }
   }
 
-  @SuppressWarnings("serial")
-  private static class IllegalOptionException extends IllegalArgumentException {
+  static class IllegalOptionException extends IllegalArgumentException {
 
     private final OptionTemplate template;
 
-    IllegalOptionException(final OptionTemplate t) {
+    IllegalOptionException(OptionTemplate t) {
       super();
       this.template = t;
     }
@@ -642,21 +620,21 @@ public final class Options {
   /**
    * This is a resolved argument of the form key=value
    */
-  private static class ParsedArg {
+  static class ParsedArg {
 
-    /** The resolved option template this argument corresponds to */
+    // The resolved option template this argument corresponds to
     OptionTemplate template;
 
-    /** The value of the argument */
+    // The value of the argument
     String value;
 
-    ParsedArg(final String argument) {
-      final QuotedStringTokenizer st = new QuotedStringTokenizer(argument, "=");
+    ParsedArg(String argument) {
+      var st = new QuotedStringTokenizer(argument, "=");
       if (!st.hasMoreTokens()) {
         throw new IllegalArgumentException();
       }
 
-      final String token = st.nextToken();
+      var token = st.nextToken();
       this.template = getOptionTemplateByName(token);
       if (this.template == null) {
         throw new IllegalArgumentException(argument);
@@ -675,4 +653,5 @@ public final class Options {
       }
     }
   }
+
 }

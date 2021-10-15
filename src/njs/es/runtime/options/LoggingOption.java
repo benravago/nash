@@ -8,23 +8,23 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 
 /**
- * Class that collects logging options like --log=compiler:finest,fields,recompile:fine into
- * a map form that can be used to instantiate loggers in the Global object on demand
+ * Class that collects logging options like --log=compiler:finest,fields,recompile:fine
+ * into a map form that can be used to instantiate loggers in the Global object on demand
  */
 public class LoggingOption extends KeyValueOption {
 
   /**
-   * Logging info. Basically a logger name maps to this,
-   * which is a tuple of log level and the "is quiet" flag,
-   * which is a special log level used to collect RuntimeEvents
-   * only, but not output anything
+   * Logging info.
+   *
+   * Basically a logger name maps to this, which is a tuple of log level and the "is quiet" flag,
+   * which is a special log level used to collect RuntimeEvents only, but not output anything
    */
   public static class LoggerInfo {
 
     private final Level level;
     private final boolean isQuiet;
 
-    LoggerInfo(final Level level, final boolean isQuiet) {
+    LoggerInfo(Level level, boolean isQuiet) {
       this.level = level;
       this.isQuiet = isQuiet;
     }
@@ -48,7 +48,7 @@ public class LoggingOption extends KeyValueOption {
 
   private final Map<String, LoggerInfo> loggers = new HashMap<>();
 
-  LoggingOption(final String value) {
+  LoggingOption(String value) {
     super(value);
     initialize(getValues());
   }
@@ -63,19 +63,19 @@ public class LoggingOption extends KeyValueOption {
   }
 
   /**
-   * Initialization function that is called to instantiate the logging system. It takes
-   * logger names (keys) and logging labels respectively
+   * Initialization function that is called to instantiate the logging system.
+   * It takes logger names (keys) and logging labels respectively
    *
    * @param map a map where the key is a logger name and the value a logging level
    * @throws IllegalArgumentException if level or names cannot be parsed
    */
-  private void initialize(final Map<String, String> logMap) throws IllegalArgumentException {
+  void initialize(Map<String, String> logMap) throws IllegalArgumentException {
     try {
-      for (final Entry<String, String> entry : logMap.entrySet()) {
+      for (var entry : logMap.entrySet()) {
         Level level;
-        final String name = lastPart(entry.getKey());
-        final String levelString = entry.getValue().toUpperCase(Locale.ENGLISH);
-        final boolean isQuiet;
+        var name = lastPart(entry.getKey());
+        var levelString = entry.getValue().toUpperCase(Locale.ENGLISH);
+        boolean isQuiet;
 
         if ("".equals(levelString)) {
           level = Level.INFO;
@@ -90,13 +90,13 @@ public class LoggingOption extends KeyValueOption {
 
         loggers.put(name, new LoggerInfo(level, isQuiet));
       }
-    } catch (final IllegalArgumentException | SecurityException e) {
+    } catch (IllegalArgumentException | SecurityException e) {
       throw e;
     }
   }
 
-  private static String lastPart(final String packageName) {
-    final String[] parts = packageName.split("\\.");
+  static String lastPart(String packageName) {
+    var parts = packageName.split("\\.");
     if (parts.length == 0) {
       return packageName;
     }
