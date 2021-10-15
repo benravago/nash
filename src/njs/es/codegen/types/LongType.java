@@ -1,29 +1,20 @@
 package es.codegen.types;
 
-import static org.objectweb.asm.Opcodes.L2D;
-import static org.objectweb.asm.Opcodes.L2I;
-import static org.objectweb.asm.Opcodes.LCONST_0;
-import static org.objectweb.asm.Opcodes.LCONST_1;
-import static org.objectweb.asm.Opcodes.LLOAD;
-import static org.objectweb.asm.Opcodes.LRETURN;
-import static org.objectweb.asm.Opcodes.LSTORE;
-import static es.codegen.CompilerConstants.staticCallNoLookup;
-import static es.runtime.JSType.UNDEFINED_LONG;
-
 import org.objectweb.asm.MethodVisitor;
-import es.codegen.CompilerConstants;
+import static org.objectweb.asm.Opcodes.*;
+
 import es.runtime.JSType;
+import es.codegen.CompilerConstants;
+import static es.codegen.CompilerConstants.staticCallNoLookup;
 
 /**
  * Type class: LONG
  */
 class LongType extends Type {
 
-  private static final long serialVersionUID = 1L;
-
   private static final CompilerConstants.Call VALUE_OF = staticCallNoLookup(Long.class, "valueOf", Long.class, long.class);
 
-  protected LongType(final String name) {
+  protected LongType(String name) {
     super(name, long.class, 3, 2);
   }
 
@@ -47,23 +38,23 @@ class LongType extends Type {
   }
 
   @Override
-  public Type load(final MethodVisitor method, final int slot) {
+  public Type load(MethodVisitor method, int slot) {
     assert slot != -1;
     method.visitVarInsn(LLOAD, slot);
     return LONG;
   }
 
   @Override
-  public void store(final MethodVisitor method, final int slot) {
+  public void store(MethodVisitor method, int slot) {
     assert slot != -1;
     method.visitVarInsn(LSTORE, slot);
   }
 
   @Override
-  public Type ldc(final MethodVisitor method, final Object c) {
+  public Type ldc(MethodVisitor method, Object c) {
     assert c instanceof Long;
 
-    final long value = (Long) c;
+    long value = (Long) c;
 
     if (value == 0L) {
       method.visitInsn(LCONST_0);
@@ -77,7 +68,7 @@ class LongType extends Type {
   }
 
   @Override
-  public Type convert(final MethodVisitor method, final Type to) {
+  public Type convert(MethodVisitor method, Type to) {
     if (isEquivalentTo(to)) {
       return to;
     }
@@ -98,24 +89,26 @@ class LongType extends Type {
   }
 
   @Override
-  public Type add(final MethodVisitor method, final int programPoint) {
+  public Type add(MethodVisitor method, int programPoint) {
     throw new UnsupportedOperationException("add");
   }
 
   @Override
-  public void _return(final MethodVisitor method) {
+  public void ret(MethodVisitor method) {
     method.visitInsn(LRETURN);
   }
 
   @Override
-  public Type loadUndefined(final MethodVisitor method) {
-    method.visitLdcInsn(UNDEFINED_LONG);
+  public Type loadUndefined(MethodVisitor method) {
+    method.visitLdcInsn(JSType.UNDEFINED_LONG);
     return LONG;
   }
 
   @Override
-  public Type loadForcedInitializer(final MethodVisitor method) {
+  public Type loadForcedInitializer(MethodVisitor method) {
     method.visitInsn(LCONST_0);
     return LONG;
   }
+
+  private static final long serialVersionUID = 1L;
 }

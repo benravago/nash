@@ -17,8 +17,7 @@ interface BytecodeNumericOps {
   Type neg(MethodVisitor method, int programPoint);
 
   /**
-   * Pop two values on top of the stack and subtract the first from the
-   * second, pushing the result on the stack
+   * Pop two values on top of the stack and subtract the first from the second, pushing the result on the stack
    *
    * @param method method visitor
    * @param programPoint program point id
@@ -27,8 +26,7 @@ interface BytecodeNumericOps {
   Type sub(MethodVisitor method, int programPoint);
 
   /**
-   * Pop and multiply the two values on top of the stack and push the result
-   * on the stack
+   * Pop and multiply the two values on top of the stack and push the result on the stack
    *
    * @param method method visitor
    * @param programPoint program point id
@@ -37,8 +35,7 @@ interface BytecodeNumericOps {
   Type mul(MethodVisitor method, int programPoint);
 
   /**
-   * Pop two values on top of the stack and divide the first with the second,
-   * pushing the result on the stack
+   * Pop two values on top of the stack and divide the first with the second, pushing the result on the stack
    *
    * @param method method visitor
    * @param programPoint program point id
@@ -47,13 +44,10 @@ interface BytecodeNumericOps {
   Type div(MethodVisitor method, int programPoint);
 
   /**
-   * Pop two values on top of the stack and compute the modulo of the first
-   * with the second, pushing the result on the stack
+   * Pop two values on top of the stack and compute the modulo of the first with the second, pushing the result on the stack
    *
-   * Note that the rem method never takes a program point, because it
-   * can never be more optimistic than its widest operand - an int/int
-   * rem operation or a long/long rem operation can never return a
-   * winder remainder than the int or the long
+   * Note that the rem method never takes a program point, because it can never be more optimistic than its widest operand
+   * - an int/int rem operation or a long/long rem operation can never return a wider remainder than the int or the long
    *
    * @param method method visitor
    * @param programPoint program point id
@@ -70,4 +64,5 @@ interface BytecodeNumericOps {
    * @return int return value
    */
   Type cmp(MethodVisitor method, boolean isCmpG);
+
 }

@@ -18,8 +18,6 @@ import es.codegen.CompilerConstants;
  */
 public final class BooleanType extends Type {
 
-  private static final long serialVersionUID = 1L;
-
   private static final CompilerConstants.Call VALUE_OF = staticCallNoLookup(Boolean.class, "valueOf", Boolean.class, boolean.class);
   private static final CompilerConstants.Call TO_STRING = staticCallNoLookup(Boolean.class, "toString", String.class, boolean.class);
 
@@ -46,44 +44,44 @@ public final class BooleanType extends Type {
   }
 
   @Override
-  public Type loadUndefined(final MethodVisitor method) {
+  public Type loadUndefined(MethodVisitor method) {
     method.visitLdcInsn(UNDEFINED_INT);
     return BOOLEAN;
   }
 
   @Override
-  public Type loadForcedInitializer(final MethodVisitor method) {
+  public Type loadForcedInitializer(MethodVisitor method) {
     method.visitInsn(ICONST_0);
     return BOOLEAN;
   }
 
   @Override
-  public void _return(final MethodVisitor method) {
+  public void ret(MethodVisitor method) {
     method.visitInsn(IRETURN);
   }
 
   @Override
-  public Type load(final MethodVisitor method, final int slot) {
+  public Type load(MethodVisitor method, int slot) {
     assert slot != -1;
     method.visitVarInsn(ILOAD, slot);
     return BOOLEAN;
   }
 
   @Override
-  public void store(final MethodVisitor method, final int slot) {
+  public void store(MethodVisitor method, int slot) {
     assert slot != -1;
     method.visitVarInsn(ISTORE, slot);
   }
 
   @Override
-  public Type ldc(final MethodVisitor method, final Object c) {
+  public Type ldc(MethodVisitor method, Object c) {
     assert c instanceof Boolean;
     method.visitInsn((Boolean) c ? ICONST_1 : ICONST_0);
     return BOOLEAN;
   }
 
   @Override
-  public Type convert(final MethodVisitor method, final Type to) {
+  public Type convert(MethodVisitor method, Type to) {
     if (isEquivalentTo(to)) {
       return to;
     }
@@ -106,8 +104,10 @@ public final class BooleanType extends Type {
   }
 
   @Override
-  public Type add(final MethodVisitor method, final int programPoint) {
+  public Type add(MethodVisitor method, int programPoint) {
     // Adding booleans in JavaScript is perfectly valid, they add as if false=0 and true=1
     return Type.INT.add(method, programPoint);
   }
+
+  private static final long serialVersionUID = 1L;
 }

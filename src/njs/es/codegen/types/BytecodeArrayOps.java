@@ -8,8 +8,7 @@ import org.objectweb.asm.MethodVisitor;
 interface BytecodeArrayOps {
 
   /**
-   * Load an array element given that the array and its index are already on
-   * the stack
+   * Load an array element given that the array and its index are already on the stack
    *
    * @param method method visitor
    * @return the array element type
@@ -18,8 +17,7 @@ interface BytecodeArrayOps {
   Type aload(MethodVisitor method);
 
   /**
-   * Store an array element given that the array and its index and the element
-   * are on the stack
+   * Store an array element given that the array and its index and the element are on the stack
    *
    * @param method method visitor
    */
@@ -42,12 +40,12 @@ interface BytecodeArrayOps {
   Type newarray(MethodVisitor method);
 
   /**
-   * Create a new multi array of this array type and allocate the number of
-   * dimensions given
+   * Create a new multi array of this array type and allocate the number of dimensions given
    *
    * @param method method visitor
    * @param dims   number of dimensions
    * @return the type of the new array
    */
   Type newarray(MethodVisitor method, int dims);
+
 }

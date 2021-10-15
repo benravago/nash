@@ -8,8 +8,7 @@ import org.objectweb.asm.MethodVisitor;
 interface BytecodeBitwiseOps {
 
   /**
-   * Pop and logically shift the two values on top of the stack (steps, value)
-   * right and push the result on the stack
+   * Pop and logically shift the two values on top of the stack (steps, value) right and push the result on the stack
    *
    * @param method method visitor
    * @return result type
@@ -17,8 +16,7 @@ interface BytecodeBitwiseOps {
   Type shr(MethodVisitor method);
 
   /**
-   * Pop and arithmetically shift of the two values on top of the stack
-   * (steps, value) right and push the result on the stack
+   * Pop and arithmetically shift of the two values on top of the stack (steps, value) right and push the result on the stack
    *
    * @param method method visitor
    * @return result type
@@ -26,8 +24,7 @@ interface BytecodeBitwiseOps {
   Type sar(MethodVisitor method);
 
   /**
-   * Pop and logically shift of the two values on top of the stack (steps,
-   * value) left and push the result on the stack
+   * Pop and logically shift of the two values on top of the stack (steps, value) left and push the result on the stack
    *
    * @param method method visitor
    * @return result type
@@ -35,8 +32,7 @@ interface BytecodeBitwiseOps {
   Type shl(MethodVisitor method);
 
   /**
-   * Pop and AND the two values on top of the stack and push the result on the
-   * stack
+   * Pop and AND the two values on top of the stack and push the result on the stack
    *
    * @param method method visitor
    * @return result type
@@ -44,8 +40,7 @@ interface BytecodeBitwiseOps {
   Type and(MethodVisitor method);
 
   /**
-   * Pop and OR the two values on top of the stack and push the result on the
-   * stack
+   * Pop and OR the two values on top of the stack and push the result on the stack
    *
    * @param method method visitor
    * @return result type
@@ -53,8 +48,7 @@ interface BytecodeBitwiseOps {
   Type or(MethodVisitor method);
 
   /**
-   * Pop and XOR the two values on top of the stack and push the result on the
-   * stack
+   * Pop and XOR the two values on top of the stack and push the result on the stack
    *
    * @param method method visitor
    * @return result type
@@ -68,4 +62,5 @@ interface BytecodeBitwiseOps {
    * @return int return value
    */
   Type cmp(MethodVisitor method);
+
 }

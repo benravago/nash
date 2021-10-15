@@ -1600,7 +1600,7 @@ public class MethodEmitter {
     if (!Type.areEquivalent(type, stackType)) {
       convert(type);
     }
-    popType(type)._return(method);
+    popType(type).ret(method);
     doesNotContinueSequentially();
   }
 
