@@ -5,11 +5,13 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.SwitchPoint;
 import java.lang.reflect.Method;
+
 import java.util.List;
 
 /**
- * Wrapper for all method handle related functions used in Nashorn. This interface only exists
- * so that instrumentation can be added to all method handle operations.
+ * Wrapper for all method handle related functions used in Nashorn.
+
+ * This interface only exists so that instrumentation can be added to all method handle operations.
  */
 public interface MethodHandleFunctionality {
 
@@ -22,7 +24,7 @@ public interface MethodHandleFunctionality {
    *
    * @return filtered handle
    */
-  public MethodHandle filterArguments(MethodHandle target, int pos, MethodHandle... filters);
+  MethodHandle filterArguments(MethodHandle target, int pos, MethodHandle... filters);
 
   /**
    * Wrapper for {@link MethodHandles#filterReturnValue(MethodHandle, MethodHandle)}
@@ -32,7 +34,7 @@ public interface MethodHandleFunctionality {
    *
    * @return filtered handle
    */
-  public MethodHandle filterReturnValue(MethodHandle target, MethodHandle filter);
+  MethodHandle filterReturnValue(MethodHandle target, MethodHandle filter);
 
   /**
    * Wrapper for {@link MethodHandles#guardWithTest(MethodHandle, MethodHandle, MethodHandle)}
@@ -43,7 +45,7 @@ public interface MethodHandleFunctionality {
    *
    * @return guarded handles
    */
-  public MethodHandle guardWithTest(MethodHandle test, MethodHandle target, MethodHandle fallback);
+  MethodHandle guardWithTest(MethodHandle test, MethodHandle target, MethodHandle fallback);
 
   /**
    * Wrapper for {@link MethodHandles#insertArguments(MethodHandle, int, Object...)}
@@ -54,7 +56,7 @@ public interface MethodHandleFunctionality {
    *
    * @return handle with bound arguments
    */
-  public MethodHandle insertArguments(MethodHandle target, int pos, Object... values);
+  MethodHandle insertArguments(MethodHandle target, int pos, Object... values);
 
   /**
    * Wrapper for {@link MethodHandles#dropArguments(MethodHandle, int, Class...)}
@@ -65,7 +67,7 @@ public interface MethodHandleFunctionality {
    *
    * @return handle with dropped arguments
    */
-  public MethodHandle dropArguments(MethodHandle target, int pos, Class<?>... valueTypes);
+  MethodHandle dropArguments(MethodHandle target, int pos, Class<?>... valueTypes);
 
   /**
    * Wrapper for {@link MethodHandles#dropArguments(MethodHandle, int, List)}
@@ -76,7 +78,7 @@ public interface MethodHandleFunctionality {
    *
    * @return handle with dropped arguments
    */
-  public MethodHandle dropArguments(final MethodHandle target, final int pos, final List<Class<?>> valueTypes);
+  MethodHandle dropArguments(MethodHandle target, int pos, List<Class<?>> valueTypes);
 
   /**
    * Wrapper for {@link MethodHandles#foldArguments(MethodHandle, MethodHandle)}
@@ -86,7 +88,7 @@ public interface MethodHandleFunctionality {
    *
    * @return folded method handle
    */
-  public MethodHandle foldArguments(MethodHandle target, MethodHandle combiner);
+  MethodHandle foldArguments(MethodHandle target, MethodHandle combiner);
 
   /**
    * Wrapper for {@link MethodHandles#explicitCastArguments(MethodHandle, MethodType)}
@@ -96,7 +98,7 @@ public interface MethodHandleFunctionality {
    *
    * @return modified method handle
    */
-  public MethodHandle explicitCastArguments(MethodHandle target, MethodType type);
+  MethodHandle explicitCastArguments(MethodHandle target, MethodType type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles#arrayElementGetter(Class)}
@@ -105,7 +107,7 @@ public interface MethodHandleFunctionality {
    *
    * @return array element getter
    */
-  public MethodHandle arrayElementGetter(Class<?> arrayClass);
+  MethodHandle arrayElementGetter(Class<?> arrayClass);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles#arrayElementSetter(Class)}
@@ -114,7 +116,7 @@ public interface MethodHandleFunctionality {
    *
    * @return array element setter
    */
-  public MethodHandle arrayElementSetter(Class<?> arrayClass);
+  MethodHandle arrayElementSetter(Class<?> arrayClass);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles#throwException(Class, Class)}
@@ -124,7 +126,7 @@ public interface MethodHandleFunctionality {
    *
    * @return exception thrower method handle
    */
-  public MethodHandle throwException(Class<?> returnType, Class<? extends Throwable> exType);
+  MethodHandle throwException(Class<?> returnType, Class<? extends Throwable> exType);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles#catchException(MethodHandle, Class, MethodHandle)}
@@ -135,7 +137,7 @@ public interface MethodHandleFunctionality {
    *
    * @return exception thrower method handle
    */
-  public MethodHandle catchException(final MethodHandle target, final Class<? extends Throwable> exType, final MethodHandle handler);
+  MethodHandle catchException(MethodHandle target, Class<? extends Throwable> exType, MethodHandle handler);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles#constant(Class, Object)}
@@ -145,7 +147,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle that returns said constant
    */
-  public MethodHandle constant(Class<?> type, Object value);
+  MethodHandle constant(Class<?> type, Object value);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles#identity(Class)}
@@ -154,7 +156,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle that returns identity argument
    */
-  public MethodHandle identity(Class<?> type);
+  MethodHandle identity(Class<?> type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandle#asType(MethodType)}
@@ -164,7 +166,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle with given type conversion applied
    */
-  public MethodHandle asType(MethodHandle handle, MethodType type);
+  MethodHandle asType(MethodHandle handle, MethodType type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandle#asCollector(Class, int)}
@@ -175,7 +177,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle with collector
    */
-  public MethodHandle asCollector(MethodHandle handle, Class<?> arrayType, int arrayLength);
+  MethodHandle asCollector(MethodHandle handle, Class<?> arrayType, int arrayLength);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandle#asSpreader(Class, int)}
@@ -186,7 +188,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle as spreader
    */
-  public MethodHandle asSpreader(MethodHandle handle, Class<?> arrayType, int arrayLength);
+  MethodHandle asSpreader(MethodHandle handle, Class<?> arrayType, int arrayLength);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandle#bindTo(Object)}
@@ -196,7 +198,7 @@ public interface MethodHandleFunctionality {
    *
    * @return the bound handle
    */
-  public MethodHandle bindTo(MethodHandle handle, Object x);
+  MethodHandle bindTo(MethodHandle handle, Object x);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findGetter(Class, String, Class)}
@@ -208,7 +210,7 @@ public interface MethodHandleFunctionality {
    *
    * @return getter method handle for virtual field
    */
-  public MethodHandle getter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
+  MethodHandle getter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findStaticGetter(Class, String, Class)}
@@ -220,7 +222,7 @@ public interface MethodHandleFunctionality {
    *
    * @return getter method handle for static field
    */
-  public MethodHandle staticGetter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
+  MethodHandle staticGetter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findSetter(Class, String, Class)}
@@ -232,7 +234,7 @@ public interface MethodHandleFunctionality {
    *
    * @return setter method handle for virtual field
    */
-  public MethodHandle setter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
+  MethodHandle setter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findStaticSetter(Class, String, Class)}
@@ -244,7 +246,7 @@ public interface MethodHandleFunctionality {
    *
    * @return setter method handle for static field
    */
-  public MethodHandle staticSetter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
+  MethodHandle staticSetter(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, Class<?> type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#unreflect(Method)}
@@ -254,7 +256,7 @@ public interface MethodHandleFunctionality {
    * @param method method to unreflect
    * @return unreflected method as method handle
    */
-  public MethodHandle find(Method method);
+  MethodHandle find(Method method);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findStatic(Class, String, MethodType)}
@@ -266,7 +268,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle for static method
    */
-  public MethodHandle findStatic(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, MethodType type);
+  MethodHandle findStatic(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, MethodType type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findVirtual(Class, String, MethodType)}
@@ -278,7 +280,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle for virtual method
    */
-  public MethodHandle findVirtual(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, MethodType type);
+  MethodHandle findVirtual(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, MethodType type);
 
   /**
    * Wrapper for {@link java.lang.invoke.MethodHandles.Lookup#findSpecial(Class, String, MethodType, Class)}
@@ -291,7 +293,7 @@ public interface MethodHandleFunctionality {
    *
    * @return method handle for virtual method
    */
-  public MethodHandle findSpecial(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, MethodType type, final Class<?> thisClass);
+  MethodHandle findSpecial(MethodHandles.Lookup explicitLookup, Class<?> clazz, String name, MethodType type, Class<?> thisClass);
 
   /**
    * Wrapper for SwitchPoint creation. Just like {@code new SwitchPoint()} but potentially
@@ -299,7 +301,7 @@ public interface MethodHandleFunctionality {
    *
    * @return new switch point
    */
-  public SwitchPoint createSwitchPoint();
+  SwitchPoint createSwitchPoint();
 
   /**
    * Wrapper for {@link SwitchPoint#guardWithTest(MethodHandle, MethodHandle)}
@@ -310,7 +312,7 @@ public interface MethodHandleFunctionality {
    *
    * @return guarded method handle
    */
-  public MethodHandle guardWithTest(SwitchPoint sp, MethodHandle before, MethodHandle after);
+  MethodHandle guardWithTest(SwitchPoint sp, MethodHandle before, MethodHandle after);
 
   /**
    * Wrapper for {@link MethodType#methodType(Class, Class...)}
@@ -320,6 +322,6 @@ public interface MethodHandleFunctionality {
    *
    * @return the method type
    */
-  public MethodType type(Class<?> returnType, Class<?>... paramTypes);
+  MethodType type(Class<?> returnType, Class<?>... paramTypes);
 
 }

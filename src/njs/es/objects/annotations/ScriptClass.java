@@ -12,9 +12,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ScriptClass {
 
-  /**
-   * @return the name of the script class. By default, the name is derived
-   *         from the Java class name.
-   */
+  /** @return the name of the script class. By default, the name is derived from the Java class name. */
   public String value() default "";
+
 }

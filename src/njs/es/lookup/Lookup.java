@@ -1,13 +1,13 @@
 package es.lookup;
 
-import static es.runtime.ECMAErrors.typeError;
-import static es.runtime.ScriptRuntime.UNDEFINED;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+
 import es.runtime.JSType;
 import es.runtime.ScriptRuntime;
+import static es.runtime.ECMAErrors.typeError;
+import static es.runtime.ScriptRuntime.UNDEFINED;
 
 /**
  * MethodHandle Lookup management for Nashorn.
@@ -15,13 +15,14 @@ import es.runtime.ScriptRuntime;
 public final class Lookup {
 
   /**
-   * A global singleton that points to the {@link MethodHandleFunctionality}. This is basically
-   * a collection of wrappers to the standard methods in {@link MethodHandle}, {@link MethodHandles} and
-   * {@link java.lang.invoke.MethodHandles.Lookup}, but instrumentation and debugging purposes we need
-   * intercept points.
+   * A global singleton that points to the {@link MethodHandleFunctionality}.
+   *
+   * This is basically a collection of wrappers to the standard methods in {@link MethodHandle},
+   * {@link MethodHandles} and {@link java.lang.invoke.MethodHandles.Lookup},
+   * but instrumentation and debugging purposes we need intercept points.
    * <p>
-   * All method handle operations in Nashorn should go through this field, not directly to the classes
-   * in {@code java.lang.invoke}
+   * All method handle operations in Nashorn should go through this field,
+   * not directly to the classes in {@code java.lang.invoke}
    */
   public static final MethodHandleFunctionality MH = MethodHandleFactory.getFunctionality();
 
@@ -46,15 +47,12 @@ public final class Lookup {
   /** Method handle to the primitive getters, the one that returns an long/int/double */
   public static final MethodType SET_PRIMITIVE_TYPE = MH.type(void.class, Object.class, long.class);
 
-  private Lookup() {
-  }
-
   /**
    * Empty getter implementation. Nop
    * @param self self reference
    * @return undefined
    */
-  public static Object emptyGetter(final Object self) {
+  public static Object emptyGetter(Object self) {
     return UNDEFINED;
   }
 
@@ -63,20 +61,18 @@ public final class Lookup {
    * @param self  self reference
    * @param value value (ignored)
    */
-  public static void emptySetter(final Object self, final Object value) {
+  public static void emptySetter(Object self, Object value) {
     // do nothing!!
   }
 
   /**
-   * Return a method handle to the empty getter, with a different
-   * return type value. It will still be undefined cast to whatever
-   * return value property was specified
+   * Return a method handle to the empty getter, with a different return type value.
+   * It will still be undefined cast to whatever return value property was specified
    *
    * @param type return value type
-   *
    * @return undefined as return value type
    */
-  public static MethodHandle emptyGetter(final Class<?> type) {
+  public static MethodHandle emptyGetter(Class<?> type) {
     return filterReturnType(EMPTY_GETTER, type);
   }
 
@@ -86,39 +82,39 @@ public final class Lookup {
    * @param self  self reference
    * @return undefined (but throws error before return point)
    */
-  public static Object typeErrorThrower(final Object self) {
+  public static Object typeErrorThrower(Object self) {
     throw typeError("getter.setter.poison", ScriptRuntime.safeToString(self));
   }
 
   /**
-   * This method filters primitive argument types using JavaScript semantics. For example,
-   * an (int) cast of a double in Java land is not the same thing as invoking toInt32 on it.
-   * If you are returning values to JavaScript that have to be of a specific type, this is
-   * the correct return value filter to use, as the explicitCastArguments just uses the
-   * Java boxing equivalents
+   * This method filters primitive argument types using JavaScript semantics.
+   * For example, an (int) cast of a double in Java land is not the same thing as invoking toInt32 on it.
+   * If you are returning values to JavaScript that have to be of a specific type,
+   * this is the correct return value filter to use,
+   * as the explicitCastArguments just uses the Java boxing equivalents
    *
    * @param mh   method handle for which to filter argument value
    * @param n    argument index
    * @param from old argument type, the new one is given by the sent method handle
    * @return method handle for appropriate argument type conversion
    */
-  public static MethodHandle filterArgumentType(final MethodHandle mh, final int n, final Class<?> from) {
-    final Class<?> to = mh.type().parameterType(n);
+  public static MethodHandle filterArgumentType(MethodHandle mh, int n, Class<?> from) {
+    var to = mh.type().parameterType(n);
 
     if (from == int.class) {
-      //fallthru
+      // fallthru
     } else if (from == long.class) {
       if (to == int.class) {
         return MH.filterArguments(mh, n, JSType.TO_INT32_L.methodHandle());
       }
-      //fallthru
+      // fallthru
     } else if (from == double.class) {
       if (to == int.class) {
         return MH.filterArguments(mh, n, JSType.TO_INT32_D.methodHandle());
       } else if (to == long.class) {
         return MH.filterArguments(mh, n, JSType.TO_UINT32_D.methodHandle());
       }
-      //fallthru
+      // fallthru
     } else if (!from.isPrimitive()) {
       if (to == int.class) {
         return MH.filterArguments(mh, n, JSType.TO_INT32.methodHandle());
@@ -133,38 +129,38 @@ public final class Lookup {
       assert false : "unsupported Lookup.filterReturnType type " + from + " -> " + to;
     }
 
-    //use a standard cast - we don't need to check JavaScript special cases
+    // use a standard cast - we don't need to check JavaScript special cases
     return MH.explicitCastArguments(mh, mh.type().changeParameterType(n, from));
   }
 
   /**
-   * This method filters primitive return types using JavaScript semantics. For example,
-   * an (int) cast of a double in Java land is not the same thing as invoking toInt32 on it.
-   * If you are returning values to JavaScript that have to be of a specific type, this is
-   * the correct return value filter to use, as the explicitCastArguments just uses the
-   * Java boxing equivalents
+   * This method filters primitive return types using JavaScript semantics.
+   * For example, an (int) cast of a double in Java land is not the same thing as invoking toInt32 on it.
+   * If you are returning values to JavaScript that have to be of a specific type,
+   * this is the correct return value filter to use,
+   * as the explicitCastArguments just uses the Java boxing equivalents
    *
    * @param mh   method handle for which to filter return value
    * @param type new return type
    * @return method handle for appropriate return type conversion
    */
-  public static MethodHandle filterReturnType(final MethodHandle mh, final Class<?> type) {
-    final Class<?> retType = mh.type().returnType();
+  public static MethodHandle filterReturnType(MethodHandle mh, Class<?> type) {
+    var retType = mh.type().returnType();
 
     if (retType == int.class) {
-      //fallthru
+      // fallthru
     } else if (retType == long.class) {
       if (type == int.class) {
         return MH.filterReturnValue(mh, JSType.TO_INT32_L.methodHandle());
       }
-      //fallthru
+      // fallthru
     } else if (retType == double.class) {
       if (type == int.class) {
         return MH.filterReturnValue(mh, JSType.TO_INT32_D.methodHandle());
       } else if (type == long.class) {
         return MH.filterReturnValue(mh, JSType.TO_UINT32_D.methodHandle());
       }
-      //fallthru
+      // fallthru
     } else if (!retType.isPrimitive()) {
       if (type == int.class) {
         return MH.filterReturnValue(mh, JSType.TO_INT32.methodHandle());
@@ -179,11 +175,11 @@ public final class Lookup {
       assert false : "unsupported Lookup.filterReturnType type " + retType + " -> " + type;
     }
 
-    //use a standard cast - we don't need to check JavaScript special cases
+    // use a standard cast - we don't need to check JavaScript special cases
     return MH.explicitCastArguments(mh, mh.type().changeReturnType(type));
   }
 
-  private static MethodHandle findOwnMH(final String name, final Class<?> rtype, final Class<?>... types) {
+  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), Lookup.class, name, MH.type(rtype, types));
   }
 

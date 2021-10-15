@@ -12,16 +12,14 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Constructor {
 
-  /**
-   * @return the name of the constructor function. If empty, the name is
-   *         inferred.
-   */
+  /** @return the name of the constructor function. If empty, the name is inferred. */
   public String name() default "";
 
   /**
-   * @return the arity of the function. By default computed from the method
-   *         signature. Note that -1 means varargs. So, -2 is used as invalid
-   *         arity.
+   * @return the arity of the function.
+   * By default computed from the method signature.
+   * Note that -1 means varargs. So, -2 is used as invalid arity.
    */
   public int arity() default -2;
+
 }

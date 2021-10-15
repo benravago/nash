@@ -14,18 +14,13 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Getter {
 
-  /**
-   * @return the name of the property. If empty, the name is inferred.
-   */
+  /** @return the name of the property. If empty, the name is inferred. */
   public String name() default "";
 
-  /**
-   * @return the attribute flags for this setter.
-   */
+  /** @return the attribute flags for this setter. */
   public int attributes() default DEFAULT_ATTRIBUTES;
 
-  /**
-   * @return where this getter lives.
-   */
+  /** @return where this getter lives. */
   public Where where() default Where.INSTANCE;
+
 }

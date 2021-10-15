@@ -14,27 +14,16 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Property {
 
-  /**
-   * Name of the script property. If empty, the name is inferred.
-   * @return name
-   */
+  /** @return Name of the script property. If empty, the name is inferred. */
   public String name() default "";
 
-  /**
-   * Attribute flags for this function.
-   * @return attribute
-   */
+  /** @return Attribute flags for this function. */
   public int attributes() default DEFAULT_ATTRIBUTES;
 
-  /**
-   * Initialize this property with the object of given class.
-   * @return class
-   */
+  /** @return class; initialize this property with the object of given class. */
   public String clazz() default "";
 
-  /**
-   * Where this property lives?
-   * @return location of property
-   */
+  /** @return location of property */
   public Where where() default Where.INSTANCE;
+
 }
