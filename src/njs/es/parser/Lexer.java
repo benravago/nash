@@ -1,32 +1,5 @@
 package es.parser;
 
-import static es.parser.TokenType.ADD;
-import static es.parser.TokenType.BINARY_NUMBER;
-import static es.parser.TokenType.COMMENT;
-import static es.parser.TokenType.DECIMAL;
-import static es.parser.TokenType.DIRECTIVE_COMMENT;
-import static es.parser.TokenType.EOF;
-import static es.parser.TokenType.EOL;
-import static es.parser.TokenType.ERROR;
-import static es.parser.TokenType.ESCSTRING;
-import static es.parser.TokenType.EXECSTRING;
-import static es.parser.TokenType.FLOATING;
-import static es.parser.TokenType.FUNCTION;
-import static es.parser.TokenType.HEXADECIMAL;
-import static es.parser.TokenType.LBRACE;
-import static es.parser.TokenType.LPAREN;
-import static es.parser.TokenType.OCTAL;
-import static es.parser.TokenType.OCTAL_LEGACY;
-import static es.parser.TokenType.RBRACE;
-import static es.parser.TokenType.REGEX;
-import static es.parser.TokenType.RPAREN;
-import static es.parser.TokenType.STRING;
-import static es.parser.TokenType.TEMPLATE;
-import static es.parser.TokenType.TEMPLATE_HEAD;
-import static es.parser.TokenType.TEMPLATE_MIDDLE;
-import static es.parser.TokenType.TEMPLATE_TAIL;
-import static es.parser.TokenType.XML;
-
 import java.io.Serializable;
 
 import es.runtime.ECMAErrors;
@@ -36,12 +9,11 @@ import es.runtime.JSType;
 import es.runtime.ParserException;
 import es.runtime.Source;
 import es.runtime.options.Options;
+import static es.parser.TokenType.*;
 
 /**
  * Responsible for converting source content into a stream of tokens.
- *
  */
-@SuppressWarnings("fallthrough")
 public class Lexer extends Scanner {
 
   private static final long MIN_INT_L = Integer.MIN_VALUE;
@@ -49,25 +21,25 @@ public class Lexer extends Scanner {
 
   private static final boolean XML_LITERALS = Options.getBooleanProperty("nashorn.lexer.xmlliterals");
 
-  /** Content source. */
+  // Content source.
   private final Source source;
 
-  /** Buffered stream for tokens. */
+  // Buffered stream for tokens.
   private final TokenStream stream;
 
-  /** True if here and edit strings are supported. */
+  // True if here and edit strings are supported.
   private final boolean scripting;
 
-  /** True if a nested scan. (scan to completion, no EOF.) */
+  // True if a nested scan. (scan to completion, no EOF.)
   private final boolean nested;
 
-  /** Pending new line number and position. */
+  // Pending new line number and position.
   int pendingLine;
 
-  /** Position of last EOL + 1. */
+  // Position of last EOL + 1.
   private int linePosition;
 
-  /** Type of last token added. */
+  // Type of last token added.
   private TokenType last;
 
   private final boolean pauseOnFunctionBody;
@@ -75,109 +47,63 @@ public class Lexer extends Scanner {
 
   private int templateExpressionOpenBraces;
 
-  private static final String JAVASCRIPT_OTHER_WHITESPACE
-          = "\u2028"
-          + // line separator
-          "\u2029"
-          + // paragraph separator
-          "\u00a0"
-          + // Latin-1 space
-          "\u1680"
-          + // Ogham space mark
-          "\u180e"
-          + // separator, Mongolian vowel
-          "\u2000"
-          + // en quad
-          "\u2001"
-          + // em quad
-          "\u2002"
-          + // en space
-          "\u2003"
-          + // em space
-          "\u2004"
-          + // three-per-em space
-          "\u2005"
-          + // four-per-em space
-          "\u2006"
-          + // six-per-em space
-          "\u2007"
-          + // figure space
-          "\u2008"
-          + // punctuation space
-          "\u2009"
-          + // thin space
-          "\u200a"
-          + // hair space
-          "\u202f"
-          + // narrow no-break space
-          "\u205f"
-          + // medium mathematical space
-          "\u3000"
-          + // ideographic space
-          "\ufeff" // byte order mark
-          ;
+  private static final String JAVASCRIPT_OTHER_WHITESPACE =
+    "\u2028" + // line separator
+    "\u2029" + // paragraph separator
+    "\u00a0" + // Latin-1 space
+    "\u1680" + // Ogham space mark
+    "\u180e" + // separator, Mongolian vowel
+    "\u2000" + // en quad
+    "\u2001" + // em quad
+    "\u2002" + // en space
+    "\u2003" + // em space
+    "\u2004" + // three-per-em space
+    "\u2005" + // four-per-em space
+    "\u2006" + // six-per-em space
+    "\u2007" + // figure space
+    "\u2008" + // punctuation space
+    "\u2009" + // thin space
+    "\u200a" + // hair space
+    "\u202f" + // narrow no-break space
+    "\u205f" + // medium mathematical space
+    "\u3000" + // ideographic space
+    "\ufeff" ; // byte order mark
 
-  private static final String JAVASCRIPT_WHITESPACE_IN_REGEXP
-          = "\\u000a"
-          + // line feed
-          "\\u000d"
-          + // carriage return (ctrl-m)
-          "\\u2028"
-          + // line separator
-          "\\u2029"
-          + // paragraph separator
-          "\\u0009"
-          + // tab
-          "\\u0020"
-          + // ASCII space
-          "\\u000b"
-          + // tabulation line
-          "\\u000c"
-          + // ff (ctrl-l)
-          "\\u00a0"
-          + // Latin-1 space
-          "\\u1680"
-          + // Ogham space mark
-          "\\u180e"
-          + // separator, Mongolian vowel
-          "\\u2000"
-          + // en quad
-          "\\u2001"
-          + // em quad
-          "\\u2002"
-          + // en space
-          "\\u2003"
-          + // em space
-          "\\u2004"
-          + // three-per-em space
-          "\\u2005"
-          + // four-per-em space
-          "\\u2006"
-          + // six-per-em space
-          "\\u2007"
-          + // figure space
-          "\\u2008"
-          + // punctuation space
-          "\\u2009"
-          + // thin space
-          "\\u200a"
-          + // hair space
-          "\\u202f"
-          + // narrow no-break space
-          "\\u205f"
-          + // medium mathematical space
-          "\\u3000"
-          + // ideographic space
-          "\\ufeff" // byte order mark
-          ;
+  private static final String JAVASCRIPT_WHITESPACE_IN_REGEXP =
+    "\\u000a" + // line feed
+    "\\u000d" + // carriage return (ctrl-m)
+    "\\u2028" + // line separator
+    "\\u2029" + // paragraph separator
+    "\\u0009" + // tab
+    "\\u0020" + // ASCII space
+    "\\u000b" + // tabulation line
+    "\\u000c" + // ff (ctrl-l)
+    "\\u00a0" + // Latin-1 space
+    "\\u1680" + // Ogham space mark
+    "\\u180e" + // separator, Mongolian vowel
+    "\\u2000" + // en quad
+    "\\u2001" + // em quad
+    "\\u2002" + // en space
+    "\\u2003" + // em space
+    "\\u2004" + // three-per-em space
+    "\\u2005" + // four-per-em space
+    "\\u2006" + // six-per-em space
+    "\\u2007" + // figure space
+    "\\u2008" + // punctuation space
+    "\\u2009" + // thin space
+    "\\u200a" + // hair space
+    "\\u202f" + // narrow no-break space
+    "\\u205f" + // medium mathematical space
+    "\\u3000" + // ideographic space
+    "\\ufeff" ; // byte order mark
 
-  static String unicodeEscape(final char ch) {
-    final StringBuilder sb = new StringBuilder();
+  static String unicodeEscape(char ch) {
+    var sb = new StringBuilder();
 
     sb.append("\\u");
 
-    final String hex = Integer.toHexString(ch);
-    for (int i = hex.length(); i < 4; i++) {
+    var hex = Integer.toHexString(ch);
+    for (var i = hex.length(); i < 4; i++) {
       sb.append('0');
     }
     sb.append(hex);
@@ -191,7 +117,7 @@ public class Lexer extends Scanner {
    * @param source    the source
    * @param stream    the token stream to lex
    */
-  public Lexer(final Source source, final TokenStream stream) {
+  public Lexer(Source source, TokenStream stream) {
     this(source, stream, false);
   }
 
@@ -202,7 +128,7 @@ public class Lexer extends Scanner {
    * @param stream    the token stream to lex
    * @param scripting are we in scripting mode
    */
-  public Lexer(final Source source, final TokenStream stream, final boolean scripting) {
+  public Lexer(Source source, TokenStream stream, boolean scripting) {
     this(source, 0, source.getLength(), stream, scripting, false);
   }
 
@@ -214,11 +140,10 @@ public class Lexer extends Scanner {
    * @param len       length of source segment to lex
    * @param stream    token stream to lex
    * @param scripting are we in scripting mode
-   * @param pauseOnFunctionBody if true, lexer will return from {@link #lexify()} when it encounters a
-   * function body. This is used with the feature where the parser is skipping nested function bodies to
-   * avoid reading ahead unnecessarily when we skip the function bodies.
+   * @param pauseOnFunctionBody if true, lexer will return from {@link #lexify()} when it encounters a function body.
+   *    This is used with the feature where the parser is skipping nested function bodies to avoid reading ahead unnecessarily when we skip the function bodies.
    */
-  public Lexer(final Source source, final int start, final int len, final TokenStream stream, final boolean scripting, final boolean pauseOnFunctionBody) {
+  public Lexer(Source source, int start, int len, TokenStream stream, boolean scripting, boolean pauseOnFunctionBody) {
     super(source.getContent(), 1, start, len);
     this.source = source;
     this.stream = stream;
@@ -230,7 +155,7 @@ public class Lexer extends Scanner {
     this.pauseOnFunctionBody = pauseOnFunctionBody;
   }
 
-  private Lexer(final Lexer lexer, final State state) {
+  private Lexer(Lexer lexer, State state) {
     super(lexer, state);
 
     source = lexer.source;
@@ -246,21 +171,17 @@ public class Lexer extends Scanner {
 
   static class State extends Scanner.State {
 
-    /** Pending new line number and position. */
+    // Pending new line number and position.
     public final int pendingLine;
 
-    /** Position of last EOL + 1. */
+    // Position of last EOL + 1.
     public final int linePosition;
 
-    /** Type of last token added. */
+    // Type of last token added.
     public final TokenType last;
 
-    /*
-         * Constructor.
-     */
-    State(final int position, final int limit, final int line, final int pendingLine, final int linePosition, final TokenType last) {
+    State(int position, int limit, int line, int pendingLine, int linePosition, TokenType last) {
       super(position, limit, line);
-
       this.pendingLine = pendingLine;
       this.linePosition = linePosition;
       this.last = last;
@@ -280,12 +201,10 @@ public class Lexer extends Scanner {
   /**
    * Restore the state of the scan.
    *
-   * @param state
-   *            Captured state.
+   * @param state Captured state.
    */
-  void restoreState(final State state) {
+  void restoreState(State state) {
     super.restoreState(state);
-
     pendingLine = state.pendingLine;
     linePosition = state.linePosition;
     last = state.last;
@@ -294,17 +213,13 @@ public class Lexer extends Scanner {
   /**
    * Add a new token to the stream.
    *
-   * @param type
-   *            Token type.
-   * @param start
-   *            Start position.
-   * @param end
-   *            End position.
+   * @param type  Token type.
+   * @param start Start position.
+   * @param end   End position.
    */
-  protected void add(final TokenType type, final int start, final int end) {
+  void add(TokenType type, int start, int end) {
     // Record last token.
     last = type;
-
     // Only emit the last EOL in a cluster.
     if (type == EOL) {
       pendingLine = end;
@@ -315,7 +230,6 @@ public class Lexer extends Scanner {
         stream.put(Token.toDesc(EOL, linePosition, pendingLine));
         pendingLine = -1;
       }
-
       // Write token to stream.
       stream.put(Token.toDesc(type, start, end - start));
     }
@@ -324,18 +238,15 @@ public class Lexer extends Scanner {
   /**
    * Add a new token to the stream.
    *
-   * @param type
-   *            Token type.
-   * @param start
-   *            Start position.
+   * @param type  Token type.
+   * @param start Start position.
    */
-  protected void add(final TokenType type, final int start) {
+  void add(TokenType type, int start) {
     add(type, start, position);
   }
 
   /**
-   * Return the String of valid whitespace characters for regular
-   * expressions in JavaScript
+   * Return the String of valid whitespace characters for regular expressions in JavaScript
    * @return regexp whitespace string
    */
   public static String getWhitespaceRegExp() {
@@ -347,8 +258,7 @@ public class Lexer extends Scanner {
    *
    * @param addEOL true if EOL token should be recorded.
    */
-  private void skipEOL(final boolean addEOL) {
-
+  void skipEOL(boolean addEOL) {
     if (ch0 == '\r') { // detect \r\n pattern
       skip(1);
       if (ch0 == '\n') {
@@ -357,10 +267,8 @@ public class Lexer extends Scanner {
     } else { // all other space, ch0 is guaranteed to be EOL or \0
       skip(1);
     }
-
     // bump up line count
     line++;
-
     if (addEOL) {
       // Add an EOL token.
       add(EOL, position, line);
@@ -372,7 +280,7 @@ public class Lexer extends Scanner {
    *
    * @param addEOL true if EOL token should be recorded.
    */
-  private void skipLine(final boolean addEOL) {
+  void skipLine(boolean addEOL) {
     // Ignore characters.
     while (!isEOL(ch0) && !atEOF()) {
       skip(1);
@@ -386,13 +294,13 @@ public class Lexer extends Scanner {
    * @param ch a char
    * @return true if valid JavaScript whitespace
    */
-  public static boolean isJSWhitespace(final char ch) {
+  public static boolean isJSWhitespace(char ch) {
     return ch == ' ' // space
-            || ch >= '\t' && ch <= '\r' // 0x09..0x0d: tab, line feed, tabulation line, ff, carriage return
-            || ch >= 160 && isOtherJSWhitespace(ch);
+        || ch >= '\t' && ch <= '\r' // 0x09..0x0d: tab, line feed, tabulation line, ff, carriage return
+        || ch >= 160 && isOtherJSWhitespace(ch);
   }
 
-  private static boolean isOtherJSWhitespace(final char ch) {
+  private static boolean isOtherJSWhitespace(char ch) {
     return JAVASCRIPT_OTHER_WHITESPACE.indexOf(ch) != -1;
   }
 
@@ -401,11 +309,11 @@ public class Lexer extends Scanner {
    * @param ch a char
    * @return true if valid JavaScript end of line
    */
-  public static boolean isJSEOL(final char ch) {
+  public static boolean isJSEOL(char ch) {
     return ch == '\n' // line feed
-            || ch == '\r' // carriage return (ctrl-m)
-            || ch == '\u2028' // line separator
-            || ch == '\u2029'; // paragraph separator
+        || ch == '\r' // carriage return (ctrl-m)
+        || ch == '\u2028' // line separator
+        || ch == '\u2029'; // paragraph separator
   }
 
   /**
@@ -413,14 +321,14 @@ public class Lexer extends Scanner {
    * @param ch a char
    * @return true if string delimiter
    */
-  protected boolean isStringDelimiter(final char ch) {
+  boolean isStringDelimiter(char ch) {
     return ch == '\'' || ch == '"';
   }
 
   /**
    * Test if char is a template literal delimiter ('`').
    */
-  private static boolean isTemplateDelimiter(final char ch) {
+  static boolean isTemplateDelimiter(char ch) {
     return ch == '`';
   }
 
@@ -429,7 +337,7 @@ public class Lexer extends Scanner {
    * @param ch a char
    * @return true if valid JavaScript whitespace
    */
-  protected boolean isWhitespace(final char ch) {
+  boolean isWhitespace(char ch) {
     return Lexer.isJSWhitespace(ch);
   }
 
@@ -438,7 +346,7 @@ public class Lexer extends Scanner {
    * @param ch a char
    * @return true if valid JavaScript end of line
    */
-  protected boolean isEOL(final char ch) {
+  boolean isEOL(char ch) {
     return Lexer.isJSEOL(ch);
   }
 
@@ -448,7 +356,7 @@ public class Lexer extends Scanner {
    *
    * @param addEOL true if EOL tokens should be recorded.
    */
-  private void skipWhitespace(final boolean addEOL) {
+  void skipWhitespace(boolean addEOL) {
     while (isWhitespace(ch0)) {
       if (isEOL(ch0)) {
         skipEOL(addEOL);
@@ -463,21 +371,18 @@ public class Lexer extends Scanner {
    *
    * @return True if a comment.
    */
-  protected boolean skipComments() {
+  boolean skipComments() {
     // Save the current position.
-    final int start = position;
-
+    var start = position;
     if (ch0 == '/') {
       // Is it a // comment.
       if (ch1 == '/') {
         // Skip over //.
         skip(2);
-
-        boolean directiveComment = false;
+        var directiveComment = false;
         if ((ch0 == '#' || ch0 == '@') && (ch1 == ' ')) {
           directiveComment = true;
         }
-
         // Scan for EOL.
         while (!atEOF() && !isEOL(ch0)) {
           skip(1);
@@ -497,7 +402,6 @@ public class Lexer extends Scanner {
             skip(1);
           }
         }
-
         if (atEOF()) {
           // TODO - Report closing */ missing in parser.
           add(ERROR, start);
@@ -505,7 +409,6 @@ public class Lexer extends Scanner {
           // Skip */.
           skip(2);
         }
-
         // Did detect a comment.
         add(COMMENT, start);
         return true;
@@ -523,7 +426,6 @@ public class Lexer extends Scanner {
       add(COMMENT, start);
       return true;
     }
-
     // Not a comment.
     return false;
   }
@@ -535,14 +437,13 @@ public class Lexer extends Scanner {
    * @param length Length of regex token.
    * @return Regex token object.
    */
-  public RegexToken valueOfPattern(final int start, final int length) {
+  public RegexToken valueOfPattern(int start, int length) {
     // Save the current position.
-    final int savePosition = position;
+    var savePosition = position;
     // Reset to beginning of content.
     reset(start);
     // Buffer for recording characters.
-    final StringBuilder sb = new StringBuilder(length);
-
+    var sb = new StringBuilder(length);
     // Skip /.
     skip(1);
     boolean inBrackets = false;
@@ -559,24 +460,18 @@ public class Lexer extends Scanner {
         } else if (ch0 == ']') {
           inBrackets = false;
         }
-
         // Skip literal character.
         sb.append(ch0);
         skip(1);
       }
     }
-
     // Get pattern as string.
-    final String regex = sb.toString();
-
+    var regex = sb.toString();
     // Skip /.
     skip(1);
-
     // Options as string.
-    final String options = source.getString(position, scanIdentifier());
-
+    var options = source.getString(position, scanIdentifier());
     reset(savePosition);
-
     // Compile the pattern.
     return new RegexToken(regex, options);
   }
@@ -587,15 +482,14 @@ public class Lexer extends Scanner {
    * @param token a token
    * @return true if token can start a literal.
    */
-  public boolean canStartLiteral(final TokenType token) {
+  public boolean canStartLiteral(TokenType token) {
     return token.startsWith('/') || ((scripting || XML_LITERALS) && token.startsWith('<'));
   }
 
   /**
    * interface to receive line information for multi-line literals.
    */
-  protected interface LineInfoReceiver {
-
+  interface LineInfoReceiver {
     /**
      * Receives line information
      * @param line last line number
@@ -605,15 +499,15 @@ public class Lexer extends Scanner {
   }
 
   /**
-   * Check whether the given token represents the beginning of a literal. If so scan
-   * the literal and return <code>true</code>, otherwise return false.
+   * Check whether the given token represents the beginning of a literal.
+   * If so scan the literal and return <code>true</code>, otherwise return false.
    *
    * @param token the token.
    * @param startTokenType the token type.
    * @param lir LineInfoReceiver that receives line info for multi-line string literals.
    * @return True if a literal beginning with startToken was found and scanned.
    */
-  protected boolean scanLiteral(final long token, final TokenType startTokenType, final LineInfoReceiver lir) {
+  boolean scanLiteral(long token, TokenType startTokenType, LineInfoReceiver lir) {
     // Check if it can be a literal.
     if (!canStartLiteral(startTokenType)) {
       return false;
@@ -622,9 +516,8 @@ public class Lexer extends Scanner {
     if (stream.get(stream.last()) != token) {
       return false;
     }
-
     // Record current position in case multiple heredocs start on this line - see JDK-8073653
-    final State state = saveState();
+    var state = saveState();
     // Rewind to token start position
     reset(Token.descPosition(token));
 
@@ -637,7 +530,6 @@ public class Lexer extends Scanner {
         return scanXMLLiteral();
       }
     }
-
     return false;
   }
 
@@ -646,16 +538,15 @@ public class Lexer extends Scanner {
    *
    * @return True if a regex literal.
    */
-  private boolean scanRegEx() {
+  boolean scanRegEx() {
     assert ch0 == '/';
     // Make sure it's not a comment.
     if (ch1 != '/' && ch1 != '*') {
       // Record beginning of literal.
-      final int start = position;
+      var start = position;
       // Skip /.
       skip(1);
-      boolean inBrackets = false;
-
+      var inBrackets = false;
       // Scan for closing /, stopping at end of line.
       while (!atEOF() && (ch0 != '/' || inBrackets) && !isEOL(ch0)) {
         // Skip over escaped character.
@@ -672,32 +563,26 @@ public class Lexer extends Scanner {
           } else if (ch0 == ']') {
             inBrackets = false;
           }
-
           // Skip literal character.
           skip(1);
         }
       }
-
       // If regex literal.
       if (ch0 == '/') {
         // Skip /.
         skip(1);
-
         // Skip over options.
         while (!atEOF() && Character.isJavaIdentifierPart(ch0) || ch0 == '\\' && ch1 == 'u') {
           skip(1);
         }
-
         // Add regex token.
         add(REGEX, start);
         // Regex literal detected.
         return true;
       }
-
       // False start try again.
       reset(start);
     }
-
     // Regex literal not detected.
     return false;
   }
@@ -711,9 +596,8 @@ public class Lexer extends Scanner {
    *
    * @return The converted digit or -1 if invalid.
    */
-  protected static int convertDigit(final char ch, final int base) {
+  static int convertDigit(char ch, int base) {
     int digit;
-
     if ('0' <= ch && ch <= '9') {
       digit = ch - '0';
     } else if ('A' <= ch && ch <= 'Z') {
@@ -723,7 +607,6 @@ public class Lexer extends Scanner {
     } else {
       return -1;
     }
-
     return digit < base ? digit : -1;
   }
 
@@ -734,21 +617,17 @@ public class Lexer extends Scanner {
    * @param type   Type of token to report against.
    * @return Value of sequence or < 0 if no digits.
    */
-  private int hexSequence(final int length, final TokenType type) {
-    int value = 0;
-
-    for (int i = 0; i < length; i++) {
-      final int digit = convertDigit(ch0, 16);
-
+  int hexSequence(int length, TokenType type) {
+    var value = 0;
+    for (var i = 0; i < length; i++) {
+      var digit = convertDigit(ch0, 16);
       if (digit == -1) {
         error(Lexer.message("invalid.hex"), type, position, limit);
         return i == 0 ? -1 : value;
       }
-
       value = digit | value << 4;
       skip(1);
     }
-
     return value;
   }
 
@@ -757,18 +636,15 @@ public class Lexer extends Scanner {
    *
    * @return Value of sequence.
    */
-  private int octalSequence() {
-    int value = 0;
-
-    for (int i = 0; i < 3; i++) {
-      final int digit = convertDigit(ch0, 8);
-
+  int octalSequence() {
+    var value = 0;
+    for (var i = 0; i < 3; i++) {
+      var digit = convertDigit(ch0, 8);
       if (digit == -1) {
         break;
       }
       value = digit | value << 3;
       skip(1);
-
       if (i == 1 && value >= 32) {
         break;
       }
@@ -783,22 +659,21 @@ public class Lexer extends Scanner {
    * @param length Length of token.
    * @return Ident string or null if an error.
    */
-  private String valueOfIdent(final int start, final int length) throws RuntimeException {
+  String valueOfIdent(int start, int length) throws RuntimeException {
     // Save the current position.
-    final int savePosition = position;
+    var savePosition = position;
     // End of scan.
-    final int end = start + length;
+    var end = start + length;
     // Reset to beginning of content.
     reset(start);
     // Buffer for recording characters.
-    final StringBuilder sb = new StringBuilder(length);
-
+    var sb = new StringBuilder(length);
     // Scan until end of line or end of file.
     while (!atEOF() && position < end && !isEOL(ch0)) {
       // If escape character.
       if (ch0 == '\\' && ch1 == 'u') {
         skip(2);
-        final int ch = hexSequence(4, TokenType.IDENT);
+        var ch = hexSequence(4, TokenType.IDENT);
         assert !isWhitespace((char) ch);
         assert ch >= 0;
         sb.append((char) ch);
@@ -808,10 +683,8 @@ public class Lexer extends Scanner {
         skip(1);
       }
     }
-
     // Restore position.
     reset(savePosition);
-
     return sb.toString();
   }
 
@@ -823,13 +696,13 @@ public class Lexer extends Scanner {
    *
    * var \u0042 = 44;
    */
-  private void scanIdentifierOrKeyword() {
+  void scanIdentifierOrKeyword() {
     // Record beginning of identifier.
-    final int start = position;
+    var start = position;
     // Scan identifier.
-    final int length = scanIdentifier();
+    var length = scanIdentifier();
     // Check to see if it is a keyword.
-    final TokenType type = TokenLookup.lookupKeyword(content, start, length);
+    var type = TokenLookup.lookupKeyword(content, start, length);
     if (type == FUNCTION && pauseOnFunctionBody) {
       pauseOnNextLeftBrace = true;
     }
@@ -844,41 +717,29 @@ public class Lexer extends Scanner {
    * @param length Length of token.
    * @return JavaScript string object.
    */
-  private String valueOfString(final int start, final int length, final boolean allow) throws RuntimeException {
+  String valueOfString(int start, int length, boolean allow) throws RuntimeException {
     // Save the current position.
-    final int savePosition = position;
+    var savePosition = position;
     // Calculate the end position.
-    final int end = start + length;
+    var end = start + length;
     // Reset to beginning of string.
     reset(start);
-
     // Buffer for recording characters.
-    final StringBuilder sb = new StringBuilder(length);
-
+    var sb = new StringBuilder(length);
     // Scan until end of string.
     while (position < end) {
       // If escape character.
       if (ch0 == '\\') {
         skip(1);
-
-        final char next = ch0;
-        final int afterSlash = position;
-
+        var next = ch0;
+        var afterSlash = position;
         skip(1);
-
         // Special characters.
         switch (next) {
-          case '0':
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7': {
+          case '0', '1', '2', '3', '4', '5', '6', '7' -> {
             if (allow) {
-              // "\0" itself may be allowed. Only other 'real'
-              // octal escape sequences are not allowed (eg. "\02", "\31").
+              // "\0" itself may be allowed.
+              // Only other 'real' octal escape sequences are not allowed (eg. "\02", "\31").
               // See section 7.8.4 String literals production EscapeSequence
               if (next != '0' || (ch0 >= '0' && ch0 <= '9')) {
                 error(Lexer.message("no.octal"), STRING, position, limit);
@@ -886,55 +747,26 @@ public class Lexer extends Scanner {
             }
             reset(afterSlash);
             // Octal sequence.
-            final int ch = octalSequence();
-
+            var ch = octalSequence();
             if (ch < 0) {
               sb.append('\\');
               sb.append('x');
             } else {
               sb.append((char) ch);
             }
-            break;
           }
-          case 'n':
-            sb.append('\n');
-            break;
-          case 't':
-            sb.append('\t');
-            break;
-          case 'b':
-            sb.append('\b');
-            break;
-          case 'f':
-            sb.append('\f');
-            break;
-          case 'r':
-            sb.append('\r');
-            break;
-          case '\'':
-            sb.append('\'');
-            break;
-          case '\"':
-            sb.append('\"');
-            break;
-          case '\\':
-            sb.append('\\');
-            break;
-          case '\r': // CR | CRLF
+
+          case '\r' -> { // CR | CRLF
             if (ch0 == '\n') {
               skip(1);
             }
-          // fall through
-          case '\n': // LF
-          case '\u2028': // LS
-          case '\u2029': // PS
-            // continue on the next line, slash-return continues string
-            // literal
-            break;
-          case 'x': {
-            // Hex sequence.
-            final int ch = hexSequence(2, STRING);
-
+            // continue as in '\n'
+          }
+          case '\n', '\u2028', '\u2029' -> { // LF, LS, PS
+            // continue on the next line, slash-return continues string literal
+          }
+          case 'x' -> { // Hex sequence.
+            var ch = hexSequence(2, STRING);
             if (ch < 0) {
               sb.append('\\');
               sb.append('x');
@@ -942,11 +774,8 @@ public class Lexer extends Scanner {
               sb.append((char) ch);
             }
           }
-          break;
-          case 'u': {
-            // Unicode sequence.
-            final int ch = hexSequence(4, STRING);
-
+          case 'u' -> { // Unicode sequence.
+            var ch = hexSequence(4, STRING);
             if (ch < 0) {
               sb.append('\\');
               sb.append('u');
@@ -954,14 +783,18 @@ public class Lexer extends Scanner {
               sb.append((char) ch);
             }
           }
-          break;
-          case 'v':
-            sb.append('\u000B');
-            break;
-          // All other characters.
-          default:
-            sb.append(next);
-            break;
+
+          case 'n' -> sb.append('\n');
+          case 't' -> sb.append('\t');
+          case 'b' -> sb.append('\b');
+          case 'f' -> sb.append('\f');
+          case 'r' -> sb.append('\r');
+          case '\'' -> sb.append('\'');
+          case '\"' -> sb.append('\"');
+          case '\\' -> sb.append('\\');
+          case 'v' -> sb.append('\u000B');
+
+          default -> sb.append(next); // All other characters.
         }
       } else if (ch0 == '\r') {
         // Convert CR-LF or CR to LF line terminator.
@@ -973,10 +806,8 @@ public class Lexer extends Scanner {
         skip(1);
       }
     }
-
     // Restore position.
     reset(savePosition);
-
     return sb.toString();
   }
 
@@ -984,17 +815,15 @@ public class Lexer extends Scanner {
    * Scan over a string literal.
    * @param add true if we are not just scanning but should actually modify the token stream
    */
-  protected void scanString(final boolean add) {
+  void scanString(boolean add) {
     // Type of string.
-    TokenType type = STRING;
+    var type = STRING;
     // Record starting quote.
-    final char quote = ch0;
+    var quote = ch0;
     // Skip over quote.
     skip(1);
-
     // Record beginning of string content.
-    final State stringState = saveState();
-
+    var stringState = saveState();
     // Scan until close quote or end of line.
     while (!atEOF() && ch0 != quote && !isEOL(ch0)) {
       // Skip over escaped character.
@@ -1010,7 +839,6 @@ public class Lexer extends Scanner {
       // Skip literal character.
       skip(1);
     }
-
     // If close quote.
     if (ch0 == quote) {
       // Skip close quote.
@@ -1018,15 +846,13 @@ public class Lexer extends Scanner {
     } else {
       error(Lexer.message("missing.close.quote"), STRING, position, limit);
     }
-
     // If not just scanning.
     if (add) {
       // Record end of string.
       stringState.setLimit(position - 1);
-
       if (scripting && !stringState.isEmpty()) {
         switch (quote) {
-          case '`':
+          case '`' -> {
             // Mark the beginning of an exec string.
             add(EXECSTRING, stringState.position, stringState.limit);
             // Frame edit string with left brace.
@@ -1035,17 +861,14 @@ public class Lexer extends Scanner {
             editString(type, stringState);
             // Frame edit string with right brace.
             add(RBRACE, stringState.limit, stringState.limit);
-            break;
-          case '"':
-            // Only edit double quoted strings.
+          }
+          case '"' -> { // Only edit double quoted strings.
             editString(type, stringState);
-            break;
-          case '\'':
-            // Add string token without editing.
+          }
+          case '\'' -> { // Add string token without editing.
             add(type, stringState.position, stringState.limit);
-            break;
-          default:
-            break;
+          }
+          // default : no-op
         }
       } else {
         /// Add string token without editing.
@@ -1057,14 +880,12 @@ public class Lexer extends Scanner {
   /**
    * Scan over a template string literal.
    */
-  private void scanTemplate() {
+  void scanTemplate() {
     assert ch0 == '`';
-    TokenType type = TEMPLATE;
-
+    var type = TEMPLATE;
     // Skip over quote and record beginning of string content.
     skip(1);
-    State stringState = saveState();
-
+    var stringState = saveState();
     // Scan until close quote
     while (!atEOF()) {
       // Skip over escaped character.
@@ -1078,21 +899,17 @@ public class Lexer extends Scanner {
         skip(2);
         stringState.setLimit(position - 2);
         add(type == TEMPLATE ? TEMPLATE_HEAD : type, stringState.position, stringState.limit);
-
         // scan to RBRACE
-        final Lexer expressionLexer = new Lexer(this, saveState());
+        var expressionLexer = new Lexer(this, saveState());
         expressionLexer.templateExpressionOpenBraces = 1;
         expressionLexer.lexify();
         restoreState(expressionLexer.saveState());
-
         // scan next middle or tail of the template literal
         assert ch0 == '}';
         type = TEMPLATE_MIDDLE;
-
         // Skip over rbrace and record beginning of string content.
         skip(1);
         stringState = saveState();
-
         continue;
       } else if (ch0 == '\\') {
         skip(1);
@@ -1107,11 +924,9 @@ public class Lexer extends Scanner {
         skipEOL(false);
         continue;
       }
-
       // Skip literal character.
       skip(1);
     }
-
     error(Lexer.message("missing.close.quote"), TEMPLATE, position, limit);
   }
 
@@ -1122,24 +937,21 @@ public class Lexer extends Scanner {
    * @param radix        Numeric base.
    * @return Converted number.
    */
-  private static Number valueOf(final String valueString, final int radix) throws NumberFormatException {
+  static Number valueOf(String valueString, int radix) throws NumberFormatException {
     try {
       return Integer.parseInt(valueString, radix);
-    } catch (final NumberFormatException e) {
+    } catch (NumberFormatException e) {
       if (radix == 10) {
         return Double.valueOf(valueString);
       }
-
-      double value = 0.0;
-
-      for (int i = 0; i < valueString.length(); i++) {
-        final char ch = valueString.charAt(i);
+      var value = 0.0;
+      for (var i = 0; i < valueString.length(); i++) {
+        var ch = valueString.charAt(i);
         // Preverified, should always be a valid digit.
-        final int digit = convertDigit(ch, radix);
+        var digit = convertDigit(ch, radix);
         value *= radix;
         value += digit;
       }
-
       return value;
     }
   }
@@ -1147,15 +959,13 @@ public class Lexer extends Scanner {
   /**
    * Scan a number.
    */
-  protected void scanNumber() {
+  void scanNumber() {
     // Record beginning of number.
-    final int start = position;
+    var start = position;
     // Assume value is a decimal.
-    TokenType type = DECIMAL;
-
+    var type = DECIMAL;
     // First digit of number.
-    int digit = convertDigit(ch0, 10);
-
+    var digit = convertDigit(ch0, 10);
     // If number begins with 0x.
     if (digit == 0 && (ch1 == 'x' || ch1 == 'X') && convertDigit(ch2, 16) != -1) {
       // Skip over 0xN.
@@ -1164,7 +974,6 @@ public class Lexer extends Scanner {
       while (convertDigit(ch0, 16) != -1) {
         skip(1);
       }
-
       type = HEXADECIMAL;
     } else if (digit == 0 && (ch1 == 'o' || ch1 == 'O') && convertDigit(ch2, 8) != -1) {
       // Skip over 0oN.
@@ -1173,7 +982,6 @@ public class Lexer extends Scanner {
       while (convertDigit(ch0, 8) != -1) {
         skip(1);
       }
-
       type = OCTAL;
     } else if (digit == 0 && (ch1 == 'b' || ch1 == 'B') && convertDigit(ch2, 2) != -1) {
       // Skip over 0bN.
@@ -1182,16 +990,14 @@ public class Lexer extends Scanner {
       while (convertDigit(ch0, 2) != -1) {
         skip(1);
       }
-
       type = BINARY_NUMBER;
     } else {
       // Check for possible octal constant.
-      boolean octal = digit == 0;
+      var octal = digit == 0;
       // Skip first digit if not leading '.'.
       if (digit != -1) {
         skip(1);
       }
-
       // Skip remaining digits.
       while ((digit = convertDigit(ch0, 10)) != -1) {
         // Check octal only digits.
@@ -1199,7 +1005,6 @@ public class Lexer extends Scanner {
         // Skip digit.
         skip(1);
       }
-
       if (octal && position - start > 1) {
         type = OCTAL_LEGACY;
       } else if (ch0 == '.' || ch0 == 'E' || ch0 == 'e') {
@@ -1212,7 +1017,6 @@ public class Lexer extends Scanner {
             skip(1);
           }
         }
-
         // Detect exponent.
         if (ch0 == 'E' || ch0 == 'e') {
           // Skip E.
@@ -1226,15 +1030,12 @@ public class Lexer extends Scanner {
             skip(1);
           }
         }
-
         type = FLOATING;
       }
     }
-
     if (Character.isJavaIdentifierStart(ch0)) {
       error(Lexer.message("missing.space.after.number"), type, position, 1);
     }
-
     // Add number token.
     add(type, start);
   }
@@ -1246,7 +1047,7 @@ public class Lexer extends Scanner {
    * @param length Length of regex token.
    * @return Regex token object.
    */
-  XMLToken valueOfXML(final int start, final int length) {
+  XMLToken valueOfXML(int start, int length) {
     return new XMLToken(source.getString(start, length));
   }
 
@@ -1255,14 +1056,12 @@ public class Lexer extends Scanner {
    *
    * @return TRUE if is an XML literal.
    */
-  private boolean scanXMLLiteral() {
+  boolean scanXMLLiteral() {
     assert ch0 == '<' && Character.isJavaIdentifierStart(ch1);
     if (XML_LITERALS) {
       // Record beginning of xml expression.
-      final int start = position;
-
-      int openCount = 0;
-
+      var start = position;
+      var openCount = 0;
       do {
         if (ch0 == '<') {
           if (ch1 == '/' && Character.isJavaIdentifierStart(ch2)) {
@@ -1279,7 +1078,6 @@ public class Lexer extends Scanner {
             reset(start);
             return false;
           }
-
           while (!atEOF() && ch0 != '>') {
             if (ch0 == '/' && ch1 == '>') {
               openCount--;
@@ -1291,12 +1089,10 @@ public class Lexer extends Scanner {
               skip(1);
             }
           }
-
           if (ch0 != '>') {
             reset(start);
             return false;
           }
-
           skip(1);
         } else if (atEOF()) {
           reset(start);
@@ -1305,11 +1101,9 @@ public class Lexer extends Scanner {
           skip(1);
         }
       } while (openCount > 0);
-
       add(XML, start);
       return true;
     }
-
     return false;
   }
 
@@ -1318,14 +1112,12 @@ public class Lexer extends Scanner {
    *
    * @return Length of identifier or zero if none found.
    */
-  private int scanIdentifier() {
-    final int start = position;
-
+  int scanIdentifier() {
+    var start = position;
     // Make sure first character is valid start character.
     if (ch0 == '\\' && ch1 == 'u') {
       skip(2);
-      final int ch = hexSequence(4, TokenType.IDENT);
-
+      var ch = hexSequence(4, TokenType.IDENT);
       if (!Character.isJavaIdentifierStart(ch)) {
         error(Lexer.message("illegal.identifier.character"), TokenType.IDENT, start, position);
       }
@@ -1333,13 +1125,11 @@ public class Lexer extends Scanner {
       // Not an identifier.
       return 0;
     }
-
     // Make sure remaining characters are valid part characters.
     while (!atEOF()) {
       if (ch0 == '\\' && ch1 == 'u') {
         skip(2);
-        final int ch = hexSequence(4, TokenType.IDENT);
-
+        var ch = hexSequence(4, TokenType.IDENT);
         if (!Character.isJavaIdentifierPart(ch)) {
           error(Lexer.message("illegal.identifier.character"), TokenType.IDENT, start, position);
         }
@@ -1349,7 +1139,6 @@ public class Lexer extends Scanner {
         break;
       }
     }
-
     // Length of identifier sequence.
     return position - start;
   }
@@ -1363,17 +1152,15 @@ public class Lexer extends Scanner {
    * @param bLength Length of second identifier.
    * @return True if equal.
    */
-  private boolean identifierEqual(final int aStart, final int aLength, final int bStart, final int bLength) {
+  boolean identifierEqual(int aStart, int aLength, int bStart, int bLength) {
     if (aLength == bLength) {
-      for (int i = 0; i < aLength; i++) {
+      for (var i = 0; i < aLength; i++) {
         if (content[aStart + i] != content[bStart + i]) {
           return false;
         }
       }
-
       return true;
     }
-
     return false;
   }
 
@@ -1384,27 +1171,22 @@ public class Lexer extends Scanner {
    * @param identLength Length of identifier.
    * @return True if detected.
    */
-  private boolean hasHereMarker(final int identStart, final int identLength) {
+  boolean hasHereMarker(int identStart, int identLength) {
     // Skip any whitespace.
     skipWhitespace(false);
-
     return identifierEqual(identStart, identLength, position, scanIdentifier());
   }
 
   /**
    * Lexer to service edit strings.
    */
-  private static class EditStringLexer extends Lexer {
+  static class EditStringLexer extends Lexer {
 
-    /** Type of string literals to emit. */
+    // Type of string literals to emit.
     final TokenType stringType;
 
-    /*
-         * Constructor.
-     */
-    EditStringLexer(final Lexer lexer, final TokenType stringType, final State stringState) {
+    EditStringLexer(Lexer lexer, TokenType stringType, State stringState) {
       super(lexer, stringState);
-
       this.stringType = stringType;
     }
 
@@ -1414,43 +1196,34 @@ public class Lexer extends Scanner {
     @Override
     public void lexify() {
       // Record start of string position.
-      int stringStart = position;
+      var stringStart = position;
       // Indicate that the priming first string has not been emitted.
-      boolean primed = false;
-
-      while (true) {
+      var primed = false;
+      for (;;) {
         // Detect end of content.
         if (atEOF()) {
           break;
         }
-
         // Honour escapes (should be well formed.)
         if (ch0 == '\\' && stringType == ESCSTRING) {
           skip(2);
-
           continue;
         }
-
         // If start of expression.
         if (ch0 == '$' && ch1 == '{') {
           if (!primed || stringStart != position) {
             if (primed) {
               add(ADD, stringStart, stringStart + 1);
             }
-
             add(stringType, stringStart, position);
             primed = true;
           }
-
           // Skip ${
           skip(2);
-
           // Save expression state.
-          final State expressionState = saveState();
-
+          var expressionState = saveState();
           // Start with one open brace.
-          int braceCount = 1;
-
+          var braceCount = 1;
           // Scan for the rest of the string.
           while (!atEOF()) {
             // If closing brace.
@@ -1463,53 +1236,41 @@ public class Lexer extends Scanner {
               // Bump up the brace count.
               braceCount++;
             }
-
             // Skip to next character.
             skip(1);
           }
-
           // If braces don't match then report an error.
           if (braceCount != 0) {
             error(Lexer.message("edit.string.missing.brace"), LBRACE, expressionState.position - 1, 1);
           }
-
           // Mark end of expression.
           expressionState.setLimit(position);
           // Skip closing brace.
           skip(1);
-
           // Start next string.
           stringStart = position;
-
           // Concatenate expression.
           add(ADD, expressionState.position, expressionState.position + 1);
           add(LPAREN, expressionState.position, expressionState.position + 1);
-
           // Scan expression.
-          final Lexer lexer = new Lexer(this, expressionState);
+          var lexer = new Lexer(this, expressionState);
           lexer.lexify();
-
           // Close out expression parenthesis.
           add(RPAREN, position - 1, position);
-
           continue;
         }
-
         // Next character in string.
         skip(1);
       }
-
       // If there is any unemitted string portion.
       if (stringStart != limit) {
         // Concatenate remaining string.
         if (primed) {
           add(ADD, stringStart, 1);
         }
-
         add(stringType, stringStart, limit);
       }
     }
-
   }
 
   /**
@@ -1518,11 +1279,10 @@ public class Lexer extends Scanner {
    * @param stringType  Type of string literals to emit.
    * @param stringState State of lexer at start of string.
    */
-  private void editString(final TokenType stringType, final State stringState) {
+  void editString(TokenType stringType, State stringState) {
     // Use special lexer to scan string.
-    final EditStringLexer lexer = new EditStringLexer(this, stringType, stringState);
+    var lexer = new EditStringLexer(this, stringType, stringState);
     lexer.lexify();
-
     // Need to keep lexer informed.
     last = stringType;
   }
@@ -1532,29 +1292,26 @@ public class Lexer extends Scanner {
    *
    * @return TRUE if is a here string.
    */
-  private boolean scanHereString(final LineInfoReceiver lir, final State oldState) {
+  boolean scanHereString(LineInfoReceiver lir, State oldState) {
     assert ch0 == '<' && ch1 == '<';
     if (scripting) {
       // Record beginning of here string.
-      final State saved = saveState();
-
+      var saved = saveState();
       // << or <<<
-      final boolean excludeLastEOL = ch2 != '<';
-
+      var excludeLastEOL = ch2 != '<';
       if (excludeLastEOL) {
         skip(2);
       } else {
         skip(3);
       }
-
       // Scan identifier. It might be quoted, indicating that no string editing should take place.
-      final char quoteChar = ch0;
-      final boolean noStringEditing = quoteChar == '"' || quoteChar == '\'';
+      var quoteChar = ch0;
+      var noStringEditing = quoteChar == '"' || quoteChar == '\'';
       if (noStringEditing) {
         skip(1);
       }
-      final int identStart = position;
-      final int identLength = scanIdentifier();
+      var identStart = position;
+      var identLength = scanIdentifier();
       if (noStringEditing) {
         if (ch0 != quoteChar) {
           error(Lexer.message("here.non.matching.delimiter"), last, position, position);
@@ -1563,83 +1320,65 @@ public class Lexer extends Scanner {
         }
         skip(1);
       }
-
       // Check for identifier.
       if (identLength == 0) {
         // Treat as shift.
         restoreState(saved);
-
         return false;
       }
-
       // Record rest of line.
-      final State restState = saveState();
+      var restState = saveState();
       // keep line number updated
-      int lastLine = line;
-
+      var lastLine = line;
       skipLine(false);
       lastLine++;
-      int lastLinePosition = position;
+      var lastLinePosition = position;
       restState.setLimit(position);
-
       if (oldState.position > position) {
         restoreState(oldState);
         skipLine(false);
       }
-
       // Record beginning of string.
-      final State stringState = saveState();
-      int stringEnd = position;
-
+      var stringState = saveState();
+      var stringEnd = position;
       // Hunt down marker.
       while (!atEOF()) {
         // Skip any whitespace.
         skipWhitespace(false);
-
         //handle trailing blank lines
         lastLinePosition = position;
         stringEnd = position;
-
         if (hasHereMarker(identStart, identLength)) {
           break;
         }
-
         skipLine(false);
         lastLine++;
         lastLinePosition = position;
         stringEnd = position;
       }
-
       // notify last line information
       lir.lineInfo(lastLine, lastLinePosition);
-
       // Record end of string.
       stringState.setLimit(stringEnd);
-
       // If marker is missing.
       if (stringState.isEmpty() || atEOF()) {
         error(Lexer.message("here.missing.end.marker", source.getString(identStart, identLength)), last, position, position);
         restoreState(saved);
-
         return false;
       }
-
       // Remove last end of line if specified.
       if (excludeLastEOL) {
         // Handles \n.
         if (content[stringEnd - 1] == '\n') {
           stringEnd--;
         }
-
         // Handles \r and \r\n.
         if (content[stringEnd - 1] == '\r') {
           stringEnd--;
         }
-
         // Update end of string.
         stringState.setLimit(stringEnd);
       }
-
       // Edit string if appropriate.
       if (!noStringEditing && !stringState.isEmpty()) {
         editString(STRING, stringState);
@@ -1647,52 +1386,42 @@ public class Lexer extends Scanner {
         // Add here string.
         add(STRING, stringState.position, stringState.limit);
       }
-
       // Scan rest of original line.
-      final Lexer restLexer = new Lexer(this, restState);
-
+      var restLexer = new Lexer(this, restState);
       restLexer.lexify();
-
       return true;
     }
-
     return false;
   }
 
   /**
-   * Breaks source content down into lex units, adding tokens to the token
-   * stream. The routine scans until the stream buffer is full. Can be called
-   * repeatedly until EOF is detected.
+   * Breaks source content down into lex units, adding tokens to the token stream.
+   * The routine scans until the stream buffer is full.
+   * Can be called repeatedly until EOF is detected.
    */
   public void lexify() {
     while (!stream.isFull() || nested) {
       // Skip over whitespace.
       skipWhitespace(true);
-
       // Detect end of file.
       if (atEOF()) {
         if (!nested) {
           // Add an EOF token at the end.
           add(EOF, position);
         }
-
         break;
       }
-
-      // Check for comments. Note that we don't scan for regexp and other literals here as
-      // we may not have enough context to distinguish them from similar looking operators.
+      // Check for comments.
+      // Note that we don't scan for regexp and other literals here as we may not have enough context to distinguish them from similar looking operators.
       // Instead we break on ambiguous operators below and let the parser decide.
       if (ch0 == '/' && skipComments()) {
         continue;
       }
-
       if (scripting && ch0 == '#' && skipComments()) {
         continue;
       }
-
       // TokenType for lookup of delimiter or operator.
       TokenType type;
-
       if (ch0 == '.' && convertDigit(ch1, 10) != -1) {
         // '.' followed by digit.
         // Scan and add a number.
@@ -1707,9 +1436,8 @@ public class Lexer extends Scanner {
             }
           }
         }
-
         // Get the number of characters in the token.
-        final int typeLength = type.getLength();
+        var typeLength = type.getLength();
         // Skip that many characters.
         skip(typeLength);
         // Add operator token.
@@ -1751,59 +1479,45 @@ public class Lexer extends Scanner {
    * @param token  Token descriptor.
    * @return JavaScript value.
    */
-  Object getValueOf(final long token) {
-    final int start = Token.descPosition(token);
-    final int len = Token.descLength(token);
+  Object getValueOf(long token) {
+    var start = Token.descPosition(token);
+    var len = Token.descLength(token);
 
-    switch (Token.descType(token)) {
-      case DECIMAL:
-        return Lexer.valueOf(source.getString(start, len), 10); // number
-      case HEXADECIMAL:
-        return Lexer.valueOf(source.getString(start + 2, len - 2), 16); // number
-      case OCTAL_LEGACY:
-        return Lexer.valueOf(source.getString(start, len), 8); // number
-      case OCTAL:
-        return Lexer.valueOf(source.getString(start + 2, len - 2), 8); // number
-      case BINARY_NUMBER:
-        return Lexer.valueOf(source.getString(start + 2, len - 2), 2); // number
-      case FLOATING:
-        final String str = source.getString(start, len);
-        final double value = Double.valueOf(str);
+    return switch (Token.descType(token)) {
+
+      case DECIMAL -> Lexer.valueOf(source.getString(start, len), 10); // number
+      case HEXADECIMAL -> Lexer.valueOf(source.getString(start + 2, len - 2), 16); // number
+      case OCTAL_LEGACY -> Lexer.valueOf(source.getString(start, len), 8); // number
+      case OCTAL -> Lexer.valueOf(source.getString(start + 2, len - 2), 8); // number
+      case BINARY_NUMBER -> Lexer.valueOf(source.getString(start + 2, len - 2), 2); // number
+
+      case FLOATING -> {
+        var str = source.getString(start, len);
+        double value = Double.valueOf(str);
         if (str.indexOf('.') != -1) {
-          return value; //number
+          yield value; //number
         }
-        //anything without an explicit decimal point is still subject to a
-        //"representable as int or long" check. Then the programmer does not
-        //explicitly code something as a double. For example new Color(int, int, int)
-        //and new Color(float, float, float) will get ambiguous for cases like
-        //new Color(1.0, 1.5, 1.5) if we don't respect the decimal point.
-        //yet we don't want e.g. 1e6 to be a double unnecessarily
+        // anything without an explicit decimal point is still subject to a "representable as int or long" check.
+        // Then the programmer does not explicitly code something as a double.
+        // For example new Color(int, int, int) and new Color(float, float, float) will get ambiguous
+        //  for cases like new Color(1.0, 1.5, 1.5) if we don't respect the decimal point.
+        //  yet we don't want e.g. 1e6 to be a double unnecessarily
         if (JSType.isNonNegativeZeroInt(value)) {
-          return (int) value;
+          yield (int) value;
         }
-        return value;
-      case STRING:
-        return source.getString(start, len); // String
-      case ESCSTRING:
-        return valueOfString(start, len, true); // String
-      case IDENT:
-        return valueOfIdent(start, len); // String
-      case REGEX:
-        return valueOfPattern(start, len); // RegexToken::LexerToken
-      case TEMPLATE:
-      case TEMPLATE_HEAD:
-      case TEMPLATE_MIDDLE:
-      case TEMPLATE_TAIL:
-        return valueOfString(start, len, true); // String
-      case XML:
-        return valueOfXML(start, len); // XMLToken::LexerToken
-      case DIRECTIVE_COMMENT:
-        return source.getString(start, len);
-      default:
-        break;
-    }
+        yield value;
+      }
 
-    return null;
+      case STRING -> source.getString(start, len); // String
+      case ESCSTRING -> valueOfString(start, len, true); // String
+      case IDENT -> valueOfIdent(start, len); // String
+      case REGEX -> valueOfPattern(start, len); // RegexToken::LexerToken
+      case TEMPLATE, TEMPLATE_HEAD, TEMPLATE_MIDDLE, TEMPLATE_TAIL -> valueOfString(start, len, true); // String
+      case XML -> valueOfXML(start, len); // XMLToken::LexerToken
+      case DIRECTIVE_COMMENT -> source.getString(start, len);
+
+      default -> null;
+    };
   }
 
   /**
@@ -1812,20 +1526,17 @@ public class Lexer extends Scanner {
    * @param token template string token
    * @return raw string
    */
-  public String valueOfRawString(final long token) {
-    final int start = Token.descPosition(token);
-    final int length = Token.descLength(token);
-
+  public String valueOfRawString(long token) {
+    var start = Token.descPosition(token);
+    var length = Token.descLength(token);
     // Save the current position.
-    final int savePosition = position;
+    var savePosition = position;
     // Calculate the end position.
-    final int end = start + length;
+    var end = start + length;
     // Reset to beginning of string.
     reset(start);
-
     // Buffer for recording characters.
-    final StringBuilder sb = new StringBuilder(length);
-
+    var sb = new StringBuilder(length);
     // Scan until end of string.
     while (position < end) {
       if (ch0 == '\r') {
@@ -1838,20 +1549,19 @@ public class Lexer extends Scanner {
         skip(1);
       }
     }
-
     // Restore position.
     reset(savePosition);
-
     return sb.toString();
   }
 
   /**
    * Get the correctly localized error message for a given message id format arguments
+   *
    * @param msgId message id
    * @param args  format arguments
    * @return message
    */
-  protected static String message(final String msgId, final String... args) {
+  static String message(String msgId, String... args) {
     return ECMAErrors.getMessage("lexer.error." + msgId, args);
   }
 
@@ -1864,12 +1574,12 @@ public class Lexer extends Scanner {
    * @param length        length of lexed error
    * @throws ParserException  unconditionally
    */
-  protected void error(final String message, final TokenType type, final int start, final int length) throws ParserException {
-    final long token = Token.toDesc(type, start, length);
-    final int pos = Token.descPosition(token);
-    final int lineNum = source.getLine(pos);
-    final int columnNum = source.getColumn(pos);
-    final String formatted = ErrorManager.format(message, source, lineNum, columnNum, token);
+  void error(String message, TokenType type, int start, int length) throws ParserException {
+    var token = Token.toDesc(type, start, length);
+    var pos = Token.descPosition(token);
+    var lineNum = source.getLine(pos);
+    var columnNum = source.getColumn(pos);
+    var formatted = ErrorManager.format(message, source, lineNum, columnNum, token);
     throw new ParserException(JSErrorType.SYNTAX_ERROR, formatted, source, lineNum, columnNum, token);
   }
 
@@ -1879,15 +1589,13 @@ public class Lexer extends Scanner {
    */
   public static abstract class LexerToken implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
     private final String expression;
 
     /**
      * Constructor
      * @param expression token expression
      */
-    protected LexerToken(final String expression) {
+    LexerToken(String expression) {
       this.expression = expression;
     }
 
@@ -1898,6 +1606,8 @@ public class Lexer extends Scanner {
     public String getExpression() {
       return expression;
     }
+
+    private static final long serialVersionUID = 1L;
   }
 
   /**
@@ -1905,18 +1615,15 @@ public class Lexer extends Scanner {
    */
   public static class RegexToken extends LexerToken {
 
-    private static final long serialVersionUID = 1L;
-
-    /** Options. */
+    // Options.
     private final String options;
 
     /**
      * Constructor.
-     *
      * @param expression  regexp expression
      * @param options     regexp options
      */
-    public RegexToken(final String expression, final String options) {
+    public RegexToken(String expression, String options) {
       super(expression);
       this.options = options;
     }
@@ -1933,22 +1640,22 @@ public class Lexer extends Scanner {
     public String toString() {
       return '/' + getExpression() + '/' + options;
     }
+
+    private static final long serialVersionUID = 1L;
   }
 
   /**
    * Temporary container for XML expression.
    */
   public static class XMLToken extends LexerToken {
-
-    private static final long serialVersionUID = 1L;
-
     /**
      * Constructor.
-     *
      * @param expression  XML expression
      */
-    public XMLToken(final String expression) {
+    public XMLToken(String expression) {
       super(expression);
     }
+    private static final long serialVersionUID = 1L;
   }
+
 }

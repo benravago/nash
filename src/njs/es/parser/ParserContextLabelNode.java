@@ -5,15 +5,14 @@ package es.parser;
  */
 class ParserContextLabelNode extends ParserContextBaseNode {
 
-  /** Name for label */
+  // Name for label
   private final String name;
 
   /**
    * Constructor
-   *
    * @param name The name of the label
    */
-  public ParserContextLabelNode(final String name) {
+  public ParserContextLabelNode(String name) {
     this.name = name;
   }
 
@@ -24,4 +23,5 @@ class ParserContextLabelNode extends ParserContextBaseNode {
   public String getLabelName() {
     return name;
   }
+
 }

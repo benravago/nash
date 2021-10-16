@@ -1,30 +1,26 @@
 package es.parser;
 
 /**
- *
- */
-/**
  * Handles streaming of tokens between lexer and parser.
- *
  */
 public class TokenStream {
 
-  /** Initial buffer size. */
+  // Initial buffer size.
   private static final int INITIAL_SIZE = 256;
 
-  /** Token buffer. */
+  // Token buffer.
   private long[] buffer;
 
-  /** Token count. */
+  // Token count.
   private int count;
 
-  /** Cursor to write position in buffer */
+  // Cursor to write position in buffer
   private int in;
 
-  /** Cursor to read position in buffer */
+  // Cursor to read position in buffer
   private int out;
 
-  /** Base index in buffer */
+  // Base index in buffer
   private int base;
 
   /**
@@ -40,12 +36,13 @@ public class TokenStream {
 
   /**
    * Get the next position in the buffer.
+   *
    * @param position Current position in buffer.
    * @return Next position in buffer.
    */
-  private int next(final int position) {
+  int next(int position) {
     // Next position.
-    int next = position + 1;
+    var next = position + 1;
 
     // If exceeds buffer length.
     if (next >= buffer.length) {
@@ -58,10 +55,11 @@ public class TokenStream {
 
   /**
    * Get the index position in the buffer.
+   *
    * @param k Seek position.
    * @return Position in buffer.
    */
-  private int index(final int k) {
+  int index(int k) {
     // Bias k.
     int index = k - (base - out);
 
@@ -131,7 +129,7 @@ public class TokenStream {
    * Put a token descriptor to the stream.
    * @param token Token descriptor to add.
    */
-  public void put(final long token) {
+  public void put(long token) {
     if (count == buffer.length) {
       grow();
     }
@@ -146,7 +144,7 @@ public class TokenStream {
    * @param k index
    * @return Token descriptor.
    */
-  public long get(final int k) {
+  public long get(int k) {
     return buffer[index(k)];
   }
 
@@ -154,7 +152,7 @@ public class TokenStream {
    * Advances the base of the stream.
    * @param k Position of token to be the new base.
    */
-  public void commit(final int k) {
+  public void commit(int k) {
     // Advance out.
     out = index(k);
     // Adjust count.
@@ -168,13 +166,13 @@ public class TokenStream {
    */
   public void grow() {
     // Allocate new buffer.
-    final long[] newBuffer = new long[buffer.length * 2];
+    var newBuffer = new long[buffer.length * 2];
 
     // If single chunk.
     if (in > out) {
       System.arraycopy(buffer, out, newBuffer, 0, count);
     } else {
-      final int portion = buffer.length - out;
+      var portion = buffer.length - out;
       System.arraycopy(buffer, out, newBuffer, 0, portion);
       System.arraycopy(buffer, 0, newBuffer, portion, count - portion);
     }
@@ -188,4 +186,5 @@ public class TokenStream {
   void reset() {
     in = out = count = base = 0;
   }
+
 }

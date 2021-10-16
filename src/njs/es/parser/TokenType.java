@@ -1,28 +1,19 @@
 package es.parser;
 
-import static es.parser.TokenKind.BINARY;
-import static es.parser.TokenKind.BRACKET;
-import static es.parser.TokenKind.FUTURE;
-import static es.parser.TokenKind.IR;
-import static es.parser.TokenKind.KEYWORD;
-import static es.parser.TokenKind.LITERAL;
-import static es.parser.TokenKind.SPECIAL;
-import static es.parser.TokenKind.UNARY;
+import static es.parser.TokenKind.*;
 
 import java.util.Locale;
 
 /**
  * Description of all the JavaScript tokens.
  */
-@SuppressWarnings("javadoc")
 public enum TokenType {
   ERROR(SPECIAL, null),
   EOF(SPECIAL, null),
   EOL(SPECIAL, null),
   COMMENT(SPECIAL, null),
   // comments of the form //@ foo=bar or //# foo=bar
-  // These comments are treated as special instructions
-  // to the lexer, parser or codegenerator.
+  // These comments are treated as special instructions to the lexer, parser or codegenerator.
   DIRECTIVE_COMMENT(SPECIAL, null),
   NOT(UNARY, "!", 14, false),
   NE(BINARY, "!=", 9, true),
@@ -76,6 +67,7 @@ public enum TokenType {
   RBRACE(BRACKET, "}"),
   BIT_NOT(UNARY, "~", 14, false),
   ELLIPSIS(UNARY, "..."),
+
   // ECMA 7.6.1.1 Keywords, 7.6.1.2 Future Reserved Words.
   // All other Java keywords are commented out.
 
@@ -167,25 +159,25 @@ public enum TokenType {
   SPREAD_ARRAY(IR, null),
   YIELD_STAR(IR, null);
 
-  /** Next token kind in token lookup table. */
+  // Next token kind in token lookup table.
   private TokenType next;
 
-  /** Classification of token. */
+  // Classification of token.
   private final TokenKind kind;
 
-  /** Printable name of token. */
+  // Printable name of token.
   private final String name;
 
-  /** Operator precedence. */
+  // Operator precedence.
   private final int precedence;
 
-  /** Left associativity */
+  // Left associativity
   private final boolean isLeftAssociative;
 
-  /** Cache values to avoid cloning. */
+  // Cache values to avoid cloning.
   private static final TokenType[] values;
 
-  TokenType(final TokenKind kind, final String name) {
+  TokenType(TokenKind kind, String name) {
     next = null;
     this.kind = kind;
     this.name = name;
@@ -193,7 +185,7 @@ public enum TokenType {
     isLeftAssociative = false;
   }
 
-  TokenType(final TokenKind kind, final String name, final int precedence, final boolean isLeftAssociative) {
+  TokenType(TokenKind kind, String name, int precedence, boolean isLeftAssociative) {
     next = null;
     this.kind = kind;
     this.name = name;
@@ -206,23 +198,20 @@ public enum TokenType {
    *
    * @param other  Compare token.
    * @param isLeft Is to the left of the other.
-   *
    * @return {@code true} if greater precedence.
    */
-  public boolean needsParens(final TokenType other, final boolean isLeft) {
-    return other.precedence != 0
-            && (precedence > other.precedence
-            || precedence == other.precedence && isLeftAssociative && !isLeft);
+  public boolean needsParens(TokenType other, boolean isLeft) {
+    return other.precedence != 0 && (precedence > other.precedence
+        || precedence == other.precedence && isLeftAssociative && !isLeft);
   }
 
   /**
    * Determines if the type is a valid operator.
    *
    * @param noIn {@code true} if IN operator should be ignored.
-   *
    * @return {@code true} if valid operator.
    */
-  public boolean isOperator(final boolean noIn) {
+  public boolean isOperator(boolean noIn) {
     return kind == BINARY && (!noIn || this != IN) && precedence != 0;
   }
 
@@ -243,7 +232,7 @@ public enum TokenType {
     return next;
   }
 
-  public void setNext(final TokenType next) {
+  public void setNext(TokenType next) {
     this.next = next;
   }
 
@@ -259,7 +248,7 @@ public enum TokenType {
     return isLeftAssociative;
   }
 
-  boolean startsWith(final char c) {
+  boolean startsWith(char c) {
     return name != null && name.length() > 0 && name.charAt(0) == c;
   }
 
@@ -276,4 +265,5 @@ public enum TokenType {
     // Avoid cloning of enumeration.
     values = TokenType.values();
   }
+
 }

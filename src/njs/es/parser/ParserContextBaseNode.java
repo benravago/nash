@@ -2,6 +2,7 @@ package es.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import es.ir.Statement;
 
 /**
@@ -36,7 +37,7 @@ abstract class ParserContextBaseNode implements ParserContextNode {
    * @param flag flag
    * @return A single flag
    */
-  protected int getFlag(final int flag) {
+  protected int getFlag(int flag) {
     return (flags & flag);
   }
 
@@ -45,7 +46,7 @@ abstract class ParserContextBaseNode implements ParserContextNode {
    * @return the new flags
    */
   @Override
-  public int setFlag(final int flag) {
+  public int setFlag(int flag) {
     flags |= flag;
     return flags;
   }
@@ -62,7 +63,7 @@ abstract class ParserContextBaseNode implements ParserContextNode {
    * @param statements statements
    */
   @Override
-  public void setStatements(final List<Statement> statements) {
+  public void setStatements(List<Statement> statements) {
     this.statements = statements;
   }
 
@@ -71,7 +72,7 @@ abstract class ParserContextBaseNode implements ParserContextNode {
    * @param statement The statement to add
    */
   @Override
-  public void appendStatement(final Statement statement) {
+  public void appendStatement(Statement statement) {
     this.statements.add(statement);
   }
 
@@ -80,7 +81,8 @@ abstract class ParserContextBaseNode implements ParserContextNode {
    * @param statement The statement to add
    */
   @Override
-  public void prependStatement(final Statement statement) {
+  public void prependStatement(Statement statement) {
     this.statements.add(0, statement);
   }
+
 }

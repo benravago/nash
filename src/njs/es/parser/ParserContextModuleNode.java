@@ -13,7 +13,7 @@ import es.ir.Module.ImportEntry;
  */
 class ParserContextModuleNode extends ParserContextBaseNode {
 
-  /** Module name. */
+  // Module name.
   private final String name;
 
   private final List<String> requestedModules = new ArrayList<>();
@@ -24,43 +24,42 @@ class ParserContextModuleNode extends ParserContextBaseNode {
 
   /**
    * Constructor.
-   *
    * @param name name of the module
    */
-  ParserContextModuleNode(final String name) {
+  ParserContextModuleNode(String name) {
     this.name = name;
   }
 
   /**
    * Returns the name of the module.
-   *
    * @return name of the module
    */
   public String getModuleName() {
     return name;
   }
 
-  public void addModuleRequest(final IdentNode moduleRequest) {
+  public void addModuleRequest(IdentNode moduleRequest) {
     requestedModules.add(moduleRequest.getName());
   }
 
-  public void addImportEntry(final ImportEntry importEntry) {
+  public void addImportEntry(ImportEntry importEntry) {
     importEntries.add(importEntry);
   }
 
-  public void addLocalExportEntry(final ExportEntry exportEntry) {
+  public void addLocalExportEntry(ExportEntry exportEntry) {
     localExportEntries.add(exportEntry);
   }
 
-  public void addIndirectExportEntry(final ExportEntry exportEntry) {
+  public void addIndirectExportEntry(ExportEntry exportEntry) {
     indirectExportEntries.add(exportEntry);
   }
 
-  public void addStarExportEntry(final ExportEntry exportEntry) {
+  public void addStarExportEntry(ExportEntry exportEntry) {
     starExportEntries.add(exportEntry);
   }
 
   public Module createModule() {
     return new Module(requestedModules, importEntries, localExportEntries, indirectExportEntries, starExportEntries);
   }
+
 }

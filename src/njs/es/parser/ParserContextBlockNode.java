@@ -12,7 +12,7 @@ class ParserContextBlockNode extends ParserContextBaseNode implements ParserCont
    *
    * @param token The first token of the block
    */
-  public ParserContextBlockNode(final long token) {
+  public ParserContextBlockNode(long token) {
     this.token = token;
   }
 
