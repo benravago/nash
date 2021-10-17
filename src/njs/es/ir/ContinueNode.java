@@ -10,8 +10,6 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public class ContinueNode extends JumpStatement {
 
-  private static final long serialVersionUID = 1L;
-
   /**
    * Constructor
    *
@@ -20,25 +18,21 @@ public class ContinueNode extends JumpStatement {
    * @param finish     finish
    * @param labelName  label name for continue or null if none
    */
-  public ContinueNode(final int lineNumber, final long token, final int finish, final String labelName) {
+  public ContinueNode(int lineNumber, long token, int finish, String labelName) {
     super(lineNumber, token, finish, labelName);
   }
 
-  private ContinueNode(final ContinueNode continueNode, final LocalVariableConversion conversion) {
+  ContinueNode(ContinueNode continueNode, LocalVariableConversion conversion) {
     super(continueNode, conversion);
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterContinueNode(this)) {
-      return visitor.leaveContinueNode(this);
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterContinueNode(this)) ? visitor.leaveContinueNode(this) : this;
   }
 
   @Override
-  JumpStatement createNewJumpStatement(final LocalVariableConversion conversion) {
+  JumpStatement createNewJumpStatement(LocalVariableConversion conversion) {
     return new ContinueNode(this, conversion);
   }
 
@@ -48,12 +42,13 @@ public class ContinueNode extends JumpStatement {
   }
 
   @Override
-  public BreakableNode getTarget(final LexicalContext lc) {
+  public BreakableNode getTarget(LexicalContext lc) {
     return lc.getContinueTo(getLabelName());
   }
 
   @Override
-  Label getTargetLabel(final BreakableNode target) {
+  Label getTargetLabel(BreakableNode target) {
     return ((LoopNode) target).getContinueLabel();
   }
+
 }

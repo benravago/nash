@@ -1,10 +1,8 @@
 package es.ir;
 
-import static es.parser.TokenType.RETURN;
-import static es.parser.TokenType.YIELD;
-
 import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
+import static es.parser.TokenType.*;
 
 /**
  * IR representation for RETURN or YIELD statements.
@@ -12,9 +10,7 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public class ReturnNode extends Statement {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Optional expression. */
+  // Optional expression.
   private final Expression expression;
 
   /**
@@ -25,12 +21,12 @@ public class ReturnNode extends Statement {
    * @param finish     finish
    * @param expression expression to return
    */
-  public ReturnNode(final int lineNumber, final long token, final int finish, final Expression expression) {
+  public ReturnNode(int lineNumber, long token, int finish, Expression expression) {
     super(lineNumber, token, finish);
     this.expression = expression;
   }
 
-  private ReturnNode(final ReturnNode returnNode, final Expression expression) {
+  private ReturnNode(ReturnNode returnNode, Expression expression) {
     super(returnNode);
     this.expression = expression;
   }
@@ -65,19 +61,18 @@ public class ReturnNode extends Statement {
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
     if (visitor.enterReturnNode(this)) {
       if (expression != null) {
         return visitor.leaveReturnNode(setExpression((Expression) expression.accept(visitor)));
       }
       return visitor.leaveReturnNode(this);
     }
-
     return this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append(isYield() ? "yield" : "return");
     if (expression != null) {
       sb.append(' ');
@@ -98,11 +93,8 @@ public class ReturnNode extends Statement {
    * @param expression new expression, or null if void return
    * @return new or same return node
    */
-  public ReturnNode setExpression(final Expression expression) {
-    if (this.expression == expression) {
-      return this;
-    }
-    return new ReturnNode(this, expression);
+  public ReturnNode setExpression(Expression expression) {
+    return (this.expression == expression) ? this : new ReturnNode(this, expression);
   }
 
 }

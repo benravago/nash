@@ -11,8 +11,6 @@ import es.ir.visitor.NodeVisitor;
  */
 public class ClassNode extends Expression {
 
-  private static final long serialVersionUID = 1L;
-
   private final IdentNode ident;
   private final Expression classHeritage;
   private final PropertyNode constructor;
@@ -32,8 +30,7 @@ public class ClassNode extends Expression {
    * @param classElements class elements
    * @param isStatement is this a statement or an expression?
    */
-  public ClassNode(final int line, final long token, final int finish, final IdentNode ident, final Expression classHeritage, final PropertyNode constructor,
-          final List<PropertyNode> classElements, final boolean isStatement) {
+  public ClassNode(int line, long token, int finish, IdentNode ident, Expression classHeritage, PropertyNode constructor, List<PropertyNode> classElements, boolean isStatement) {
     super(token, finish);
     this.line = line;
     this.ident = ident;
@@ -45,7 +42,6 @@ public class ClassNode extends Expression {
 
   /**
    * Class identifier. Optional.
-   *
    * @return the class identifier
    */
   public IdentNode getIdent() {
@@ -54,7 +50,6 @@ public class ClassNode extends Expression {
 
   /**
    * The expression of the {@code extends} clause. Optional.
-   *
    * @return the class heritage
    */
   public Expression getClassHeritage() {
@@ -63,7 +58,6 @@ public class ClassNode extends Expression {
 
   /**
    * Get the constructor method definition.
-   *
    * @return the constructor
    */
   public PropertyNode getConstructor() {
@@ -72,7 +66,6 @@ public class ClassNode extends Expression {
 
   /**
    * Get method definitions except the constructor.
-   *
    * @return the class elements
    */
   public List<PropertyNode> getClassElements() {
@@ -81,7 +74,6 @@ public class ClassNode extends Expression {
 
   /**
    * Returns if this class was a statement or an expression
-   *
    * @return true if this class was a statement
    */
   public boolean isStatement() {
@@ -90,7 +82,6 @@ public class ClassNode extends Expression {
 
   /**
    * Returns the line number.
-   *
    * @return the line number
    */
   public int getLineNumber() {
@@ -103,16 +94,12 @@ public class ClassNode extends Expression {
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterClassNode(this)) {
-      return visitor.leaveClassNode(this);
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterClassNode(this)) ? visitor.leaveClassNode(this) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append("class");
     if (ident != null) {
       sb.append(' ');
@@ -126,10 +113,11 @@ public class ClassNode extends Expression {
     if (constructor != null) {
       constructor.toString(sb, printType);
     }
-    for (final PropertyNode classElement : classElements) {
+    for (var classElement : classElements) {
       sb.append(" ");
       classElement.toString(sb, printType);
     }
     sb.append("}");
   }
+
 }

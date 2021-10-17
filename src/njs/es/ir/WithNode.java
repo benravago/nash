@@ -9,12 +9,10 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class WithNode extends LexicalContextStatement {
 
-  private static final long serialVersionUID = 1L;
-
-  /** This expression. */
+  // This expression.
   private final Expression expression;
 
-  /** Statements. */
+  // Statements.
   private final Block body;
 
   /**
@@ -26,13 +24,13 @@ public final class WithNode extends LexicalContextStatement {
    * @param expression With expression
    * @param body       Body of with node
    */
-  public WithNode(final int lineNumber, final long token, final int finish, final Expression expression, final Block body) {
+  public WithNode(int lineNumber, long token, int finish, Expression expression, Block body) {
     super(lineNumber, token, finish);
     this.expression = expression;
     this.body = body;
   }
 
-  private WithNode(final WithNode node, final Expression expression, final Block body) {
+  WithNode(WithNode node, Expression expression, Block body) {
     super(node);
     this.expression = expression;
     this.body = body;
@@ -40,17 +38,14 @@ public final class WithNode extends LexicalContextStatement {
 
   /**
    * Assist in IR navigation.
-   *
    * @param visitor IR navigating visitor.
    */
   @Override
-  public Node accept(final LexicalContext lc, final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterWithNode(this)) {
-      return visitor.leaveWithNode(
-              setExpression(lc, (Expression) expression.accept(visitor)).
-                      setBody(lc, (Block) body.accept(visitor)));
-    }
-    return this;
+  public Node accept(LexicalContext lc, NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterWithNode(this)) ?
+      visitor.leaveWithNode(
+        setExpression(lc, (Expression) expression.accept(visitor))
+        .setBody(lc, (Block) body.accept(visitor))) : this;
   }
 
   @Override
@@ -59,7 +54,7 @@ public final class WithNode extends LexicalContextStatement {
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append("with (");
     expression.toString(sb, printType);
     sb.append(')');
@@ -79,11 +74,8 @@ public final class WithNode extends LexicalContextStatement {
    * @param body new body
    * @return new or same withnode
    */
-  public WithNode setBody(final LexicalContext lc, final Block body) {
-    if (this.body == body) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new WithNode(this, expression, body));
+  public WithNode setBody(LexicalContext lc, Block body) {
+    return (this.body == body) ? this : Node.replaceInLexicalContext(lc, this, new WithNode(this, expression, body));
   }
 
   /**
@@ -100,10 +92,8 @@ public final class WithNode extends LexicalContextStatement {
    * @param expression new expression
    * @return new or same withnode
    */
-  public WithNode setExpression(final LexicalContext lc, final Expression expression) {
-    if (this.expression == expression) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new WithNode(this, expression, body));
+  public WithNode setExpression(LexicalContext lc, Expression expression) {
+    return (this.expression == expression) ? this : Node.replaceInLexicalContext(lc, this, new WithNode(this, expression, body));
   }
+
 }

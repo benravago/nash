@@ -10,9 +10,7 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class AccessNode extends BaseNode {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Property name. */
+  // Property name.
   private final String property;
 
   /**
@@ -23,13 +21,12 @@ public final class AccessNode extends BaseNode {
    * @param base      base node
    * @param property  property
    */
-  public AccessNode(final long token, final int finish, final Expression base, final String property) {
+  public AccessNode(long token, int finish, Expression base, String property) {
     super(token, finish, base, false, false);
     this.property = property;
   }
 
-  private AccessNode(final AccessNode accessNode, final Expression base, final String property, final boolean isFunction,
-          final Type type, final int id, final boolean isSuper) {
+  AccessNode(AccessNode accessNode, Expression base, String property, boolean isFunction, Type type, int id, boolean isSuper) {
     super(accessNode, base, isFunction, type, id, isSuper);
     this.property = property;
   }
@@ -39,81 +36,60 @@ public final class AccessNode extends BaseNode {
    * @param visitor IR navigating visitor.
    */
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterAccessNode(this)) {
-      return visitor.leaveAccessNode(
-              setBase((Expression) base.accept(visitor)));
-    }
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterAccessNode(this))
+      ? visitor.leaveAccessNode(setBase((Expression) base.accept(visitor)))
+      : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
-    final boolean needsParen = tokenType().needsParens(getBase().tokenType(), true);
-
+  public void toString(StringBuilder sb, boolean printType) {
+    var needsParen = tokenType().needsParens(getBase().tokenType(), true);
     if (printType) {
       optimisticTypeToString(sb);
     }
-
     if (needsParen) {
       sb.append('(');
     }
-
     base.toString(sb, printType);
-
     if (needsParen) {
       sb.append(')');
     }
     sb.append('.');
-
     sb.append(property);
   }
 
   /**
    * Get the property name
-   *
    * @return the property name
    */
   public String getProperty() {
     return property;
   }
 
-  private AccessNode setBase(final Expression base) {
-    if (this.base == base) {
-      return this;
-    }
-    return new AccessNode(this, base, property, isFunction(), type, programPoint, isSuper());
+  AccessNode setBase(Expression base) {
+    return (this.base == base) ? this : new AccessNode(this, base, property, isFunction(), type, programPoint, isSuper());
   }
 
   @Override
-  public AccessNode setType(final Type type) {
-    if (this.type == type) {
-      return this;
-    }
-    return new AccessNode(this, base, property, isFunction(), type, programPoint, isSuper());
+  public AccessNode setType(Type type) {
+    return (this.type == type) ? this : new AccessNode(this, base, property, isFunction(), type, programPoint, isSuper());
   }
 
   @Override
-  public AccessNode setProgramPoint(final int programPoint) {
-    if (this.programPoint == programPoint) {
-      return this;
-    }
-    return new AccessNode(this, base, property, isFunction(), type, programPoint, isSuper());
+  public AccessNode setProgramPoint(int programPoint) {
+    return (this.programPoint == programPoint) ? this : new AccessNode(this, base, property, isFunction(), type, programPoint, isSuper());
   }
 
   @Override
   public AccessNode setIsFunction() {
-    if (isFunction()) {
-      return this;
-    }
-    return new AccessNode(this, base, property, true, type, programPoint, isSuper());
+    return isFunction() ? this : new AccessNode(this, base, property, true, type, programPoint, isSuper());
   }
 
   @Override
   public AccessNode setIsSuper() {
-    if (isSuper()) {
-      return this;
-    }
-    return new AccessNode(this, base, property, isFunction(), type, programPoint, true);
+    return isSuper() ? this : new AccessNode(this, base, property, isFunction(), type, programPoint, true);
   }
+
+  private static final long serialVersionUID = 1L;
 }

@@ -8,41 +8,35 @@ import es.ir.visitor.NodeVisitor;
  */
 public class JoinPredecessorExpression extends Expression implements JoinPredecessor {
 
-  private static final long serialVersionUID = 1L;
-
   private final Expression expression;
   private final LocalVariableConversion conversion;
 
   /**
-   * A no-arg constructor does not wrap any expression on its own, but can be used as a place to contain a local
-   * variable conversion in a place where an expression can otherwise stand.
+   * A no-arg constructor does not wrap any expression on its own,
+   * but can be used as a place to contain a local variable conversion in a place where an expression can otherwise stand.
    */
   public JoinPredecessorExpression() {
     this(null);
   }
 
   /**
-   * A constructor for wrapping an expression and making it a join predecessor. Typically used on true and false
-   * subexpressions of the ternary node as well as on the operands of short-circuiting logical expressions {@code &&}
-   * and {@code ||}.
+   * A constructor for wrapping an expression and making it a join predecessor.
+   * Typically used on true and false subexpressions of the ternary node as well as on the operands of short-circuiting logical expressions {@code &&} and {@code ||}.
    * @param expression the expression to wrap
    */
-  public JoinPredecessorExpression(final Expression expression) {
+  public JoinPredecessorExpression(Expression expression) {
     this(expression, null);
   }
 
-  private JoinPredecessorExpression(final Expression expression, final LocalVariableConversion conversion) {
+  JoinPredecessorExpression(Expression expression, LocalVariableConversion conversion) {
     super(expression == null ? 0L : expression.getToken(), expression == null ? 0 : expression.getStart(), expression == null ? 0 : expression.getFinish());
     this.expression = expression;
     this.conversion = conversion;
   }
 
   @Override
-  public JoinPredecessor setLocalVariableConversion(final LexicalContext lc, final LocalVariableConversion conversion) {
-    if (conversion == this.conversion) {
-      return this;
-    }
-    return new JoinPredecessorExpression(expression, conversion);
+  public JoinPredecessor setLocalVariableConversion(LexicalContext lc, LocalVariableConversion conversion) {
+    return (conversion == this.conversion) ? this : new JoinPredecessorExpression(expression, conversion);
   }
 
   @Override
@@ -73,11 +67,8 @@ public class JoinPredecessorExpression extends Expression implements JoinPredece
    * @param expression the new underlying expression
    * @return this or modified join predecessor expression object.
    */
-  public JoinPredecessorExpression setExpression(final Expression expression) {
-    if (expression == this.expression) {
-      return this;
-    }
-    return new JoinPredecessorExpression(expression, conversion);
+  public JoinPredecessorExpression setExpression(Expression expression) {
+    return (expression == this.expression) ? this : new JoinPredecessorExpression(expression, conversion);
   }
 
   @Override
@@ -86,16 +77,16 @@ public class JoinPredecessorExpression extends Expression implements JoinPredece
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
     if (visitor.enterJoinPredecessorExpression(this)) {
-      final Expression expr = getExpression();
+      var  expr = getExpression();
       return visitor.leaveJoinPredecessorExpression(expr == null ? this : setExpression((Expression) expr.accept(visitor)));
     }
     return this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     if (expression != null) {
       expression.toString(sb, printType);
     }

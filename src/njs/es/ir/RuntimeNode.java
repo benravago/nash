@@ -3,6 +3,7 @@ package es.ir;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import es.codegen.types.Type;
 import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
@@ -13,8 +14,6 @@ import es.parser.TokenType;
  */
 @Immutable
 public class RuntimeNode extends Expression {
-
-  private static final long serialVersionUID = 1L;
 
   /**
    * Request enum used for meta-information about the runtime request
@@ -57,27 +56,27 @@ public class RuntimeNode extends Expression {
     /** Get template object from raw and cooked string arrays. */
     GET_TEMPLATE_OBJECT(TokenType.TEMPLATE, Type.SCRIPT_OBJECT, 2);
 
-    /** token type */
+    // token type
     private final TokenType tokenType;
 
-    /** return type for request */
+    // return type for request
     private final Type returnType;
 
-    /** arity of request */
+    // arity of request
     private final int arity;
 
-    /** Can the specializer turn this into something that works with 1 or more primitives? */
+    // Can the specializer turn this into something that works with 1 or more primitives?
     private final boolean canSpecialize;
 
-    private Request() {
+    Request() {
       this(TokenType.VOID, Type.OBJECT, 0);
     }
 
-    private Request(final TokenType tokenType, final Type returnType, final int arity) {
+    Request(TokenType tokenType, Type returnType, int arity) {
       this(tokenType, returnType, arity, false);
     }
 
-    private Request(final TokenType tokenType, final Type returnType, final int arity, final boolean canSpecialize) {
+    Request(TokenType tokenType, Type returnType, int arity, boolean canSpecialize) {
       this.tokenType = tokenType;
       this.returnType = returnType;
       this.arity = arity;
@@ -86,7 +85,6 @@ public class RuntimeNode extends Expression {
 
     /**
      * Can this request type be specialized?
-     *
      * @return true if request can be specialized
      */
     public boolean canSpecialize() {
@@ -95,7 +93,6 @@ public class RuntimeNode extends Expression {
 
     /**
      * Get arity
-     *
      * @return the arity of the request
      */
     public int getArity() {
@@ -104,7 +101,6 @@ public class RuntimeNode extends Expression {
 
     /**
      * Get the return type
-     *
      * @return return type for request
      */
     public Type getReturnType() {
@@ -113,7 +109,6 @@ public class RuntimeNode extends Expression {
 
     /**
      * Get token type
-     *
      * @return token type for request
      */
     public TokenType getTokenType() {
@@ -125,168 +120,111 @@ public class RuntimeNode extends Expression {
      * @param node the node
      * @return request type
      */
-    public static Request requestFor(final Expression node) {
-      switch (node.tokenType()) {
-        case TYPEOF:
-          return Request.TYPEOF;
-        case IN:
-          return Request.IN;
-        case INSTANCEOF:
-          return Request.INSTANCEOF;
-        case EQU:
-          return Request.EQUIV;
-        case NEQU:
-          return Request.NOT_EQUIV;
-        case EQ:
-          return Request.EQ;
-        case NE:
-          return Request.NE;
-        case LT:
-          return Request.LT;
-        case LE:
-          return Request.LE;
-        case GT:
-          return Request.GT;
-        case GE:
-          return Request.GE;
-        default:
-          assert false;
-          return null;
-      }
+    public static Request requestFor(Expression node) {
+      return switch (node.tokenType()) {
+        case TYPEOF -> Request.TYPEOF;
+        case IN -> Request.IN;
+        case INSTANCEOF -> Request.INSTANCEOF;
+        case EQU -> Request.EQUIV;
+        case NEQU -> Request.NOT_EQUIV;
+        case EQ -> Request.EQ;
+        case NE -> Request.NE;
+        case LT -> Request.LT;
+        case LE -> Request.LE;
+        case GT -> Request.GT;
+        case GE -> Request.GE;
+        default -> null; // assert false; should not occur
+      };
     }
 
     /**
      * Is this an undefined check?
-     *
      * @param request request
-     *
      * @return true if undefined check
      */
-    public static boolean isUndefinedCheck(final Request request) {
+    public static boolean isUndefinedCheck(Request request) {
       return request == IS_UNDEFINED || request == IS_NOT_UNDEFINED;
     }
 
     /**
      * Is this an EQ
-     *
      * @param request a request
-     *
      * @return true if '==' or '==='?
      */
-    public static boolean isEQ(final Request request) {
+    public static boolean isEQ(Request request) {
       return request == EQ || request == EQUIV;
     }
 
     /**
      * Is this an NE ?
-     *
      * @param request a request
-     *
-     * @return true if '!=' or '!==' 
+     * @return true if '!=' or '!=='
      */
-    public static boolean isNE(final Request request) {
+    public static boolean isNE(Request request) {
       return request == NE || request == NOT_EQUIV;
     }
 
     /**
      * Is this equivalence? '===' or '!==='
-     *
      * @param request a request
-     *
      * @return true if script
      */
-    public static boolean isEquiv(final Request request) {
+    public static boolean isEquiv(Request request) {
       return request == EQUIV || request == NOT_EQUIV;
     }
 
     /**
-     * If this request can be reversed, return the reverse request
-     * Eq EQ {@literal ->} NE.
-     *
+     * If this request can be reversed, return the reverse request; eg. EQ {@literal ->} NE.
      * @param request request to reverse
-     *
      * @return reversed request or null if not applicable
      */
-    public static Request reverse(final Request request) {
-      switch (request) {
-        case EQ:
-        case EQUIV:
-        case NE:
-        case NOT_EQUIV:
-          return request;
-        case LE:
-          return GE;
-        case LT:
-          return GT;
-        case GE:
-          return LE;
-        case GT:
-          return LT;
-        default:
-          return null;
-      }
+    public static Request reverse(Request request) {
+      return switch (request) {
+        case EQ, EQUIV, NE, NOT_EQUIV -> request;
+        case LE -> GE;
+        case LT -> GT;
+        case GE -> LE;
+        case GT -> LT;
+        default -> null;
+      };
     }
 
     /**
      * Invert the request, only for non equals comparisons.
-     *
      * @param request a request
-     *
      * @return the inverted request, or null if not applicable
      */
-    public static Request invert(final Request request) {
-      switch (request) {
-        case EQ:
-          return NE;
-        case EQUIV:
-          return NOT_EQUIV;
-        case NE:
-          return EQ;
-        case NOT_EQUIV:
-          return EQUIV;
-        case LE:
-          return GT;
-        case LT:
-          return GE;
-        case GE:
-          return LT;
-        case GT:
-          return LE;
-        default:
-          return null;
-      }
+    public static Request invert(Request request) {
+      return switch (request) {
+        case EQ -> NE;
+        case EQUIV -> NOT_EQUIV;
+        case NE -> EQ;
+        case NOT_EQUIV -> EQUIV;
+        case LE -> GT;
+        case LT -> GE;
+        case GE -> LT;
+        case GT -> LE;
+        default -> null;
+      };
     }
 
     /**
      * Check if this is a comparison
-     *
      * @param request a request
-     *
      * @return true if this is a comparison, null otherwise
      */
-    public static boolean isComparison(final Request request) {
-      switch (request) {
-        case EQ:
-        case EQUIV:
-        case NE:
-        case NOT_EQUIV:
-        case LE:
-        case LT:
-        case GE:
-        case GT:
-        case IS_UNDEFINED:
-        case IS_NOT_UNDEFINED:
-          return true;
-        default:
-          return false;
-      }
+    public static boolean isComparison(Request request) {
+      return switch (request) {
+        case EQ, EQUIV, NE, NOT_EQUIV, LE, LT, GE, GT, IS_UNDEFINED, IS_NOT_UNDEFINED -> true;
+        default -> false;
+      };
     }
   }
 
-  /** Runtime request. */
+  // Runtime request.
   private final Request request;
 
-  /** Call arguments. */
+  // Call arguments.
   private final List<Expression> args;
 
   /**
@@ -297,16 +235,14 @@ public class RuntimeNode extends Expression {
    * @param request the request
    * @param args    arguments to request
    */
-  public RuntimeNode(final long token, final int finish, final Request request, final List<Expression> args) {
+  public RuntimeNode(long token, int finish, Request request, List<Expression> args) {
     super(token, finish);
-
     this.request = request;
     this.args = args;
   }
 
-  private RuntimeNode(final RuntimeNode runtimeNode, final Request request, final List<Expression> args) {
+  RuntimeNode(RuntimeNode runtimeNode, Request request, List<Expression> args) {
     super(runtimeNode);
-
     this.request = request;
     this.args = args;
   }
@@ -319,7 +255,7 @@ public class RuntimeNode extends Expression {
    * @param request the request
    * @param args    arguments to request
    */
-  public RuntimeNode(final long token, final int finish, final Request request, final Expression... args) {
+  public RuntimeNode(long token, int finish, Request request, Expression... args) {
     this(token, finish, request, Arrays.asList(args));
   }
 
@@ -330,7 +266,7 @@ public class RuntimeNode extends Expression {
    * @param request the request
    * @param args    arguments to request
    */
-  public RuntimeNode(final Expression parent, final Request request, final Expression... args) {
+  public RuntimeNode(Expression parent, Request request, Expression... args) {
     this(parent, request, Arrays.asList(args));
   }
 
@@ -341,9 +277,8 @@ public class RuntimeNode extends Expression {
    * @param request the request
    * @param args    arguments to request
    */
-  public RuntimeNode(final Expression parent, final Request request, final List<Expression> args) {
+  public RuntimeNode(Expression parent, Request request, List<Expression> args) {
     super(parent);
-
     this.request = request;
     this.args = args;
   }
@@ -354,7 +289,7 @@ public class RuntimeNode extends Expression {
    * @param parent  parent node from which to inherit source, token, finish and arguments
    * @param request the request
    */
-  public RuntimeNode(final UnaryNode parent, final Request request) {
+  public RuntimeNode(UnaryNode parent, Request request) {
     this(parent, request, parent.getExpression());
   }
 
@@ -363,7 +298,7 @@ public class RuntimeNode extends Expression {
    *
    * @param parent  parent node from which to inherit source, token, finish and arguments
    */
-  public RuntimeNode(final BinaryNode parent) {
+  public RuntimeNode(BinaryNode parent) {
     this(parent, Request.requestFor(parent), parent.lhs(), parent.rhs());
   }
 
@@ -372,11 +307,8 @@ public class RuntimeNode extends Expression {
    * @param request request
    * @return new runtime node or same if same request
    */
-  public RuntimeNode setRequest(final Request request) {
-    if (this.request == request) {
-      return this;
-    }
-    return new RuntimeNode(this, request, args);
+  public RuntimeNode setRequest(Request request) {
+    return (this.request == request) ? this : new RuntimeNode(this, request, args);
   }
 
   /**
@@ -388,32 +320,24 @@ public class RuntimeNode extends Expression {
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterRuntimeNode(this)) {
-      return visitor.leaveRuntimeNode(setArgs(Node.accept(visitor, args)));
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterRuntimeNode(this)) ? visitor.leaveRuntimeNode(setArgs(Node.accept(visitor, args))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append("ScriptRuntime.");
     sb.append(request);
     sb.append('(');
-
-    boolean first = true;
-
-    for (final Node arg : args) {
+    var first = true;
+    for (var arg : args) {
       if (!first) {
         sb.append(", ");
       } else {
         first = false;
       }
-
       arg.toString(sb, printType);
     }
-
     sb.append(')');
   }
 
@@ -430,11 +354,8 @@ public class RuntimeNode extends Expression {
    * @param args new arguments
    * @return new runtime node, or identical if no change
    */
-  public RuntimeNode setArgs(final List<Expression> args) {
-    if (this.args == args) {
-      return this;
-    }
-    return new RuntimeNode(this, request, args);
+  public RuntimeNode setArgs(List<Expression> args) {
+    return (this.args == args) ? this : new RuntimeNode(this, request, args);
   }
 
   /**
@@ -446,18 +367,18 @@ public class RuntimeNode extends Expression {
   }
 
   /**
-   * Is this runtime node, engineered to handle the "at least one object" case of the defined
-   * requests and specialize on demand, really primitive. This can happen e.g. after AccessSpecializer
+   * Is this runtime node, engineered to handle the "at least one object" case of the defined requests and specialize on demand, really primitive.
+   * This can happen e.g. after AccessSpecializer
    * In that case it can be turned into a simpler primitive form in CodeGenerator
-   *
    * @return true if all arguments now are primitive
    */
   public boolean isPrimitive() {
-    for (final Expression arg : args) {
+    for (var arg : args) {
       if (arg.getType().isObject()) {
         return false;
       }
     }
     return true;
   }
+
 }

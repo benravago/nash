@@ -9,21 +9,19 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class VarNode extends Statement implements Assignment<IdentNode> {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Var name. */
+  // Var name.
   private final IdentNode name;
 
-  /** Initialization expression. */
+  // Initialization expression.
   private final Expression init;
 
-  /** Is this a var statement (as opposed to a "var" in a for loop statement) */
+  // Is this a var statement (as opposed to a "var" in a for loop statement)
   private final int flags;
 
   /**
-   * source order id to be used for this node. If this is -1, then we
-   * the default which is start position of this node. See also the
-   * method Node::getSourceOrder.
+   * source order id to be used for this node.
+   * If this is -1, then we the default which is start position of this node.
+   * See also the method Node::getSourceOrder.
    */
   private final int sourceOrder;
 
@@ -33,9 +31,9 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
   /** Flag for ES6 CONST declaration */
   public static final int IS_CONST = 1 << 1;
 
-  /** Flag that determines if this is the last function declaration in a function
-   *  This is used to micro optimize the placement of return value assignments for
-   *  a program node */
+  /**
+   * Flag that determines if this is the last function declaration in a function.
+   * This is used to micro optimize the placement of return value assignments for a program node */
   public static final int IS_LAST_FUNCTION_DECLARATION = 1 << 2;
 
   /**
@@ -47,11 +45,11 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param name       name of variable
    * @param init       init node or null if just a declaration
    */
-  public VarNode(final int lineNumber, final long token, final int finish, final IdentNode name, final Expression init) {
+  public VarNode(int lineNumber, long token, int finish, IdentNode name, Expression init) {
     this(lineNumber, token, finish, name, init, 0);
   }
 
-  private VarNode(final VarNode varNode, final IdentNode name, final Expression init, final int flags) {
+  VarNode(VarNode varNode, IdentNode name, Expression init, int flags) {
     super(varNode);
     this.sourceOrder = -1;
     this.name = init == null ? name : name.setIsInitializedHere();
@@ -69,7 +67,7 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param init        init node or null if just a declaration
    * @param flags       flags
    */
-  public VarNode(final int lineNumber, final long token, final int finish, final IdentNode name, final Expression init, final int flags) {
+  public VarNode(int lineNumber, long token, int finish, IdentNode name, Expression init, int flags) {
     this(lineNumber, token, -1, finish, name, init, flags);
   }
 
@@ -84,7 +82,7 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param init        init node or null if just a declaration
    * @param flags       flags
    */
-  public VarNode(final int lineNumber, final long token, final int sourceOrder, final int finish, final IdentNode name, final Expression init, final int flags) {
+  public VarNode(int lineNumber, long token, int sourceOrder, int finish, IdentNode name, Expression init, int flags) {
     super(lineNumber, token, finish);
     this.sourceOrder = sourceOrder;
     this.name = init == null ? name : name.setIsInitializedHere();
@@ -108,7 +106,7 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
   }
 
   @Override
-  public VarNode setAssignmentDest(final IdentNode n) {
+  public VarNode setAssignmentDest(IdentNode n) {
     return setName(n);
   }
 
@@ -146,12 +144,9 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @return the symbol flags
    */
   public int getSymbolFlags() {
-    if (isLet()) {
-      return Symbol.IS_VAR | Symbol.IS_LET;
-    } else if (isConst()) {
-      return Symbol.IS_VAR | Symbol.IS_CONST;
-    }
-    return Symbol.IS_VAR;
+    return isLet() ? Symbol.IS_VAR | Symbol.IS_LET
+         : isConst() ? Symbol.IS_VAR | Symbol.IS_CONST
+         : Symbol.IS_VAR;
   }
 
   /**
@@ -167,12 +162,12 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param visitor IR navigating visitor.
    */
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
     if (visitor.enterVarNode(this)) {
       // var is right associative, so visit init before name
-      final Expression newInit = init == null ? null : (Expression) init.accept(visitor);
-      final IdentNode newName = (IdentNode) name.accept(visitor);
-      final VarNode newThis;
+      var newInit = init == null ? null : (Expression) init.accept(visitor);
+      var newName = (IdentNode) name.accept(visitor);
+      VarNode newThis;
       if (name != newName || init != newInit) {
         newThis = new VarNode(this, newName, newInit, flags);
       } else {
@@ -184,10 +179,9 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append(tokenType().getName()).append(' ');
     name.toString(sb, printType);
-
     if (init != null) {
       sb.append(" = ");
       init.toString(sb, printType);
@@ -207,11 +201,8 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param init new initialization expression
    * @return a node equivalent to this one except for the requested change.
    */
-  public VarNode setInit(final Expression init) {
-    if (this.init == init) {
-      return this;
-    }
-    return new VarNode(this, name, init, flags);
+  public VarNode setInit(Expression init) {
+    return (this.init == init) ? this : new VarNode(this, name, init, flags);
   }
 
   /**
@@ -227,18 +218,12 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param name new IdentNode representing the variable being set or declared
    * @return a node equivalent to this one except for the requested change.
    */
-  public VarNode setName(final IdentNode name) {
-    if (this.name == name) {
-      return this;
-    }
-    return new VarNode(this, name, init, flags);
+  public VarNode setName(IdentNode name) {
+    return (this.name == name) ? this : new VarNode(this, name, init, flags);
   }
 
-  private VarNode setFlags(final int flags) {
-    if (this.flags == flags) {
-      return this;
-    }
-    return new VarNode(this, name, init, flags);
+  private VarNode setFlags(int flags) {
+    return (this.flags == flags) ? this : new VarNode(this, name, init, flags);
   }
 
   /**
@@ -246,7 +231,7 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param flag flag
    * @return true if flag is set
    */
-  public boolean getFlag(final int flag) {
+  public boolean getFlag(int flag) {
     return (flags & flag) == flag;
   }
 
@@ -255,7 +240,7 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @param flag flag
    * @return new node if flags changed, same otherwise
    */
-  public VarNode setFlag(final int flag) {
+  public VarNode setFlag(int flag) {
     return setFlags(flags | flag);
   }
 
@@ -264,6 +249,7 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
    * @return true if this is a function declaration.
    */
   public boolean isFunctionDeclaration() {
-    return init instanceof FunctionNode && ((FunctionNode) init).isDeclared();
+    return init instanceof FunctionNode node && node.isDeclared();
   }
+
 }

@@ -5,17 +5,16 @@ import es.ir.visitor.NodeVisitor;
 import es.parser.TokenType;
 
 /**
- * IR representation for executing bare expressions. Basically, an expression
- * node means "this code will be executed" and evaluating it results in
- * statements being added to the IR
+ * IR representation for executing bare expressions.
+ *
+ * Basically, an expression node means "this code will be executed" and evaluating it results in statements being added to the IR
  */
 @Immutable
 public final class ExpressionStatement extends Statement {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Expression to execute. */
+  // Expression to execute.
   private final Expression expression;
+
   private final TokenType destructuringDecl;
 
   /**
@@ -27,8 +26,7 @@ public final class ExpressionStatement extends Statement {
    * @param expression the expression to execute
    * @param destructuringDecl does this statement represent a destructuring declaration?
    */
-  public ExpressionStatement(final int lineNumber, final long token, final int finish,
-          final Expression expression, final TokenType destructuringDecl) {
+  public ExpressionStatement(int lineNumber, long token, int finish, Expression expression, TokenType destructuringDecl) {
     super(lineNumber, token, finish);
     this.expression = expression;
     this.destructuringDecl = destructuringDecl;
@@ -42,27 +40,23 @@ public final class ExpressionStatement extends Statement {
    * @param finish     finish
    * @param expression the expression to execute
    */
-  public ExpressionStatement(final int lineNumber, final long token, final int finish, final Expression expression) {
+  public ExpressionStatement(int lineNumber, long token, int finish, Expression expression) {
     this(lineNumber, token, finish, expression, null);
   }
 
-  private ExpressionStatement(final ExpressionStatement expressionStatement, final Expression expression) {
+  ExpressionStatement(ExpressionStatement expressionStatement, Expression expression) {
     super(expressionStatement);
     this.expression = expression;
     this.destructuringDecl = null;
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterExpressionStatement(this)) {
-      return visitor.leaveExpressionStatement(setExpression((Expression) expression.accept(visitor)));
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterExpressionStatement(this)) ? visitor.leaveExpressionStatement(setExpression((Expression) expression.accept(visitor))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printTypes) {
+  public void toString(StringBuilder sb, boolean printTypes) {
     expression.toString(sb, printTypes);
   }
 
@@ -76,7 +70,6 @@ public final class ExpressionStatement extends Statement {
 
   /**
    * Return declaration type if this expression statement is a destructuring declaration
-   *
    * @return declaration type (LET, VAR, CONST) if destructuring declaration, null otherwise.
    */
   public TokenType destructuringDeclarationType() {
@@ -88,10 +81,8 @@ public final class ExpressionStatement extends Statement {
    * @param expression the expression
    * @return new or same execute node
    */
-  public ExpressionStatement setExpression(final Expression expression) {
-    if (this.expression == expression) {
-      return this;
-    }
-    return new ExpressionStatement(this, expression);
+  public ExpressionStatement setExpression(Expression expression) {
+    return (this.expression == expression) ? this : new ExpressionStatement(this, expression);
   }
+
 }

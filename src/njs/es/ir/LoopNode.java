@@ -10,18 +10,16 @@ import es.codegen.Label;
  */
 public abstract class LoopNode extends BreakableStatement {
 
-  private static final long serialVersionUID = 1L;
-
-  /** loop continue label. */
+  // loop continue label.
   protected final Label continueLabel;
 
-  /** Loop test node, null if infinite */
+  // Loop test node, null if infinite
   protected final JoinPredecessorExpression test;
 
-  /** Loop body */
+  // Loop body
   protected final Block body;
 
-  /** Can control flow escape from loop, e.g. through breaks or continues to outer loops? */
+  // Can control flow escape from loop, e.g. through breaks or continues to outer loops?
   protected final boolean controlFlowEscapes;
 
   /**
@@ -34,7 +32,7 @@ public abstract class LoopNode extends BreakableStatement {
    * @param test               test
    * @param controlFlowEscapes controlFlowEscapes
    */
-  protected LoopNode(final int lineNumber, final long token, final int finish, final Block body, final JoinPredecessorExpression test, final boolean controlFlowEscapes) {
+  protected LoopNode(int lineNumber, long token, int finish, Block body, JoinPredecessorExpression test, boolean controlFlowEscapes) {
     super(lineNumber, token, finish, new Label("while_break"));
     this.continueLabel = new Label("while_continue");
     this.body = body;
@@ -51,8 +49,7 @@ public abstract class LoopNode extends BreakableStatement {
    * @param controlFlowEscapes controlFlowEscapes
    * @param conversion the local variable conversion carried by this loop node.
    */
-  protected LoopNode(final LoopNode loopNode, final JoinPredecessorExpression test, final Block body,
-          final boolean controlFlowEscapes, final LocalVariableConversion conversion) {
+  protected LoopNode(LoopNode loopNode, JoinPredecessorExpression test, Block body, boolean controlFlowEscapes, LocalVariableConversion conversion) {
     super(loopNode, conversion);
     this.continueLabel = new Label(loopNode.continueLabel);
     this.test = test;
@@ -61,11 +58,10 @@ public abstract class LoopNode extends BreakableStatement {
   }
 
   @Override
-  public abstract Node ensureUniqueLabels(final LexicalContext lc);
+  public abstract Node ensureUniqueLabels(LexicalContext lc);
 
   /**
-   * Does the control flow escape from this loop, i.e. through breaks or
-   * continues to outer loops?
+   * Does the control flow escape from this loop, i.e. through breaks or continues to outer loops?
    * @return true if control flow escapes
    */
   public boolean controlFlowEscapes() {
@@ -77,15 +73,15 @@ public abstract class LoopNode extends BreakableStatement {
     if (!mustEnter()) {
       return false;
     }
-    //must enter but control flow may escape - then not terminal
+    // must enter but control flow may escape - then not terminal
     if (controlFlowEscapes) {
       return false;
     }
-    //must enter, but body ends with return - then terminal
+    // must enter, but body ends with return - then terminal
     if (body.isTerminal()) {
       return true;
     }
-    //no breaks or returns, it is still terminal if we can never exit
+    // no breaks or returns, it is still terminal if we can never exit
     return test == null;
   }
 
@@ -124,7 +120,7 @@ public abstract class LoopNode extends BreakableStatement {
    * @param body new body
    * @return new for node if changed or existing if not
    */
-  public abstract LoopNode setBody(final LexicalContext lc, final Block body);
+  public abstract LoopNode setBody(LexicalContext lc, Block body);
 
   /**
    * Get the test for this for node
@@ -136,26 +132,25 @@ public abstract class LoopNode extends BreakableStatement {
 
   /**
    * Set the test for this for node
-   *
    * @param lc lexical context
    * @param test new test
    * @return same or new node depending on if test was changed
    */
-  public abstract LoopNode setTest(final LexicalContext lc, final JoinPredecessorExpression test);
+  public abstract LoopNode setTest(LexicalContext lc, JoinPredecessorExpression test);
 
   /**
    * Set the control flow escapes flag for this node.
    * TODO  - integrate this with Lowering in a better way
-   *
    * @param lc lexical context
    * @param controlFlowEscapes control flow escapes value
    * @return new loop node if changed otherwise the same
    */
-  public abstract LoopNode setControlFlowEscapes(final LexicalContext lc, final boolean controlFlowEscapes);
+  public abstract LoopNode setControlFlowEscapes(LexicalContext lc, boolean controlFlowEscapes);
 
   /**
    * Does this loop have a LET declaration and hence require a per-iteration scope?
    * @return true if a per-iteration scope is required.
    */
   public abstract boolean hasPerIterationScope();
+
 }

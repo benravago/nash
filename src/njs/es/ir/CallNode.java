@@ -1,14 +1,14 @@
 package es.ir;
 
-import static es.runtime.UnwarrantedOptimismException.INVALID_PROGRAM_POINT;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+
 import es.codegen.types.Type;
 import es.ir.annotations.Ignore;
 import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
+import static es.runtime.UnwarrantedOptimismException.INVALID_PROGRAM_POINT;
 
 /**
  * IR representation for a function call.
@@ -16,18 +16,16 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class CallNode extends LexicalContextExpression implements Optimistic {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Function identifier or function body. */
+  // Function identifier or function body.
   private final Expression function;
 
-  /** Call arguments. */
+  // Call arguments.
   private final List<Expression> args;
 
-  /** Is this a "new" operation */
+  // Is this a "new" operation
   private static final int IS_NEW = 1 << 0;
 
-  /** Can this be a Function.call? */
+  // Can this be a Function.call?
   private static final int IS_APPLY_TO_CALL = 1 << 1;
 
   private final int flags;
@@ -46,7 +44,7 @@ public final class CallNode extends LexicalContextExpression implements Optimist
     private static final long serialVersionUID = 1L;
     private final List<Expression> args;
 
-    /** location string for the eval call */
+    // location string for the eval call
     private final String location;
 
     /**
@@ -55,7 +53,7 @@ public final class CallNode extends LexicalContextExpression implements Optimist
      * @param args     arguments to eval
      * @param location location for the eval call
      */
-    public EvalArgs(final List<Expression> args, final String location) {
+    public EvalArgs(List<Expression> args, String location) {
       this.args = args;
       this.location = location;
     }
@@ -68,11 +66,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
       return Collections.unmodifiableList(args);
     }
 
-    private EvalArgs setArgs(final List<Expression> args) {
-      if (this.args == args) {
-        return this;
-      }
-      return new EvalArgs(args, location);
+    EvalArgs setArgs(List<Expression> args) {
+      return (this.args == args) ? this : new EvalArgs(args, location);
     }
 
     /**
@@ -98,9 +93,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
    * @param args       args to the call
    * @param isNew      true if this is a constructor call with the "new" keyword
    */
-  public CallNode(final int lineNumber, final long token, final int finish, final Expression function, final List<Expression> args, final boolean isNew) {
+  public CallNode(int lineNumber, long token, int finish, Expression function, List<Expression> args, boolean isNew) {
     super(token, finish);
-
     this.function = function;
     this.args = args;
     this.flags = isNew ? IS_NEW : 0;
@@ -110,7 +104,7 @@ public final class CallNode extends LexicalContextExpression implements Optimist
     this.optimisticType = null;
   }
 
-  private CallNode(final CallNode callNode, final Expression function, final List<Expression> args, final int flags, final Type optimisticType, final EvalArgs evalArgs, final int programPoint) {
+  CallNode(CallNode callNode, Expression function, List<Expression> args, int flags, Type optimisticType, EvalArgs evalArgs, int programPoint) {
     super(callNode);
     this.lineNumber = callNode.lineNumber;
     this.function = function;
@@ -135,68 +129,54 @@ public final class CallNode extends LexicalContextExpression implements Optimist
   }
 
   @Override
-  public Optimistic setType(final Type optimisticType) {
-    if (this.optimisticType == optimisticType) {
-      return this;
-    }
-    return new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
+  public Optimistic setType(Type optimisticType) {
+    return (this.optimisticType == optimisticType) ? this : new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
   }
 
   /**
    * Assist in IR navigation.
-   *
    * @param visitor IR navigating visitor.
-   *
    * @return node or replacement
    */
   @Override
-  public Node accept(final LexicalContext lc, final NodeVisitor<? extends LexicalContext> visitor) {
+  public Node accept(LexicalContext lc, NodeVisitor<? extends LexicalContext> visitor) {
     if (visitor.enterCallNode(this)) {
-      final CallNode newCallNode = (CallNode) visitor.leaveCallNode(
-              setFunction((Expression) function.accept(visitor)).
-                      setArgs(Node.accept(visitor, args)).
-                      setEvalArgs(evalArgs == null
-                              ? null
-                              : evalArgs.setArgs(Node.accept(visitor, evalArgs.getArgs()))));
-      // Theoretically, we'd need to instead pass lc to every setter and do a replacement on each. In practice,
-      // setType from TypeOverride can't accept a lc, and we don't necessarily want to go there now.
+      var newCallNode = (CallNode) visitor.leaveCallNode(
+        setFunction((Expression)function.accept(visitor))
+        .setArgs(Node.accept(visitor, args))
+        .setEvalArgs(evalArgs == null ? null : evalArgs.setArgs(Node.accept(visitor, evalArgs.getArgs())))
+      );
+      // Theoretically, we'd need to instead pass lc to every setter and do a replacement on each.
+      // In practice, setType from TypeOverride can't accept a lc, and we don't necessarily want to go there now.
       if (this != newCallNode) {
         return Node.replaceInLexicalContext(lc, this, newCallNode);
       }
     }
-
     return this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     if (printType) {
       optimisticTypeToString(sb);
     }
-
-    final StringBuilder fsb = new StringBuilder();
+    var fsb = new StringBuilder();
     function.toString(fsb, printType);
-
     if (isApplyToCall()) {
       sb.append(fsb.toString().replace("apply", "[apply => call]"));
     } else {
       sb.append(fsb);
     }
-
     sb.append('(');
-
-    boolean first = true;
-
-    for (final Node arg : args) {
+    var first = true;
+    for (var arg : args) {
       if (!first) {
         sb.append(", ");
       } else {
         first = false;
       }
-
       arg.toString(sb, printType);
     }
-
     sb.append(')');
   }
 
@@ -213,11 +193,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
    * @param args new arguments list
    * @return new callnode, or same if unchanged
    */
-  public CallNode setArgs(final List<Expression> args) {
-    if (this.args == args) {
-      return this;
-    }
-    return new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
+  public CallNode setArgs(List<Expression> args) {
+    return (this.args == args) ? this : new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
   }
 
   /**
@@ -229,17 +206,12 @@ public final class CallNode extends LexicalContextExpression implements Optimist
   }
 
   /**
-   * Set the EvalArgs structure for this call, if it has been determined it is an
-   * {@code eval}
-   *
+   * Set the EvalArgs structure for this call, if it has been determined it is an {@code eval}
    * @param evalArgs eval args
    * @return same node or new one on state change
    */
-  public CallNode setEvalArgs(final EvalArgs evalArgs) {
-    if (this.evalArgs == evalArgs) {
-      return this;
-    }
-    return new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
+  public CallNode setEvalArgs(EvalArgs evalArgs) {
+    return (this.evalArgs == evalArgs) ? this : new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
   }
 
   /**
@@ -251,8 +223,7 @@ public final class CallNode extends LexicalContextExpression implements Optimist
   }
 
   /**
-   * Is this an apply call that we optimistically should try to turn into
-   * a call instead
+   * Is this an apply call that we optimistically should try to turn into a call instead
    * @return true if apply to call
    */
   public boolean isApplyToCall() {
@@ -280,11 +251,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
    * @param function the function
    * @return same node or new one on state change
    */
-  public CallNode setFunction(final Expression function) {
-    if (this.function == function) {
-      return this;
-    }
-    return new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
+  public CallNode setFunction(Expression function) {
+    return (this.function == function) ? this : new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
   }
 
   /**
@@ -295,11 +263,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
     return (flags & IS_NEW) != 0;
   }
 
-  private CallNode setFlags(final int flags) {
-    if (this.flags == flags) {
-      return this;
-    }
-    return new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
+  CallNode setFlags(int flags) {
+    return (this.flags == flags) ? this : new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
   }
 
   @Override
@@ -308,11 +273,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
   }
 
   @Override
-  public CallNode setProgramPoint(final int programPoint) {
-    if (this.programPoint == programPoint) {
-      return this;
-    }
-    return new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
+  public CallNode setProgramPoint(int programPoint) {
+    return (this.programPoint == programPoint) ? this : new CallNode(this, function, args, flags, optimisticType, evalArgs, programPoint);
   }
 
   @Override
@@ -329,4 +291,5 @@ public final class CallNode extends LexicalContextExpression implements Optimist
   public boolean canBeOptimistic() {
     return true;
   }
+
 }

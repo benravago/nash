@@ -31,8 +31,7 @@ public final class Module {
     private final int startPosition;
     private final int endPosition;
 
-    private ExportEntry(final IdentNode exportName, final IdentNode moduleRequest, final IdentNode importName,
-            final IdentNode localName, final int startPosition, final int endPosition) {
+    ExportEntry(IdentNode exportName, IdentNode moduleRequest, IdentNode importName, IdentNode localName, int startPosition, int endPosition) {
       this.exportName = exportName;
       this.moduleRequest = moduleRequest;
       this.importName = importName;
@@ -50,7 +49,7 @@ public final class Module {
      * @param endPosition the end position
      * @return the export entry
      */
-    public static ExportEntry exportStarFrom(final IdentNode starName, final IdentNode moduleRequest, final int startPosition, final int endPosition) {
+    public static ExportEntry exportStarFrom(IdentNode starName, IdentNode moduleRequest, int startPosition, int endPosition) {
       return new ExportEntry(null, moduleRequest, starName, null, startPosition, endPosition);
     }
 
@@ -63,7 +62,7 @@ public final class Module {
      * @param endPosition the end position
      * @return the export entry
      */
-    public static ExportEntry exportDefault(final IdentNode defaultName, final IdentNode localName, final int startPosition, final int endPosition) {
+    public static ExportEntry exportDefault(IdentNode defaultName, IdentNode localName, int startPosition, int endPosition) {
       return new ExportEntry(defaultName, null, null, localName, startPosition, endPosition);
     }
 
@@ -76,7 +75,7 @@ public final class Module {
      * @param endPosition the end position
      * @return the export entry
      */
-    public static ExportEntry exportSpecifier(final IdentNode exportName, final IdentNode localName, final int startPosition, final int endPosition) {
+    public static ExportEntry exportSpecifier(IdentNode exportName, IdentNode localName, int startPosition, int endPosition) {
       return new ExportEntry(exportName, null, null, localName, startPosition, endPosition);
     }
 
@@ -88,7 +87,7 @@ public final class Module {
      * @param endPosition the end position
      * @return the export entry
      */
-    public static ExportEntry exportSpecifier(final IdentNode exportName, final int startPosition, final int endPosition) {
+    public static ExportEntry exportSpecifier(IdentNode exportName, int startPosition, int endPosition) {
       return exportSpecifier(exportName, exportName, startPosition, endPosition);
     }
 
@@ -99,14 +98,13 @@ public final class Module {
      * @param endPosition the new endPosition
      * @return the new export entry
      */
-    public ExportEntry withFrom(@SuppressWarnings("hiding") final IdentNode moduleRequest, final int endPosition) {
+    public ExportEntry withFrom(@SuppressWarnings("hiding") final IdentNode moduleRequest, int endPosition) {
       // Note that "from" moves localName to inputName, and localName becomes null
       return new ExportEntry(exportName, moduleRequest, localName, null, startPosition, endPosition);
     }
 
     /**
      * Returns the entry's export name.
-     *
      * @return the export name
      */
     public IdentNode getExportName() {
@@ -115,7 +113,6 @@ public final class Module {
 
     /**
      * Returns the entry's module request.
-     *
      * @return the module request
      */
     public IdentNode getModuleRequest() {
@@ -124,7 +121,6 @@ public final class Module {
 
     /**
      * Returns the entry's import name.
-     *
      * @return the import name
      */
     public IdentNode getImportName() {
@@ -133,7 +129,6 @@ public final class Module {
 
     /**
      * Returns the entry's local name.
-     *
      * @return the local name
      */
     public IdentNode getLocalName() {
@@ -142,7 +137,6 @@ public final class Module {
 
     /**
      * Returns the entry's start position.
-     *
      * @return the start position
      */
     public int getStartPosition() {
@@ -151,7 +145,6 @@ public final class Module {
 
     /**
      * Returns the entry's end position.
-     *
      * @return the end position
      */
     public int getEndPosition() {
@@ -162,7 +155,8 @@ public final class Module {
     public String toString() {
       return "ExportEntry [exportName=" + exportName + ", moduleRequest=" + moduleRequest + ", importName=" + importName + ", localName=" + localName + "]";
     }
-  }
+
+  } // ExportEntry
 
   /**
    * An ImportEntry record.
@@ -178,8 +172,7 @@ public final class Module {
     private final int startPosition;
     private final int endPosition;
 
-    private ImportEntry(final IdentNode moduleRequest, final IdentNode importName, final IdentNode localName,
-            final int startPosition, final int endPosition) {
+    ImportEntry(IdentNode moduleRequest, IdentNode importName, IdentNode localName, int startPosition, int endPosition) {
       this.moduleRequest = moduleRequest;
       this.importName = importName;
       this.localName = localName;
@@ -196,7 +189,7 @@ public final class Module {
      * @param endPosition the end position
      * @return the import entry
      */
-    public static ImportEntry importSpecifier(final IdentNode importName, final IdentNode localName, final int startPosition, final int endPosition) {
+    public static ImportEntry importSpecifier(IdentNode importName, IdentNode localName, int startPosition, int endPosition) {
       return new ImportEntry(null, importName, localName, startPosition, endPosition);
     }
 
@@ -208,7 +201,7 @@ public final class Module {
      * @param endPosition the end position
      * @return the import entry
      */
-    public static ImportEntry importSpecifier(final IdentNode importName, final int startPosition, final int endPosition) {
+    public static ImportEntry importSpecifier(IdentNode importName, int startPosition, int endPosition) {
       return importSpecifier(importName, importName, startPosition, endPosition);
     }
 
@@ -219,13 +212,12 @@ public final class Module {
      * @param endPosition the new end position
      * @return the new import entry
      */
-    public ImportEntry withFrom(@SuppressWarnings("hiding") final IdentNode moduleRequest, final int endPosition) {
+    public ImportEntry withFrom(@SuppressWarnings("hiding") final IdentNode moduleRequest, int endPosition) {
       return new ImportEntry(moduleRequest, importName, localName, startPosition, endPosition);
     }
 
     /**
      * Returns the entry's module request.
-     *
      * @return the module request
      */
     public IdentNode getModuleRequest() {
@@ -234,7 +226,6 @@ public final class Module {
 
     /**
      * Returns the entry's import name.
-     *
      * @return the import name
      */
     public IdentNode getImportName() {
@@ -243,7 +234,6 @@ public final class Module {
 
     /**
      * Returns the entry's local name.
-     *
      * @return the local name
      */
     public IdentNode getLocalName() {
@@ -252,7 +242,6 @@ public final class Module {
 
     /**
      * Returns the entry's start position.
-     *
      * @return the start position
      */
     public int getStartPosition() {
@@ -261,7 +250,6 @@ public final class Module {
 
     /**
      * Returns the entry's end position.
-     *
      * @return the end position
      */
     public int getEndPosition() {
@@ -272,7 +260,8 @@ public final class Module {
     public String toString() {
       return "ImportEntry [moduleRequest=" + moduleRequest + ", importName=" + importName + ", localName=" + localName + "]";
     }
-  }
+
+  } // ImportEntry
 
   private final List<String> requestedModules;
   private final List<ImportEntry> importEntries;
@@ -289,8 +278,7 @@ public final class Module {
    * @param indirectExportEntries indirect export entries
    * @param starExportEntries star export entries
    */
-  public Module(final List<String> requestedModules, final List<ImportEntry> importEntries, final List<ExportEntry> localExportEntries,
-          final List<ExportEntry> indirectExportEntries, final List<ExportEntry> starExportEntries) {
+  public Module(List<String> requestedModules, List<ImportEntry> importEntries, List<ExportEntry> localExportEntries, List<ExportEntry> indirectExportEntries, List<ExportEntry> starExportEntries) {
     this.requestedModules = requestedModules;
     this.importEntries = importEntries;
     this.localExportEntries = localExportEntries;
@@ -300,7 +288,6 @@ public final class Module {
 
   /**
    * Returns the list of requested modules.
-   *
    * @return the requested modules
    */
   public List<String> getRequestedModules() {
@@ -309,7 +296,6 @@ public final class Module {
 
   /**
    * Returns the list of import entries.
-   *
    * @return the import entries
    */
   public List<ImportEntry> getImportEntries() {
@@ -318,7 +304,6 @@ public final class Module {
 
   /**
    * Returns the list of local export entries.
-   *
    * @return the local export entries
    */
   public List<ExportEntry> getLocalExportEntries() {
@@ -327,7 +312,6 @@ public final class Module {
 
   /**
    * Returns the list of indirect export entries.
-   *
    * @return the indirect export entries
    */
   public List<ExportEntry> getIndirectExportEntries() {
@@ -336,7 +320,6 @@ public final class Module {
 
   /**
    * Returns the list of star export entries.
-   *
    * @return the star export entries
    */
   public List<ExportEntry> getStarExportEntries() {
@@ -345,7 +328,12 @@ public final class Module {
 
   @Override
   public String toString() {
-    return "Module [requestedModules=" + requestedModules + ", importEntries=" + importEntries + ", localExportEntries=" + localExportEntries + ", indirectExportEntries="
-            + indirectExportEntries + ", starExportEntries=" + starExportEntries + "]";
+    return
+      "Module [requestedModules=" + requestedModules +
+            ", importEntries=" + importEntries +
+            ", localExportEntries=" + localExportEntries +
+            ", indirectExportEntries=" + indirectExportEntries +
+            ", starExportEntries=" + starExportEntries + "]";
   }
+
 }

@@ -1,6 +1,7 @@
 package es.ir;
 
 import java.util.List;
+
 import es.ir.visitor.NodeVisitor;
 
 /**
@@ -8,9 +9,7 @@ import es.ir.visitor.NodeVisitor;
  */
 public class BlockStatement extends Statement {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Block to execute. */
+  // Block to execute.
   private final Block block;
 
   /**
@@ -18,7 +17,7 @@ public class BlockStatement extends Statement {
    *
    * @param block the block to execute
    */
-  public BlockStatement(final Block block) {
+  public BlockStatement(Block block) {
     this(block.getFirstStatementLineNumber(), block);
   }
 
@@ -28,12 +27,12 @@ public class BlockStatement extends Statement {
    * @param lineNumber line number
    * @param block the block to execute
    */
-  public BlockStatement(final int lineNumber, final Block block) {
+  public BlockStatement(int lineNumber, Block block) {
     super(lineNumber, block.getToken(), block.getFinish());
     this.block = block;
   }
 
-  private BlockStatement(final BlockStatement blockStatement, final Block block) {
+  BlockStatement(BlockStatement blockStatement, Block block) {
     super(blockStatement);
     this.block = block;
   }
@@ -42,10 +41,9 @@ public class BlockStatement extends Statement {
    * Use this method to create a block statement meant to replace a single statement.
    * @param stmt the statement to replace
    * @param newStmts the statements for the new block statement
-   * @return a block statement with the new statements. It will have the line number, token, and finish of the
-   * original statement.
+   * @return a block statement with the new statements. It will have the line number, token, and finish of the original statement.
    */
-  public static BlockStatement createReplacement(final Statement stmt, final List<Statement> newStmts) {
+  public static BlockStatement createReplacement(Statement stmt, List<Statement> newStmts) {
     return createReplacement(stmt, stmt.getFinish(), newStmts);
   }
 
@@ -54,10 +52,9 @@ public class BlockStatement extends Statement {
    * @param stmt the statement to replace
    * @param finish the new finish for the block
    * @param newStmts the statements for the new block statement
-   * @return a block statement with the new statements. It will have the line number, and token of the
-   * original statement.
+   * @return a block statement with the new statements. It will have the line number, and token of the original statement.
    */
-  public static BlockStatement createReplacement(final Statement stmt, final int finish, final List<Statement> newStmts) {
+  public static BlockStatement createReplacement(Statement stmt, int finish, List<Statement> newStmts) {
     return new BlockStatement(stmt.getLineNumber(), new Block(stmt.getToken(), finish, newStmts));
   }
 
@@ -68,7 +65,6 @@ public class BlockStatement extends Statement {
 
   /**
    * Tells if this is a synthetic block statement or not.
-   *
    * @return true if this is a synthetic statement
    */
   public boolean isSynthetic() {
@@ -76,16 +72,12 @@ public class BlockStatement extends Statement {
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterBlockStatement(this)) {
-      return visitor.leaveBlockStatement(setBlock((Block) block.accept(visitor)));
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterBlockStatement(this)) ? visitor.leaveBlockStatement(setBlock((Block) block.accept(visitor))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     block.toString(sb, printType);
   }
 
@@ -102,10 +94,8 @@ public class BlockStatement extends Statement {
    * @param block the block
    * @return new or same execute node
    */
-  public BlockStatement setBlock(final Block block) {
-    if (this.block == block) {
-      return this;
-    }
-    return new BlockStatement(this, block);
+  public BlockStatement setBlock(Block block) {
+    return (this.block == block) ? this : new BlockStatement(this, block);
   }
+
 }

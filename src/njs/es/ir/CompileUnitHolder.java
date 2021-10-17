@@ -12,5 +12,6 @@ public interface CompileUnitHolder {
    * Return the compile unit held by this instance
    * @return compile unit
    */
-  public CompileUnit getCompileUnit();
+  CompileUnit getCompileUnit();
+
 }

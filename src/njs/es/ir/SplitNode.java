@@ -13,15 +13,13 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public class SplitNode extends LexicalContextStatement implements CompileUnitHolder {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Split node method name. */
+  // Split node method name.
   private final String name;
 
-  /** Compilation unit. */
+  // Compilation unit.
   private final CompileUnit compileUnit;
 
-  /** Body of split code. */
+  // Body of split code.
   private final Block body;
 
   /**
@@ -31,14 +29,14 @@ public class SplitNode extends LexicalContextStatement implements CompileUnitHol
    * @param body        body of split code
    * @param compileUnit compile unit to use for the body
    */
-  public SplitNode(final String name, final Block body, final CompileUnit compileUnit) {
+  public SplitNode(String name, Block body, CompileUnit compileUnit) {
     super(body.getFirstStatementLineNumber(), body.getToken(), body.getFinish());
     this.name = name;
     this.body = body;
     this.compileUnit = compileUnit;
   }
 
-  private SplitNode(final SplitNode splitNode, final Block body, final CompileUnit compileUnit) {
+  private SplitNode(SplitNode splitNode, Block body, CompileUnit compileUnit) {
     super(splitNode);
     this.name = splitNode.name;
     this.body = body;
@@ -53,26 +51,20 @@ public class SplitNode extends LexicalContextStatement implements CompileUnitHol
     return body;
   }
 
-  private SplitNode setBody(final LexicalContext lc, final Block body) {
-    if (this.body == body) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new SplitNode(this, body, compileUnit));
+  SplitNode setBody(LexicalContext lc, Block body) {
+    return (this.body == body) ? this : Node.replaceInLexicalContext(lc, this, new SplitNode(this, body, compileUnit));
   }
 
   @Override
-  public Node accept(final LexicalContext lc, final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterSplitNode(this)) {
-      return visitor.leaveSplitNode(setBody(lc, (Block) body.accept(visitor)));
-    }
-    return this;
+  public Node accept(LexicalContext lc, NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterSplitNode(this)) ? visitor.leaveSplitNode(setBody(lc, (Block) body.accept(visitor))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
-    sb.append("<split>(");
-    sb.append(compileUnit.getClass().getSimpleName());
-    sb.append(") ");
+  public void toString(StringBuilder sb, boolean printType) {
+    sb.append("<split>(")
+      .append(compileUnit.getClass().getSimpleName())
+      .append(") ");
     body.toString(sb, printType);
   }
 
@@ -99,16 +91,14 @@ public class SplitNode extends LexicalContextStatement implements CompileUnitHol
    * @param compileUnit compile unit
    * @return new node if changed, otherwise same node
    */
-  public SplitNode setCompileUnit(final LexicalContext lc, final CompileUnit compileUnit) {
-    if (this.compileUnit == compileUnit) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new SplitNode(this, body, compileUnit));
+  public SplitNode setCompileUnit(LexicalContext lc, CompileUnit compileUnit) {
+    return (this.compileUnit == compileUnit) ? this : Node.replaceInLexicalContext(lc, this, new SplitNode(this, body, compileUnit));
   }
 
-  private void writeObject(final ObjectOutputStream out) throws IOException {
-    // We are only serializing the AST after we run SplitIntoFunctions; no SplitNodes can remain for the
-    // serialization.
+  void writeObject(ObjectOutputStream out) throws IOException {
+    // We are only serializing the AST after we run SplitIntoFunctions;
+    // no SplitNodes can remain for the serialization.
     throw new NotSerializableException(getClass().getName());
   }
+
 }

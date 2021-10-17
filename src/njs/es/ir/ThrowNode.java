@@ -9,9 +9,7 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class ThrowNode extends Statement implements JoinPredecessor {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Exception expression. */
+  // Exception expression.
   private final Expression expression;
 
   private final LocalVariableConversion conversion;
@@ -27,15 +25,14 @@ public final class ThrowNode extends Statement implements JoinPredecessor {
    * @param expression expression to throw
    * @param isSyntheticRethrow true if this throw node is part of a synthetic rethrow.
    */
-  public ThrowNode(final int lineNumber, final long token, final int finish, final Expression expression, final boolean isSyntheticRethrow) {
+  public ThrowNode(int lineNumber, long token, int finish, Expression expression, boolean isSyntheticRethrow) {
     super(lineNumber, token, finish);
     this.expression = expression;
     this.isSyntheticRethrow = isSyntheticRethrow;
     this.conversion = null;
   }
 
-  private ThrowNode(final ThrowNode node, final Expression expression, final boolean isSyntheticRethrow,
-          final LocalVariableConversion conversion) {
+  ThrowNode(ThrowNode node, Expression expression, boolean isSyntheticRethrow, LocalVariableConversion conversion) {
     super(node);
     this.expression = expression;
     this.isSyntheticRethrow = isSyntheticRethrow;
@@ -52,18 +49,13 @@ public final class ThrowNode extends Statement implements JoinPredecessor {
    * @param visitor IR navigating visitor.
    */
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterThrowNode(this)) {
-      return visitor.leaveThrowNode(setExpression((Expression) expression.accept(visitor)));
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterThrowNode(this)) ? visitor.leaveThrowNode(setExpression((Expression) expression.accept(visitor))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append("throw ");
-
     if (expression != null) {
       expression.toString(sb, printType);
     }
@@ -85,17 +77,13 @@ public final class ThrowNode extends Statement implements JoinPredecessor {
    * @param expression new expression
    * @return new or same thrownode
    */
-  public ThrowNode setExpression(final Expression expression) {
-    if (this.expression == expression) {
-      return this;
-    }
-    return new ThrowNode(this, expression, isSyntheticRethrow, conversion);
+  public ThrowNode setExpression(Expression expression) {
+    return (this.expression == expression) ? this : new ThrowNode(this, expression, isSyntheticRethrow, conversion);
   }
 
   /**
-   * Is this a throw a synthetic rethrow in a synthetic catch-all block
-   * created when inlining finally statements? In that case we never
-   * wrap whatever is thrown into an ECMAException, just rethrow it.
+   * Is this a throw a synthetic rethrow in a synthetic catch-all block created when inlining finally statements?
+   * In that case we never wrap whatever is thrown into an ECMAException, just rethrow it.
    * @return true if synthetic throw node
    */
   public boolean isSyntheticRethrow() {
@@ -103,11 +91,8 @@ public final class ThrowNode extends Statement implements JoinPredecessor {
   }
 
   @Override
-  public JoinPredecessor setLocalVariableConversion(final LexicalContext lc, final LocalVariableConversion conversion) {
-    if (this.conversion == conversion) {
-      return this;
-    }
-    return new ThrowNode(this, expression, isSyntheticRethrow, conversion);
+  public JoinPredecessor setLocalVariableConversion(LexicalContext lc, LocalVariableConversion conversion) {
+    return (this.conversion == conversion) ? this : new ThrowNode(this, expression, isSyntheticRethrow, conversion);
   }
 
   @Override

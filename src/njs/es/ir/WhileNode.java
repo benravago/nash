@@ -4,15 +4,14 @@ import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
 
 /**
- * IR representation for a WHILE statement. This is the superclass of all
- * loop nodes
+ * IR representation for a WHILE statement.
+ *
+ * This is the superclass of all loop nodes
  */
 @Immutable
 public final class WhileNode extends LoopNode {
 
-  private static final long serialVersionUID = 1L;
-
-  /** is this a do while node ? */
+  // is this a do while node ?
   private final boolean isDoWhile;
 
   /**
@@ -25,7 +24,7 @@ public final class WhileNode extends LoopNode {
    * @param test       test expression
    * @param body       body of the while loop
    */
-  public WhileNode(final int lineNumber, final long token, final int finish, final boolean isDoWhile, final JoinPredecessorExpression test, final Block body) {
+  public WhileNode(int lineNumber, long token, int finish, boolean isDoWhile, JoinPredecessorExpression test, Block body) {
     super(lineNumber, token, finish, body, test, false);
     this.isDoWhile = isDoWhile;
   }
@@ -39,13 +38,13 @@ public final class WhileNode extends LoopNode {
    * @param controlFlowEscapes control flow escapes?
    * @param conversion local variable conversion info
    */
-  private WhileNode(final WhileNode whileNode, final JoinPredecessorExpression test, final Block body, final boolean controlFlowEscapes, final LocalVariableConversion conversion) {
+  WhileNode(WhileNode whileNode, JoinPredecessorExpression test, Block body, boolean controlFlowEscapes, LocalVariableConversion conversion) {
     super(whileNode, test, body, controlFlowEscapes, conversion);
     this.isDoWhile = whileNode.isDoWhile;
   }
 
   @Override
-  public Node ensureUniqueLabels(final LexicalContext lc) {
+  public Node ensureUniqueLabels(LexicalContext lc) {
     return Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
   }
 
@@ -55,26 +54,23 @@ public final class WhileNode extends LoopNode {
   }
 
   @Override
-  public Node accept(final LexicalContext lc, final NodeVisitor<? extends LexicalContext> visitor) {
+  public Node accept(LexicalContext lc, NodeVisitor<? extends LexicalContext> visitor) {
     if (visitor.enterWhileNode(this)) {
       if (isDoWhile()) {
         return visitor.leaveWhileNode(
-                setBody(lc, (Block) body.accept(visitor)).
-                        setTest(lc, (JoinPredecessorExpression) test.accept(visitor)));
+          setBody(lc, (Block) body.accept(visitor))
+          .setTest(lc, (JoinPredecessorExpression) test.accept(visitor)));
       }
       return visitor.leaveWhileNode(
-              setTest(lc, (JoinPredecessorExpression) test.accept(visitor)).
-                      setBody(lc, (Block) body.accept(visitor)));
+        setTest(lc, (JoinPredecessorExpression) test.accept(visitor))
+        .setBody(lc, (Block) body.accept(visitor)));
     }
     return this;
   }
 
   @Override
-  public WhileNode setTest(final LexicalContext lc, final JoinPredecessorExpression test) {
-    if (this.test == test) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
+  public WhileNode setTest(LexicalContext lc, JoinPredecessorExpression test) {
+    return (this.test == test) ? this : Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
   }
 
   @Override
@@ -83,23 +79,17 @@ public final class WhileNode extends LoopNode {
   }
 
   @Override
-  public WhileNode setBody(final LexicalContext lc, final Block body) {
-    if (this.body == body) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
+  public WhileNode setBody(LexicalContext lc, Block body) {
+    return (this.body == body) ? this : Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
   }
 
   @Override
-  public WhileNode setControlFlowEscapes(final LexicalContext lc, final boolean controlFlowEscapes) {
-    if (this.controlFlowEscapes == controlFlowEscapes) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
+  public WhileNode setControlFlowEscapes(LexicalContext lc, boolean controlFlowEscapes) {
+    return (this.controlFlowEscapes == controlFlowEscapes) ? this : Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
   }
 
   @Override
-  JoinPredecessor setLocalVariableConversionChanged(final LexicalContext lc, final LocalVariableConversion conversion) {
+  JoinPredecessor setLocalVariableConversionChanged(LexicalContext lc, LocalVariableConversion conversion) {
     return Node.replaceInLexicalContext(lc, this, new WhileNode(this, test, body, controlFlowEscapes, conversion));
   }
 
@@ -112,7 +102,7 @@ public final class WhileNode extends LoopNode {
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append("while (");
     test.toString(sb, printType);
     sb.append(')');
@@ -120,14 +110,12 @@ public final class WhileNode extends LoopNode {
 
   @Override
   public boolean mustEnter() {
-    if (isDoWhile()) {
-      return true;
-    }
-    return test == null;
+    return isDoWhile() || (test == null);
   }
 
   @Override
   public boolean hasPerIterationScope() {
     return false;
   }
+
 }

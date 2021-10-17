@@ -9,8 +9,6 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class DebuggerNode extends Statement {
 
-  private static final long serialVersionUID = 1L;
-
   /**
    * Constructor
    *
@@ -18,21 +16,18 @@ public final class DebuggerNode extends Statement {
    * @param token      token
    * @param finish     finish
    */
-  public DebuggerNode(final int lineNumber, final long token, final int finish) {
+  public DebuggerNode(int lineNumber, long token, int finish) {
     super(lineNumber, token, finish);
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterDebuggerNode(this)) {
-      return visitor.leaveDebuggerNode(this);
-    }
-
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterDebuggerNode(this)) ? visitor.leaveDebuggerNode(this) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append("debugger");
   }
+
 }

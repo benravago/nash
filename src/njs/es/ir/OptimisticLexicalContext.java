@@ -8,19 +8,19 @@ import java.util.List;
 import es.codegen.types.Type;
 
 /**
- * Lexical context that keeps track of optimistic assumptions (if any)
- * made during code generation. Used from Attr and FinalizeTypes
+ * Lexical context that keeps track of optimistic assumptions (if any) made during code generation.
+ * Used from Attr and FinalizeTypes
  */
 public class OptimisticLexicalContext extends LexicalContext {
 
   private final boolean isEnabled;
 
-  class Assumption {
+  public class Assumption {
 
     Symbol symbol;
     Type type;
 
-    Assumption(final Symbol symbol, final Type type) {
+    Assumption(Symbol symbol, Type type) {
       this.symbol = symbol;
       this.type = type;
     }
@@ -31,14 +31,14 @@ public class OptimisticLexicalContext extends LexicalContext {
     }
   }
 
-  /** Optimistic assumptions that could be made per function */
+  // Optimistic assumptions that could be made per function
   private final Deque<List<Assumption>> optimisticAssumptions = new ArrayDeque<>();
 
   /**
    * Constructor
    * @param isEnabled are optimistic types enabled?
    */
-  public OptimisticLexicalContext(final boolean isEnabled) {
+  public OptimisticLexicalContext(boolean isEnabled) {
     super();
     this.isEnabled = isEnabled;
   }
@@ -53,14 +53,13 @@ public class OptimisticLexicalContext extends LexicalContext {
 
   /**
    * Log an optimistic assumption during codegen
-   * TODO : different parameters and more info about the assumption for future profiling
-   * needs
+   * TODO : different parameters and more info about the assumption for future profiling needs
    * @param symbol symbol
    * @param type   type
    */
-  public void logOptimisticAssumption(final Symbol symbol, final Type type) {
+  public void logOptimisticAssumption(Symbol symbol, Type type) {
     if (isEnabled) {
-      final List<Assumption> peek = optimisticAssumptions.peek();
+      var peek = optimisticAssumptions.peek();
       peek.add(new Assumption(symbol, type));
     }
   }
@@ -82,19 +81,18 @@ public class OptimisticLexicalContext extends LexicalContext {
   }
 
   @Override
-  public <T extends LexicalContextNode> T push(final T node) {
+  public <T extends LexicalContextNode> T push(T node) {
     if (isEnabled) {
       if (node instanceof FunctionNode) {
-        optimisticAssumptions.push(new ArrayList<Assumption>());
+        optimisticAssumptions.push(new ArrayList<>());
       }
     }
-
     return super.push(node);
   }
 
   @Override
-  public <T extends Node> T pop(final T node) {
-    final T popped = super.pop(node);
+  public <T extends Node> T pop(T node) {
+    var popped = super.pop(node);
     if (isEnabled) {
       if (node instanceof FunctionNode) {
         optimisticAssumptions.pop();

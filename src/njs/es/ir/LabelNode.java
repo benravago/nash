@@ -4,19 +4,18 @@ import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
 
 /**
- * IR representation for a labeled statement. It implements JoinPredecessor to hold conversions that need to be effected
- * when the block exits normally, but is also targeted by a break statement that might bring different local variable
- * types to the join at the break point.
+ * IR representation for a labeled statement.
+ *
+ * It implements JoinPredecessor to hold conversions that need to be effected when the block exits normally,
+ * but is also targeted by a break statement that might bring different local variable types to the join at the break point.
  */
 @Immutable
 public final class LabelNode extends LexicalContextStatement implements JoinPredecessor {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Label ident. */
+  // Label ident.
   private final String labelName;
 
-  /** Statements. */
+  // Statements.
   private final Block body;
 
   private final LocalVariableConversion localVariableConversion;
@@ -30,15 +29,14 @@ public final class LabelNode extends LexicalContextStatement implements JoinPred
    * @param labelName  label name
    * @param body       body of label node
    */
-  public LabelNode(final int lineNumber, final long token, final int finish, final String labelName, final Block body) {
+  public LabelNode(int lineNumber, long token, int finish, String labelName, Block body) {
     super(lineNumber, token, finish);
-
     this.labelName = labelName;
     this.body = body;
     this.localVariableConversion = null;
   }
 
-  private LabelNode(final LabelNode labelNode, final String labelName, final Block body, final LocalVariableConversion localVariableConversion) {
+  LabelNode(LabelNode labelNode, String labelName, Block body, LocalVariableConversion localVariableConversion) {
     super(labelNode);
     this.labelName = labelName;
     this.body = body;
@@ -51,16 +49,12 @@ public final class LabelNode extends LexicalContextStatement implements JoinPred
   }
 
   @Override
-  public Node accept(final LexicalContext lc, final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterLabelNode(this)) {
-      return visitor.leaveLabelNode(setBody(lc, (Block) body.accept(visitor)));
-    }
-
-    return this;
+  public Node accept(LexicalContext lc, NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterLabelNode(this)) ? visitor.leaveLabelNode(setBody(lc, (Block) body.accept(visitor))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
+  public void toString(StringBuilder sb, boolean printType) {
     sb.append(labelName).append(':');
   }
 
@@ -78,11 +72,8 @@ public final class LabelNode extends LexicalContextStatement implements JoinPred
    * @param body new body
    * @return new for node if changed or existing if not
    */
-  public LabelNode setBody(final LexicalContext lc, final Block body) {
-    if (this.body == body) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new LabelNode(this, labelName, body, localVariableConversion));
+  public LabelNode setBody(LexicalContext lc, Block body) {
+    return (this.body == body) ? this : Node.replaceInLexicalContext(lc, this, new LabelNode(this, labelName, body, localVariableConversion));
   }
 
   /**
@@ -99,10 +90,8 @@ public final class LabelNode extends LexicalContextStatement implements JoinPred
   }
 
   @Override
-  public LabelNode setLocalVariableConversion(final LexicalContext lc, final LocalVariableConversion localVariableConversion) {
-    if (this.localVariableConversion == localVariableConversion) {
-      return this;
-    }
-    return Node.replaceInLexicalContext(lc, this, new LabelNode(this, labelName, body, localVariableConversion));
+  public LabelNode setLocalVariableConversion(LexicalContext lc, LocalVariableConversion localVariableConversion) {
+    return (this.localVariableConversion == localVariableConversion) ? this : Node.replaceInLexicalContext(lc, this, new LabelNode(this, labelName, body, localVariableConversion));
   }
+
 }

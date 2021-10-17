@@ -13,20 +13,21 @@ import es.runtime.options.Options;
 import es.util.Hex;
 
 /**
- * Symbol is a symbolic address for a value ("variable" if you wish). Identifiers in JavaScript source, as well as
- * certain synthetic variables created by the compiler are represented by Symbol objects. Symbols can address either
- * local variable slots in bytecode ("slotted symbol"), or properties in scope objects ("scoped symbol"). A symbol can
- * also end up being defined but then not used during symbol assignment calculations; such symbol will be neither
- * scoped, nor slotted; it represents a dead variable (it might be written to, but is never read). Finally, a symbol can
- * be both slotted and in scope. This special case can only occur with bytecode method parameters. They all come in as
- * slotted, but if they are used by a nested function (or eval) then they will be copied into the scope object, and used
- * from there onwards. Two further special cases are parameters stored in {@code NativeArguments} objects and parameters
- * stored in {@code Object[]} parameter to variable-arity functions. Those use the {@code #getFieldIndex()} property to
- * refer to their location.
+ * Symbol is a symbolic address for a value ("variable" if you wish).
+ *
+ * Identifiers in JavaScript source, as well as certain synthetic variables created by the compiler are represented by Symbol objects.
+ * Symbols can address either local variable slots in bytecode ("slotted symbol"), or properties in scope objects ("scoped symbol").
+ *
+ * A symbol can also end up being defined but then not used during symbol assignment calculations;
+ * such symbol will be neither scoped, nor slotted; it represents a dead variable (it might be written to, but is never read).
+ *
+ * Finally, a symbol can be both slotted and in scope. This special case can only occur with bytecode method parameters.
+ * They all come in as slotted, but if they are used by a nested function (or eval) then they will be copied into the scope object, and used from there onwards.
+ *
+ * Two further special cases are parameters stored in {@code NativeArguments} objects and parameters stored in {@code Object[]} parameter to variable-arity functions.
+ * Those use the {@code #getFieldIndex()} property to refer to their location.
  */
 public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable {
-
-  private static final long serialVersionUID = 1L;
 
   /** Is this Global */
   public static final int IS_GLOBAL = 1;
@@ -64,43 +65,42 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   /** Is this symbol seen a declaration? Used for block scoped LET and CONST symbols only. */
   public static final int HAS_BEEN_DECLARED = 1 << 14;
 
-  /** Null or name identifying symbol. */
+  // Null or name identifying symbol.
   private final String name;
 
-  /** Symbol flags. */
+  // Symbol flags.
   private int flags;
 
-  /** First bytecode method local variable slot for storing the value(s) of this variable. -1 indicates the variable
-   * is not stored in local variable slots or it is not yet known. */
+  // First bytecode method local variable slot for storing the value(s) of this variable.
+  // -1 indicates the variable is not stored in local variable slots or it is not yet known.
   private transient int firstSlot = -1;
 
-  /** Field number in scope or property; array index in varargs when not using arguments object. */
+  // Field number in scope or property; array index in varargs when not using arguments object.
   private transient int fieldIndex = -1;
 
-  /** Number of times this symbol is used in code */
+  // Number of times this symbol is used in code
   private int useCount;
 
-  /** Debugging option - dump info and stack trace when symbols with given names are manipulated */
+  // Debugging option - dump info and stack trace when symbols with given names are manipulated
   private static final Set<String> TRACE_SYMBOLS;
   private static final Set<String> TRACE_SYMBOLS_STACKTRACE;
 
   static {
-    final String stacktrace = Options.getStringProperty("nashorn.compiler.symbol.stacktrace", null);
-    final String trace;
+    var stacktrace = Options.getStringProperty("nashorn.compiler.symbol.stacktrace", null);
+    String trace;
     if (stacktrace != null) {
-      trace = stacktrace; //stacktrace always implies trace as well
+      trace = stacktrace; // stacktrace always implies trace as well
       TRACE_SYMBOLS_STACKTRACE = new HashSet<>();
-      for (final StringTokenizer st = new StringTokenizer(stacktrace, ","); st.hasMoreTokens();) {
+      for (var st = new StringTokenizer(stacktrace, ","); st.hasMoreTokens();) {
         TRACE_SYMBOLS_STACKTRACE.add(st.nextToken());
       }
     } else {
       trace = Options.getStringProperty("nashorn.compiler.symbol.trace", null);
       TRACE_SYMBOLS_STACKTRACE = null;
     }
-
     if (trace != null) {
       TRACE_SYMBOLS = new HashSet<>();
-      for (final StringTokenizer st = new StringTokenizer(trace, ","); st.hasMoreTokens();) {
+      for (var st = new StringTokenizer(trace, ","); st.hasMoreTokens();) {
         TRACE_SYMBOLS.add(st.nextToken());
       }
     } else {
@@ -114,7 +114,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param name  name of symbol
    * @param flags symbol flags
    */
-  public Symbol(final String name, final int flags) {
+  public Symbol(String name, int flags) {
     this.name = name;
     this.flags = flags;
     if (shouldTrace()) {
@@ -126,15 +126,14 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   public Symbol clone() {
     try {
       return (Symbol) super.clone();
-    } catch (final CloneNotSupportedException e) {
+    } catch (CloneNotSupportedException e) {
       throw new AssertionError(e);
     }
   }
 
-  private static String align(final String string, final int max) {
-    final StringBuilder sb = new StringBuilder();
+  static String align(String string, int max) {
+    var sb = new StringBuilder();
     sb.append(string.substring(0, Math.min(string.length(), max)));
-
     while (sb.length() < max) {
       sb.append(' ');
     }
@@ -143,22 +142,20 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
 
   /**
    * Debugging .
-   *
    * @param stream Stream to print to.
    */
-  void print(final PrintWriter stream) {
+  void print(PrintWriter stream) {
     final StringBuilder sb = new StringBuilder();
-
-    sb.append(align(name, 20)).
-            append(": ").
-            append(", ").
-            append(align(firstSlot == -1 ? "none" : "" + firstSlot, 10));
+    sb.append(align(name, 20))
+      .append(": ")
+      .append(", ")
+      .append(align(firstSlot == -1 ? "none" : "" + firstSlot, 10));
 
     switch (flags & KINDMASK) {
-      case IS_GLOBAL:
+      case IS_GLOBAL -> {
         sb.append(" global");
-        break;
-      case IS_VAR:
+      }
+      case IS_VAR -> {
         if (isConst()) {
           sb.append(" const");
         } else if (isLet()) {
@@ -166,52 +163,43 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
         } else {
           sb.append(" var");
         }
-        break;
-      case IS_PARAM:
+      }
+      case IS_PARAM -> {
         sb.append(" param");
-        break;
-      default:
-        break;
+      }
+      // default: pass
     }
-
     if (isScope()) {
       sb.append(" scope");
     }
-
     if (isInternal()) {
       sb.append(" internal");
     }
-
     if (isThis()) {
       sb.append(" this");
     }
-
     if (isProgramLevel()) {
       sb.append(" program");
     }
-
     sb.append('\n');
-
     stream.print(sb.toString());
   }
 
   /**
    * Compare the the symbol kind with another.
-   *
    * @param other Other symbol's flags.
    * @return True if symbol has less kind.
    */
-  public boolean less(final int other) {
+  public boolean less(int other) {
     return (flags & KINDMASK) < (other & KINDMASK);
   }
 
   /**
    * Allocate a slot for this symbol.
-   *
    * @param needsSlot True if symbol needs a slot.
    * @return the symbol
    */
-  public Symbol setNeedsSlot(final boolean needsSlot) {
+  public Symbol setNeedsSlot(boolean needsSlot) {
     if (needsSlot) {
       assert !isScope();
       flags |= HAS_SLOT;
@@ -223,31 +211,25 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
 
   /**
    * Return the number of slots required for the symbol.
-   *
    * @return Number of slots.
    */
   public int slotCount() {
     return ((flags & HAS_INT_VALUE) == 0 ? 0 : 1)
-            + ((flags & HAS_DOUBLE_VALUE) == 0 ? 0 : 2)
-            + ((flags & HAS_OBJECT_VALUE) == 0 ? 0 : 1);
+         + ((flags & HAS_DOUBLE_VALUE) == 0 ? 0 : 2)
+         + ((flags & HAS_OBJECT_VALUE) == 0 ? 0 : 1);
   }
 
-  private boolean isSlotted() {
+  boolean isSlotted() {
     return firstSlot != -1 && ((flags & HAS_SLOT) != 0);
   }
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder();
-
-    sb.append(name).
-            append(' ');
-
+    var sb = new StringBuilder();
+    sb.append(name).append(' ');
     if (hasSlot()) {
-      sb.append(' ').
-              append('(').
-              append("slot=").
-              append(firstSlot).append(' ');
+      sb.append(" (slot=")
+        .append(firstSlot).append(' ');
       if ((flags & HAS_INT_VALUE) != 0) {
         sb.append('I');
       }
@@ -259,7 +241,6 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
       }
       sb.append(')');
     }
-
     if (isScope()) {
       if (isGlobal()) {
         sb.append(" G");
@@ -267,20 +248,18 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
         sb.append(" S");
       }
     }
-
     return sb.toString();
   }
 
   @Override
-  public int compareTo(final Symbol other) {
+  public int compareTo(Symbol other) {
     return name.compareTo(other.name);
   }
 
   /**
-   * Does this symbol have an allocated bytecode slot? Note that having an allocated bytecode slot doesn't necessarily
-   * mean the symbol's value will be stored in it. Namely, a function parameter can have a bytecode slot, but if it is
-   * in scope, then the bytecode slot will not be used. See {@link #isBytecodeLocal()}.
-   *
+   * Does this symbol have an allocated bytecode slot?
+   * Note that having an allocated bytecode slot doesn't necessarily mean the symbol's value will be stored in it.
+   * Namely, a function parameter can have a bytecode slot, but if it is in scope, then the bytecode slot will not be used. See {@link #isBytecodeLocal()}.
    * @return true if this symbol has a local bytecode slot
    */
   public boolean hasSlot() {
@@ -288,8 +267,9 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   }
 
   /**
-   * Is this symbol a local variable stored in bytecode local variable slots? This is true for a slotted variable that
-   * is not in scope. (E.g. a parameter that is in scope is slotted, but it will not be a local variable).
+   * Is this symbol a local variable stored in bytecode local variable slots?
+   * This is true for a slotted variable that is not in scope.
+   * (E.g. a parameter that is in scope is slotted, but it will not be a local variable).
    * @return true if this symbol is using bytecode local slots for its storage.
    */
   public boolean isBytecodeLocal() {
@@ -305,9 +285,8 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   }
 
   /**
-   * Check if this is a symbol in scope. Scope symbols cannot, for obvious reasons
-   * be stored in byte code slots on the local frame
-   *
+   * Check if this is a symbol in scope.
+   * Scope symbols cannot, for obvious reasons be stored in byte code slots on the local frame
    * @return true if this is scoped
    */
   public boolean isScope() {
@@ -451,9 +430,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   }
 
   /**
-   * Get the index of the field used to store this symbol, should it be an AccessorProperty
-   * and get allocated in a JO-prefixed ScriptObject subclass.
-   *
+   * Get the index of the field used to store this symbol, should it be an AccessorProperty and get allocated in a JO-prefixed ScriptObject subclass.
    * @return field index
    */
   public int getFieldIndex() {
@@ -462,13 +439,11 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   }
 
   /**
-   * Set the index of the field used to store this symbol, should it be an AccessorProperty
-   * and get allocated in a JO-prefixed ScriptObject subclass.
-   *
+   * Set the index of the field used to store this symbol, should it be an AccessorProperty and get allocated in a JO-prefixed ScriptObject subclass.
    * @param fieldIndex field index - a positive integer
    * @return the symbol
    */
-  public Symbol setFieldIndex(final int fieldIndex) {
+  public Symbol setFieldIndex(int fieldIndex) {
     if (this.fieldIndex != fieldIndex) {
       this.fieldIndex = fieldIndex;
     }
@@ -488,7 +463,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param flags flags
    * @return the symbol
    */
-  public Symbol setFlags(final int flags) {
+  public Symbol setFlags(int flags) {
     if (this.flags != flags) {
       this.flags = flags;
     }
@@ -500,7 +475,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param flag flag to set
    * @return the symbol
    */
-  public Symbol setFlag(final int flag) {
+  public Symbol setFlag(int flag) {
     if ((this.flags & flag) == 0) {
       this.flags |= flag;
     }
@@ -512,7 +487,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param flag flag to set
    * @return the symbol
    */
-  public Symbol clearFlag(final int flag) {
+  public Symbol clearFlag(int flag) {
     if ((this.flags & flag) != 0) {
       this.flags &= ~flag;
     }
@@ -541,9 +516,9 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param type the requested type
    * @return byte code slot
    */
-  public int getSlot(final Type type) {
+  public int getSlot(Type type) {
     assert isSlotted();
-    int typeSlot = firstSlot;
+    var typeSlot = firstSlot;
     if (type.isBoolean() || type.isInteger()) {
       assert (flags & HAS_INT_VALUE) != 0;
       return typeSlot;
@@ -563,7 +538,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param type the type
    * @return true if this symbol has a local variable slot for storing a value of specific type.
    */
-  public boolean hasSlotFor(final Type type) {
+  public boolean hasSlotFor(Type type) {
     if (type.isBoolean() || type.isInteger()) {
       return (flags & HAS_INT_VALUE) != 0;
     } else if (type.isNumber()) {
@@ -577,7 +552,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * Marks this symbol as having a local variable slot for storing a value of specific type.
    * @param type the type
    */
-  public void setHasSlotFor(final Type type) {
+  public void setHasSlotFor(Type type) {
     if (type.isBoolean() || type.isInteger()) {
       setFlag(HAS_INT_VALUE);
     } else if (type.isNumber()) {
@@ -610,7 +585,7 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
    * @param  firstSlot valid bytecode slot
    * @return the symbol
    */
-  public Symbol setFirstSlot(final int firstSlot) {
+  public Symbol setFirstSlot(int firstSlot) {
     assert firstSlot >= 0 && firstSlot <= 65535;
     if (firstSlot != this.firstSlot) {
       if (shouldTrace()) {
@@ -622,17 +597,14 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
   }
 
   /**
-   * From a lexical context, set this symbol as needing scope, which
-   * will set flags for the defining block that will be written when
-   * block is popped from the lexical context stack, used by codegen
-   * when flags need to be tagged, but block is in the
-   * middle of evaluation and cannot be modified.
-   *
+   * From a lexical context, set this symbol as needing scope,
+   * which will set flags for the defining block that will be written when block is popped from the lexical context stack,
+   * used by codegen when flags need to be tagged, but block is in the middle of evaluation and cannot be modified.
    * @param  lc     lexical context
    * @param  symbol symbol
    * @return the symbol
    */
-  public static Symbol setSymbolIsScope(final LexicalContext lc, final Symbol symbol) {
+  public static Symbol setSymbolIsScope(LexicalContext lc, Symbol symbol) {
     symbol.setIsScope();
     if (!symbol.isGlobal()) {
       lc.setBlockNeedsScope(lc.getDefiningBlock(symbol));
@@ -640,20 +612,21 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
     return symbol;
   }
 
-  private boolean shouldTrace() {
+  boolean shouldTrace() {
     return TRACE_SYMBOLS != null && (TRACE_SYMBOLS.isEmpty() || TRACE_SYMBOLS.contains(name));
   }
 
-  private void trace(final String desc) {
+  void trace(String desc) {
     Context.err(Hex.id(this) + " SYMBOL: '" + name + "' " + desc);
     if (TRACE_SYMBOLS_STACKTRACE != null && (TRACE_SYMBOLS_STACKTRACE.isEmpty() || TRACE_SYMBOLS_STACKTRACE.contains(name))) {
       new Throwable().printStackTrace(Context.getCurrentErr());
     }
   }
 
-  private void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+  void readObject(ObjectInputStream in) throws ClassNotFoundException, IOException {
     in.defaultReadObject();
     firstSlot = -1;
     fieldIndex = -1;
   }
+
 }

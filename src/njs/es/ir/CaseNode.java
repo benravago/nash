@@ -2,31 +2,29 @@ package es.ir;
 
 import java.util.Collections;
 import java.util.List;
+
 import es.codegen.Label;
 import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
 
 /**
  * IR representation of CASE clause.
+ *
  * Case nodes are not BreakableNodes, but the SwitchNode is
  */
 @Immutable
 public final class CaseNode extends Node implements JoinPredecessor, Labels, Terminal {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Test expression. */
+  // Test expression.
   private final Expression test;
 
-  /** Statements. */
+  // Statements.
   private final Block body;
 
-  /** Case entry label. */
+  // Case entry label.
   private final Label entry;
 
-  /**
-   * @see JoinPredecessor
-   */
+  // see JoinPredecessor
   private final LocalVariableConversion conversion;
 
   /**
@@ -37,18 +35,16 @@ public final class CaseNode extends Node implements JoinPredecessor, Labels, Ter
    * @param test     case test node, can be any node in JavaScript
    * @param body     case body
    */
-  public CaseNode(final long token, final int finish, final Expression test, final Block body) {
+  public CaseNode(long token, int finish, Expression test, Block body) {
     super(token, finish);
-
     this.test = test;
     this.body = body;
     this.entry = new Label("entry");
     this.conversion = null;
   }
 
-  CaseNode(final CaseNode caseNode, final Expression test, final Block body, final LocalVariableConversion conversion) {
+  CaseNode(CaseNode caseNode, Expression test, Block body, LocalVariableConversion conversion) {
     super(caseNode);
-
     this.test = test;
     this.body = body;
     this.entry = new Label(caseNode.entry);
@@ -57,7 +53,6 @@ public final class CaseNode extends Node implements JoinPredecessor, Labels, Ter
 
   /**
    * Is this a terminal case node, i.e. does it end control flow like having a throw or return?
-   *
    * @return true if this node statement is terminal
    */
   @Override
@@ -70,19 +65,17 @@ public final class CaseNode extends Node implements JoinPredecessor, Labels, Ter
    * @param visitor IR navigating visitor.
    */
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
     if (visitor.enterCaseNode(this)) {
-      final Expression newTest = test == null ? null : (Expression) test.accept(visitor);
-      final Block newBody = body == null ? null : (Block) body.accept(visitor);
-
+      var newTest = test == null ? null : (Expression) test.accept(visitor);
+      var newBody = body == null ? null : (Block) body.accept(visitor);
       return visitor.leaveCaseNode(setTest(newTest).setBody(newBody));
     }
-
     return this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printTypes) {
+  public void toString(StringBuilder sb, boolean printTypes) {
     if (test != null) {
       sb.append("case ");
       test.toString(sb, printTypes);
@@ -121,19 +114,13 @@ public final class CaseNode extends Node implements JoinPredecessor, Labels, Ter
    * @param test new test expression
    * @return new or same CaseNode
    */
-  public CaseNode setTest(final Expression test) {
-    if (this.test == test) {
-      return this;
-    }
-    return new CaseNode(this, test, body, conversion);
+  public CaseNode setTest(Expression test) {
+    return (this.test == test) ? this : new CaseNode(this, test, body, conversion);
   }
 
   @Override
-  public JoinPredecessor setLocalVariableConversion(final LexicalContext lc, final LocalVariableConversion conversion) {
-    if (this.conversion == conversion) {
-      return this;
-    }
-    return new CaseNode(this, test, body, conversion);
+  public JoinPredecessor setLocalVariableConversion(LexicalContext lc, LocalVariableConversion conversion) {
+    return (this.conversion == conversion) ? this : new CaseNode(this, test, body, conversion);
   }
 
   @Override
@@ -141,15 +128,13 @@ public final class CaseNode extends Node implements JoinPredecessor, Labels, Ter
     return conversion;
   }
 
-  private CaseNode setBody(final Block body) {
-    if (this.body == body) {
-      return this;
-    }
-    return new CaseNode(this, test, body, conversion);
+  CaseNode setBody(Block body) {
+    return (this.body == body) ? this : new CaseNode(this, test, body, conversion);
   }
 
   @Override
   public List<Label> getLabels() {
     return Collections.unmodifiableList(Collections.singletonList(entry));
   }
+
 }

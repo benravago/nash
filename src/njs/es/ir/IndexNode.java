@@ -10,9 +10,7 @@ import es.ir.visitor.NodeVisitor;
 @Immutable
 public final class IndexNode extends BaseNode {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Property index. */
+  // Property index.
   private final Expression index;
 
   /**
@@ -23,45 +21,37 @@ public final class IndexNode extends BaseNode {
    * @param base    base node for access
    * @param index   index for access
    */
-  public IndexNode(final long token, final int finish, final Expression base, final Expression index) {
+  public IndexNode(long token, int finish, Expression base, Expression index) {
     super(token, finish, base, false, false);
     this.index = index;
   }
 
-  private IndexNode(final IndexNode indexNode, final Expression base, final Expression index, final boolean isFunction,
-          final Type type, final int programPoint, final boolean isSuper) {
+  IndexNode(IndexNode indexNode, Expression base, Expression index, boolean isFunction, Type type, int programPoint, boolean isSuper) {
     super(indexNode, base, isFunction, type, programPoint, isSuper);
     this.index = index;
   }
 
   @Override
-  public Node accept(final NodeVisitor<? extends LexicalContext> visitor) {
-    if (visitor.enterIndexNode(this)) {
-      return visitor.leaveIndexNode(
-              setBase((Expression) base.accept(visitor)).
-                      setIndex((Expression) index.accept(visitor)));
-    }
-    return this;
+  public Node accept(NodeVisitor<? extends LexicalContext> visitor) {
+    return (visitor.enterIndexNode(this)) ?
+      visitor.leaveIndexNode(
+        setBase((Expression) base.accept(visitor))
+        .setIndex((Expression) index.accept(visitor))) : this;
   }
 
   @Override
-  public void toString(final StringBuilder sb, final boolean printType) {
-    final boolean needsParen = tokenType().needsParens(base.tokenType(), true);
-
+  public void toString(StringBuilder sb, boolean printType) {
+    var needsParen = tokenType().needsParens(base.tokenType(), true);
     if (needsParen) {
       sb.append('(');
     }
-
     if (printType) {
       optimisticTypeToString(sb);
     }
-
     base.toString(sb, printType);
-
     if (needsParen) {
       sb.append(')');
     }
-
     sb.append('[');
     index.toString(sb, printType);
     sb.append(']');
@@ -75,11 +65,8 @@ public final class IndexNode extends BaseNode {
     return index;
   }
 
-  private IndexNode setBase(final Expression base) {
-    if (this.base == base) {
-      return this;
-    }
-    return new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
+  IndexNode setBase(Expression base) {
+    return (this.base == base) ? this : new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
   }
 
   /**
@@ -87,42 +74,28 @@ public final class IndexNode extends BaseNode {
    * @param index new index expression
    * @return a node equivalent to this one except for the requested change.
    */
-  public IndexNode setIndex(final Expression index) {
-    if (this.index == index) {
-      return this;
-    }
-    return new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
+  public IndexNode setIndex(Expression index) {
+    return (this.index == index) ? this : new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
   }
 
   @Override
-  public IndexNode setType(final Type type) {
-    if (this.type == type) {
-      return this;
-    }
-    return new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
+  public IndexNode setType(Type type) {
+    return (this.type == type) ? this : new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
   }
 
   @Override
   public IndexNode setIsFunction() {
-    if (isFunction()) {
-      return this;
-    }
-    return new IndexNode(this, base, index, true, type, programPoint, isSuper());
+    return isFunction() ? this : new IndexNode(this, base, index, true, type, programPoint, isSuper());
   }
 
   @Override
-  public IndexNode setProgramPoint(final int programPoint) {
-    if (this.programPoint == programPoint) {
-      return this;
-    }
-    return new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
+  public IndexNode setProgramPoint(int programPoint) {
+    return (this.programPoint == programPoint) ? this : new IndexNode(this, base, index, isFunction(), type, programPoint, isSuper());
   }
 
   @Override
   public IndexNode setIsSuper() {
-    if (isSuper()) {
-      return this;
-    }
-    return new IndexNode(this, base, index, isFunction(), type, programPoint, true);
+    return isSuper() ? this : new IndexNode(this, base, index, isFunction(), type, programPoint, true);
   }
+
 }
