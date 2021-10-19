@@ -8,28 +8,25 @@ import es.runtime.ScriptRuntime;
  */
 final class DeletedRangeArrayFilter extends ArrayFilter {
 
-  /** Range (inclusive) tracking deletions */
+  // Range (inclusive) tracking deletions
   private long lo, hi;
 
-  DeletedRangeArrayFilter(final ArrayData underlying, final long lo, final long hi) {
+  DeletedRangeArrayFilter(ArrayData underlying, long lo, long hi) {
     super(maybeSparse(underlying, hi));
     this.lo = lo;
     this.hi = hi;
   }
 
-  private static ArrayData maybeSparse(final ArrayData underlying, final long hi) {
-    if (hi < SparseArrayData.MAX_DENSE_LENGTH || underlying instanceof SparseArrayData) {
-      return underlying;
-    }
-    return new SparseArrayData(underlying, underlying.length());
+  static ArrayData maybeSparse(ArrayData underlying, long hi) {
+    return (hi < SparseArrayData.MAX_DENSE_LENGTH || underlying instanceof SparseArrayData) ? underlying : new SparseArrayData(underlying, underlying.length());
   }
 
-  private boolean isEmpty() {
+  boolean isEmpty() {
     return lo > hi;
   }
 
-  private boolean isDeleted(final int index) {
-    final long longIndex = ArrayIndex.toLongIndex(index);
+  boolean isDeleted(int index) {
+    var longIndex = ArrayIndex.toLongIndex(index);
     return lo <= longIndex && longIndex <= hi;
   }
 
@@ -40,73 +37,62 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
 
   @Override
   public Object[] asObjectArray() {
-    final Object[] value = super.asObjectArray();
-
+    var value = super.asObjectArray();
     if (lo < Integer.MAX_VALUE) {
-      final int end = (int) Math.min(hi + 1, Integer.MAX_VALUE);
-      for (int i = (int) lo; i < end; i++) {
+      var end = (int) Math.min(hi + 1, Integer.MAX_VALUE);
+      for (var i = (int) lo; i < end; i++) {
         value[i] = ScriptRuntime.UNDEFINED;
       }
     }
-
     return value;
   }
 
   @Override
-  public Object asArrayOfType(final Class<?> componentType) {
-    final Object value = super.asArrayOfType(componentType);
-    final Object undefValue = convertUndefinedValue(componentType);
-
+  public Object asArrayOfType(Class<?> componentType) {
+    var value = super.asArrayOfType(componentType);
+    var undefValue = convertUndefinedValue(componentType);
     if (lo < Integer.MAX_VALUE) {
-      final int end = (int) Math.min(hi + 1, Integer.MAX_VALUE);
-      for (int i = (int) lo; i < end; i++) {
+      var end = (int) Math.min(hi + 1, Integer.MAX_VALUE);
+      for (var i = (int) lo; i < end; i++) {
         Array.set(value, i, undefValue);
       }
     }
-
     return value;
   }
 
   @Override
-  public ArrayData ensure(final long safeIndex) {
-    if (safeIndex >= SparseArrayData.MAX_DENSE_LENGTH && safeIndex >= length()) {
-      return new SparseArrayData(this, safeIndex + 1);
-    }
-
-    return super.ensure(safeIndex);
+  public ArrayData ensure(long safeIndex) {
+    return (safeIndex >= SparseArrayData.MAX_DENSE_LENGTH && safeIndex >= length()) ? new SparseArrayData(this, safeIndex + 1) : super.ensure(safeIndex);
   }
 
   @Override
-  public ArrayData shiftLeft(final int by) {
+  public ArrayData shiftLeft(int by) {
     super.shiftLeft(by);
     lo = Math.max(0, lo - by);
     hi = Math.max(-1, hi - by);
-
     return isEmpty() ? getUnderlying() : this;
   }
 
   @Override
-  public ArrayData shiftRight(final int by) {
+  public ArrayData shiftRight(int by) {
     super.shiftRight(by);
-    final long len = length();
+    var len = length();
     lo = Math.min(len, lo + by);
     hi = Math.min(len - 1, hi + by);
-
     return isEmpty() ? getUnderlying() : this;
   }
 
   @Override
-  public ArrayData shrink(final long newLength) {
+  public ArrayData shrink(long newLength) {
     super.shrink(newLength);
     lo = Math.min(newLength, lo);
     hi = Math.min(newLength - 1, hi);
-
     return isEmpty() ? getUnderlying() : this;
   }
 
   @Override
-  public ArrayData set(final int index, final Object value) {
-    final long longIndex = ArrayIndex.toLongIndex(index);
+  public ArrayData set(int index, Object value) {
+    var longIndex = ArrayIndex.toLongIndex(index);
     if (longIndex < lo || longIndex > hi) {
       return super.set(index, value);
     } else if (longIndex > lo && longIndex < hi) {
@@ -118,13 +104,12 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
       assert longIndex == hi;
       hi--;
     }
-
     return isEmpty() ? getUnderlying().set(index, value) : super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final int value) {
-    final long longIndex = ArrayIndex.toLongIndex(index);
+  public ArrayData set(int index, int value) {
+    var longIndex = ArrayIndex.toLongIndex(index);
     if (longIndex < lo || longIndex > hi) {
       return super.set(index, value);
     } else if (longIndex > lo && longIndex < hi) {
@@ -136,13 +121,12 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
       assert longIndex == hi;
       hi--;
     }
-
     return isEmpty() ? getUnderlying().set(index, value) : super.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final double value) {
-    final long longIndex = ArrayIndex.toLongIndex(index);
+  public ArrayData set(int index, double value) {
+    var longIndex = ArrayIndex.toLongIndex(index);
     if (longIndex < lo || longIndex > hi) {
       return super.set(index, value);
     } else if (longIndex > lo && longIndex < hi) {
@@ -154,26 +138,24 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
       assert longIndex == hi;
       hi--;
     }
-
     return isEmpty() ? getUnderlying().set(index, value) : super.set(index, value);
   }
 
   @Override
-  public boolean has(final int index) {
+  public boolean has(int index) {
     return super.has(index) && !isDeleted(index);
   }
 
-  private ArrayData getDeletedArrayFilter() {
-    final ArrayData deleteFilter = new DeletedArrayFilter(getUnderlying());
+  ArrayData getDeletedArrayFilter() {
+    var deleteFilter = new DeletedArrayFilter(getUnderlying());
     deleteFilter.delete(lo, hi);
     return deleteFilter;
   }
 
   @Override
-  public ArrayData delete(final int index) {
-    final long longIndex = ArrayIndex.toLongIndex(index);
+  public ArrayData delete(int index) {
+    var longIndex = ArrayIndex.toLongIndex(index);
     underlying.setEmpty(index);
-
     if (longIndex + 1 == lo) {
       lo = longIndex;
     } else if (longIndex - 1 == hi) {
@@ -181,12 +163,11 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
     } else if (longIndex < lo || hi < longIndex) {
       return getDeletedArrayFilter().delete(index);
     }
-
     return this;
   }
 
   @Override
-  public ArrayData delete(final long fromIndex, final long toIndex) {
+  public ArrayData delete(long fromIndex, long toIndex) {
     if (fromIndex > hi + 1 || toIndex < lo - 1) {
       return getDeletedArrayFilter().delete(fromIndex, toIndex);
     }
@@ -198,21 +179,20 @@ final class DeletedRangeArrayFilter extends ArrayFilter {
 
   @Override
   public Object pop() {
-    final int index = (int) length() - 1;
+    var index = (int) length() - 1;
     if (super.has(index)) {
-      final boolean isDeleted = isDeleted(index);
-      final Object value = super.pop();
-
+      var isDeleted = isDeleted(index);
+      var value = super.pop();
       lo = Math.min(index + 1, lo);
       hi = Math.min(index, hi);
       return isDeleted ? ScriptRuntime.UNDEFINED : value;
     }
-
     return super.pop();
   }
 
   @Override
-  public ArrayData slice(final long from, final long to) {
+  public ArrayData slice(long from, long to) {
     return new DeletedRangeArrayFilter(underlying.slice(from, to), Math.max(0, lo - from), Math.max(0, hi - from));
   }
+
 }

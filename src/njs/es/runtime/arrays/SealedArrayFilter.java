@@ -1,7 +1,5 @@
 package es.runtime.arrays;
 
-import static es.runtime.ECMAErrors.typeError;
-
 import es.objects.Global;
 import es.runtime.PropertyDescriptor;
 
@@ -10,7 +8,7 @@ import es.runtime.PropertyDescriptor;
  */
 class SealedArrayFilter extends ArrayFilter {
 
-  SealedArrayFilter(final ArrayData underlying) {
+  SealedArrayFilter(ArrayData underlying) {
     super(underlying);
   }
 
@@ -20,23 +18,24 @@ class SealedArrayFilter extends ArrayFilter {
   }
 
   @Override
-  public ArrayData slice(final long from, final long to) {
+  public ArrayData slice(long from, long to) {
     return getUnderlying().slice(from, to);
   }
 
   @Override
-  public boolean canDelete(final int index) {
+  public boolean canDelete(int index) {
     return canDelete(ArrayIndex.toLongIndex(index));
   }
 
   @Override
-  public boolean canDelete(final long longIndex) {
+  public boolean canDelete(long longIndex) {
     // throw typeError("cant.delete.property", Long.toString(longIndex), "sealed array");
     return false;
   }
 
   @Override
-  public PropertyDescriptor getDescriptor(final Global global, final int index) {
+  public PropertyDescriptor getDescriptor(Global global, int index) {
     return global.newDataDescriptor(getObject(index), false, true, true);
   }
+
 }

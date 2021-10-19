@@ -1,6 +1,7 @@
 package es.runtime.arrays;
 
 import java.util.NoSuchElementException;
+
 import nash.scripting.JSObject;
 import es.runtime.JSType;
 
@@ -12,7 +13,7 @@ class JSObjectIterator extends ArrayLikeIterator<Object> {
   protected final JSObject obj;
   private final long length;
 
-  JSObjectIterator(final JSObject obj, final boolean includeUndefined) {
+  JSObjectIterator(JSObject obj, boolean includeUndefined) {
     super(includeUndefined);
     this.obj = obj;
     this.length = JSType.toUint32(obj.hasMember("length") ? obj.getMember("length") : 0);
@@ -33,14 +34,12 @@ class JSObjectIterator extends ArrayLikeIterator<Object> {
     if (length == 0L) {
       return false; //return empty string if toUint32(length) == 0
     }
-
     while (indexInArray()) {
       if (obj.hasSlot((int) index) || includeUndefined) {
         break;
       }
       bumpIndex();
     }
-
     return indexInArray();
   }
 
@@ -49,7 +48,7 @@ class JSObjectIterator extends ArrayLikeIterator<Object> {
     if (indexInArray()) {
       return obj.getSlot((int) bumpIndex());
     }
-
     throw new NoSuchElementException();
   }
+
 }

@@ -8,7 +8,7 @@ import es.runtime.JSType;
  */
 final class ReverseJSObjectIterator extends JSObjectIterator {
 
-  ReverseJSObjectIterator(final JSObject obj, final boolean includeUndefined) {
+  ReverseJSObjectIterator(JSObject obj, boolean includeUndefined) {
     super(obj, includeUndefined);
     this.index = JSType.toUint32(obj.hasMember("length") ? obj.getMember("length") : 0) - 1;
   }
@@ -27,4 +27,5 @@ final class ReverseJSObjectIterator extends JSObjectIterator {
   protected long bumpIndex() {
     return index--;
   }
+
 }

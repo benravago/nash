@@ -7,10 +7,10 @@ import java.lang.reflect.Array;
  */
 class JavaArrayIterator extends ArrayLikeIterator<Object> {
 
-  /** Array to iterate over */
+  // Array to iterate over
   protected final Object array;
 
-  /** length of array */
+  // length of array
   protected final long length;
 
   /**
@@ -18,7 +18,7 @@ class JavaArrayIterator extends ArrayLikeIterator<Object> {
    * @param array array to iterate over
    * @param includeUndefined should undefined elements be included in iteration
    */
-  protected JavaArrayIterator(final Object array, final boolean includeUndefined) {
+  protected JavaArrayIterator(Object array, boolean includeUndefined) {
     super(includeUndefined);
     assert array.getClass().isArray() : "expecting Java array object";
     this.array = array;
@@ -52,4 +52,5 @@ class JavaArrayIterator extends ArrayLikeIterator<Object> {
   public void remove() {
     throw new UnsupportedOperationException("remove");
   }
+
 }

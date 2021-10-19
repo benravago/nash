@@ -7,10 +7,10 @@ import java.util.List;
  */
 class JavaListIterator extends ArrayLikeIterator<Object> {
 
-  /** {@link java.util.List} to iterate over */
+  // {@link java.util.List} to iterate over
   protected final List<?> list;
 
-  /** length of array */
+  // length of array
   protected final long length;
 
   /**
@@ -18,7 +18,7 @@ class JavaListIterator extends ArrayLikeIterator<Object> {
    * @param list list to iterate over
    * @param includeUndefined should undefined elements be included in iteration
    */
-  protected JavaListIterator(final List<?> list, final boolean includeUndefined) {
+  protected JavaListIterator(List<?> list, boolean includeUndefined) {
     super(includeUndefined);
     this.list = list;
     this.length = list.size();
@@ -51,4 +51,5 @@ class JavaListIterator extends ArrayLikeIterator<Object> {
   public void remove() {
     list.remove(index);
   }
+
 }

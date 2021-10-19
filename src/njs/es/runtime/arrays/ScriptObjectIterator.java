@@ -12,7 +12,7 @@ class ScriptObjectIterator extends ArrayLikeIterator<Object> {
   protected final ScriptObject obj;
   private final long length;
 
-  ScriptObjectIterator(final ScriptObject obj, final boolean includeUndefined) {
+  ScriptObjectIterator(ScriptObject obj, boolean includeUndefined) {
     super(includeUndefined);
     this.obj = obj;
     this.length = JSType.toUint32(obj.getLength());
@@ -31,16 +31,14 @@ class ScriptObjectIterator extends ArrayLikeIterator<Object> {
   @Override
   public boolean hasNext() {
     if (length == 0L) {
-      return false; //return empty string if toUint32(length) == 0
+      return false; // return empty string if toUint32(length) == 0
     }
-
     while (indexInArray()) {
       if (obj.has(index) || includeUndefined) {
         break;
       }
       bumpIndex();
     }
-
     return indexInArray();
   }
 
@@ -49,7 +47,7 @@ class ScriptObjectIterator extends ArrayLikeIterator<Object> {
     if (indexInArray()) {
       return obj.get(bumpIndex());
     }
-
     throw new NoSuchElementException();
   }
+
 }

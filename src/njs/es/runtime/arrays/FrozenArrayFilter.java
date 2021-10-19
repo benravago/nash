@@ -1,6 +1,5 @@
 package es.runtime.arrays;
 
-import static es.runtime.ECMAErrors.typeError;
 import es.objects.Global;
 import es.runtime.PropertyDescriptor;
 import es.runtime.ScriptRuntime;
@@ -10,7 +9,7 @@ import es.runtime.ScriptRuntime;
  */
 final class FrozenArrayFilter extends SealedArrayFilter {
 
-  FrozenArrayFilter(final ArrayData underlying) {
+  FrozenArrayFilter(ArrayData underlying) {
     super(underlying);
   }
 
@@ -20,36 +19,37 @@ final class FrozenArrayFilter extends SealedArrayFilter {
   }
 
   @Override
-  public PropertyDescriptor getDescriptor(final Global global, final int index) {
+  public PropertyDescriptor getDescriptor(Global global, int index) {
     return global.newDataDescriptor(getObject(index), false, true, false);
   }
 
   @Override
-  public ArrayData set(final int index, final int value) {
+  public ArrayData set(int index, int value) {
     // throw typeError("cant.set.property", Integer.toString(index), "frozen array");
     return this;
   }
 
   @Override
-  public ArrayData set(final int index, final double value) {
+  public ArrayData set(int index, double value) {
     // throw typeError("cant.set.property", Integer.toString(index), "frozen array");
     return this;
   }
 
   @Override
-  public ArrayData set(final int index, final Object value) {
+  public ArrayData set(int index, Object value) {
     // throw typeError("cant.set.property", Integer.toString(index), "frozen array");
     return this;
   }
 
   @Override
-  public ArrayData push(final Object... items) {
+  public ArrayData push(Object... items) {
     return this; //nop
   }
 
   @Override
   public Object pop() {
-    final int len = (int) underlying.length();
+    var len = (int) underlying.length();
     return len == 0 ? ScriptRuntime.UNDEFINED : underlying.getObject(len - 1);
   }
+
 }

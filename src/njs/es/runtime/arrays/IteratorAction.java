@@ -10,22 +10,22 @@ import es.runtime.linker.Bootstrap;
  */
 public abstract class IteratorAction<T> {
 
-  /** Self object */
+  // Self object
   protected final Object self;
 
-  /** This for the callback invocation */
+  // This for the callback invocation
   protected Object thisArg;
 
-  /** Callback function to be applied to elements */
+  // Callback function to be applied to elements
   protected final Object callbackfn;
 
-  /** Result of array iteration */
+  // Result of array iteration
   protected T result;
 
-  /** Current array index of iterator */
+  // Current array index of iterator
   protected long index;
 
-  /** Iterator object */
+  // Iterator object
   private final ArrayLikeIterator<Object> iter;
 
   /**
@@ -36,7 +36,7 @@ public abstract class IteratorAction<T> {
    * @param thisArg       the reference
    * @param initialResult result accumulator initialization
    */
-  public IteratorAction(final Object self, final Object callbackfn, final Object thisArg, final T initialResult) {
+  public IteratorAction(Object self, Object callbackfn, Object thisArg, T initialResult) {
     this(self, callbackfn, thisArg, initialResult, ArrayLikeIterator.arrayLikeIterator(self));
   }
 
@@ -49,7 +49,7 @@ public abstract class IteratorAction<T> {
    * @param initialResult result accumulator initialization
    * @param iter          custom element iterator
    */
-  public IteratorAction(final Object self, final Object callbackfn, final Object thisArg, final T initialResult, final ArrayLikeIterator<Object> iter) {
+  public IteratorAction(Object self, Object callbackfn, Object thisArg, T initialResult, ArrayLikeIterator<Object> iter) {
     this.self = self;
     this.callbackfn = callbackfn;
     this.result = initialResult;
@@ -61,7 +61,7 @@ public abstract class IteratorAction<T> {
    * An action to be performed once at the start of the apply loop
    * @param iterator array element iterator
    */
-  protected void applyLoopBegin(final ArrayLikeIterator<Object> iterator) {
+  protected void applyLoopBegin(ArrayLikeIterator<Object> iterator) {
     //empty
   }
 
@@ -70,41 +70,33 @@ public abstract class IteratorAction<T> {
    * @return result of apply
    */
   public final T apply() {
-
     // for non-strict callback, need to translate undefined thisArg to be global object
     thisArg = (thisArg == ScriptRuntime.UNDEFINED && !Bootstrap.isCallable(callbackfn)) ? Context.getGlobal() : thisArg;
-
     applyLoopBegin(iter);
-    final boolean reverse = iter.isReverse();
+    var reverse = iter.isReverse();
     while (iter.hasNext()) {
-
-      final Object val = iter.next();
+      var val = iter.next();
       index = iter.nextIndex() + (reverse ? 1 : -1);
-
       try {
         if (!forEach(val, index)) {
           return result;
         }
-      } catch (final RuntimeException | Error e) {
+      } catch (RuntimeException | Error e) {
         throw e;
-      } catch (final Throwable t) {
+      } catch (Throwable t) {
         throw new RuntimeException(t);
       }
     }
-
     return result;
   }
 
   /**
    * For each callback
-   *
    * @param val value
    * @param i   position of value
-   *
    * @return true if callback invocation return true
-   *
    * @throws Throwable if invocation throws an exception/error
    */
-  protected abstract boolean forEach(final Object val, final double i) throws Throwable;
+  protected abstract boolean forEach(Object val, double i) throws Throwable;
 
 }

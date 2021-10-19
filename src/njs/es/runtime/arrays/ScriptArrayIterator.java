@@ -7,10 +7,10 @@ import es.runtime.ScriptObject;
  */
 class ScriptArrayIterator extends ArrayLikeIterator<Object> {
 
-  /** Array {@link ScriptObject} to iterate over */
+  // Array {@link ScriptObject} to iterate over
   protected final ScriptObject array;
 
-  /** length of array */
+  // length of array
   protected final long length;
 
   /**
@@ -18,7 +18,7 @@ class ScriptArrayIterator extends ArrayLikeIterator<Object> {
    * @param array array to iterate over
    * @param includeUndefined should undefined elements be included in iteration
    */
-  protected ScriptArrayIterator(final ScriptObject array, final boolean includeUndefined) {
+  protected ScriptArrayIterator(ScriptObject array, boolean includeUndefined) {
     super(includeUndefined);
     this.array = array;
     this.length = array.getArray().length();
@@ -52,7 +52,6 @@ class ScriptArrayIterator extends ArrayLikeIterator<Object> {
         bumpIndex();
       }
     }
-
     return indexInArray();
   }
 
@@ -60,4 +59,5 @@ class ScriptArrayIterator extends ArrayLikeIterator<Object> {
   public void remove() {
     array.delete(index);
   }
+
 }

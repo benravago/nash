@@ -25,4 +25,5 @@ final class EmptyArrayLikeIterator extends ArrayLikeIterator<Object> {
   public long getLength() {
     return 0;
   }
+
 }

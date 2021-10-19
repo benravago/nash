@@ -1,9 +1,8 @@
 package es.runtime.arrays;
 
 /**
- * Marker interface for any ContinuousArray with any elements
- * Used for type checks that throw ClassCastExceptions and force relinks
- * for fast NativeArray specializations of builtin methods
+ * Marker interface for any ContinuousArray with any elements.
+ * Used for type checks that throw ClassCastExceptions and force relinks for fast NativeArray specializations of builtin methods
  */
 public interface AnyElements {
 
@@ -12,4 +11,5 @@ public interface AnyElements {
    * @return element type weight
    */
   public int getElementWeight();
+
 }

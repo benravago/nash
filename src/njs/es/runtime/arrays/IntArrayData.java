@@ -1,29 +1,28 @@
 package es.runtime.arrays;
 
-import static es.codegen.CompilerConstants.specialCall;
+import java.util.Arrays;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
+
 import es.runtime.JSType;
 import es.runtime.ScriptRuntime;
+import static es.codegen.CompilerConstants.specialCall;
 
 /**
- * Implementation of {@link ArrayData} as soon as an int has been
- * written to the array. This is the default data for new arrays
+ * Implementation of {@link ArrayData} as soon as an int has been written to the array.
+ * This is the default data for new arrays
  */
 final class IntArrayData extends ContinuousArrayData implements IntElements {
 
-  /**
-   * The wrapped array
-   */
+  // The wrapped array
   private int[] array;
 
   IntArrayData() {
     this(new int[ArrayData.CHUNK_SIZE], 0);
   }
 
-  IntArrayData(final int length) {
+  IntArrayData(int length) {
     super(length);
     this.array = new int[ArrayData.nextSize(length)];
   }
@@ -33,7 +32,7 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
    * @param array an int array
    * @param length a length, not necessarily array.length
    */
-  IntArrayData(final int[] array, final int length) {
+  IntArrayData(int[] array, int length) {
     super(length);
     assert array == null || array.length >= length;
     this.array = array;
@@ -55,7 +54,7 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public final ContinuousArrayData widest(final ContinuousArrayData otherData) {
+  public final ContinuousArrayData widest(ContinuousArrayData otherData) {
     return otherData;
   }
 
@@ -68,7 +67,7 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @SuppressWarnings("unused")
-  private int getElem(final int index) {
+  int getElem(int index) {
     if (has(index)) {
       return array[index];
     }
@@ -76,7 +75,7 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @SuppressWarnings("unused")
-  private void setElem(final int index, final int elem) {
+  void setElem(int index, int elem) {
     if (hasRoomFor(index)) {
       array[index] = elem;
       return;
@@ -85,12 +84,12 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public MethodHandle getElementGetter(final Class<?> returnType, final int programPoint) {
+  public MethodHandle getElementGetter(Class<?> returnType, int programPoint) {
     return getContinuousElementGetter(HAS_GET_ELEM, returnType, programPoint);
   }
 
   @Override
-  public MethodHandle getElementSetter(final Class<?> elementType) {
+  public MethodHandle getElementSetter(Class<?> elementType) {
     return elementType == int.class ? getContinuousElementSetter(SET_ELEM, elementType) : null;
   }
 
@@ -100,89 +99,79 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public Object asArrayOfType(final Class<?> componentType) {
+  public Object asArrayOfType(Class<?> componentType) {
     if (componentType == int.class) {
-      final int len = (int) length();
+      var len = (int) length();
       return array.length == len ? array.clone() : Arrays.copyOf(array, len);
     }
     return super.asArrayOfType(componentType);
   }
 
-  private Object[] toObjectArray(final boolean trim) {
+  Object[] toObjectArray(boolean trim) {
     assert length() <= array.length : "length exceeds internal array size";
-    final int len = (int) length();
-    final Object[] oarray = new Object[trim ? len : array.length];
-
-    for (int index = 0; index < len; index++) {
+    var len = (int) length();
+    var oarray = new Object[trim ? len : array.length];
+    for (var index = 0; index < len; index++) {
       oarray[index] = array[index];
     }
-
     return oarray;
   }
 
-  private double[] toDoubleArray() {
+  double[] toDoubleArray() {
     assert length() <= array.length : "length exceeds internal array size";
-    final int len = (int) length();
-    final double[] darray = new double[array.length];
-
-    for (int index = 0; index < len; index++) {
+    var len = (int) length();
+    var darray = new double[array.length];
+    for (var index = 0; index < len; index++) {
       darray[index] = array[index];
     }
-
     return darray;
   }
 
-  private NumberArrayData convertToDouble() {
+  NumberArrayData convertToDouble() {
     return new NumberArrayData(toDoubleArray(), (int) length());
   }
 
-  private ObjectArrayData convertToObject() {
+  ObjectArrayData convertToObject() {
     return new ObjectArrayData(toObjectArray(false), (int) length());
   }
 
   @Override
-  public ArrayData convert(final Class<?> type) {
-    if (type == Integer.class || type == Byte.class || type == Short.class) {
-      return this;
-    } else if (type == Double.class || type == Float.class) {
-      return convertToDouble();
-    } else {
-      return convertToObject();
-    }
+  public ArrayData convert(Class<?> type) {
+    return (type == Integer.class || type == Byte.class || type == Short.class) ? this
+         : (type == Double.class || type == Float.class) ? convertToDouble()
+         : convertToObject();
   }
 
   @Override
-  public ArrayData shiftLeft(final int by) {
+  public ArrayData shiftLeft(int by) {
     if (by >= length()) {
       shrink(0);
     } else {
       System.arraycopy(array, by, array, 0, array.length - by);
     }
     setLength(Math.max(0, length() - by));
-
     return this;
   }
 
   @Override
-  public ArrayData shiftRight(final int by) {
-    final ArrayData newData = ensure(by + length() - 1);
+  public ArrayData shiftRight(int by) {
+    var newData = ensure(by + length() - 1);
     if (newData != this) {
       newData.shiftRight(by);
       return newData;
     }
     System.arraycopy(array, 0, array, by, array.length - by);
-
     return this;
   }
 
   @Override
-  public ArrayData ensure(final long safeIndex) {
+  public ArrayData ensure(long safeIndex) {
     if (safeIndex >= SparseArrayData.MAX_DENSE_LENGTH) {
       return new SparseArrayData(this, safeIndex + 1);
     }
-    final int alen = array.length;
+    var alen = array.length;
     if (safeIndex >= alen) {
-      final int newLength = ArrayData.nextSize((int) safeIndex);
+      var newLength = ArrayData.nextSize((int) safeIndex);
       array = Arrays.copyOf(array, newLength);
     }
     if (safeIndex >= length()) {
@@ -192,139 +181,123 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public ArrayData shrink(final long newLength) {
+  public ArrayData shrink(long newLength) {
     Arrays.fill(array, (int) newLength, array.length, 0);
     return this;
   }
 
   @Override
-  public ArrayData set(final int index, final Object value) {
+  public ArrayData set(int index, Object value) {
     if (JSType.isRepresentableAsInt(value)) {
       return set(index, JSType.toInt32(value));
     } else if (value == ScriptRuntime.UNDEFINED) {
       return new UndefinedArrayFilter(this).set(index, value);
     }
-
-    final ArrayData newData = convert(value == null ? Object.class : value.getClass());
+    var newData = convert(value == null ? Object.class : value.getClass());
     return newData.set(index, value);
   }
 
   @Override
-  public ArrayData set(final int index, final int value) {
+  public ArrayData set(int index, int value) {
     array[index] = value;
     setLength(Math.max(index + 1, length()));
-
     return this;
   }
 
   @Override
-  public ArrayData set(final int index, final double value) {
+  public ArrayData set(int index, double value) {
     if (JSType.isRepresentableAsInt(value)) {
       array[index] = (int) (long) value;
       setLength(Math.max(index + 1, length()));
       return this;
     }
-
     return convert(Double.class).set(index, value);
   }
 
   @Override
-  public int getInt(final int index) {
+  public int getInt(int index) {
     return array[index];
   }
 
   @Override
-  public int getIntOptimistic(final int index, final int programPoint) {
+  public int getIntOptimistic(int index, int programPoint) {
     return array[index];
   }
 
   @Override
-  public double getDouble(final int index) {
+  public double getDouble(int index) {
     return array[index];
   }
 
   @Override
-  public double getDoubleOptimistic(final int index, final int programPoint) {
+  public double getDoubleOptimistic(int index, int programPoint) {
     return array[index];
   }
 
   @Override
-  public Object getObject(final int index) {
+  public Object getObject(int index) {
     return array[index];
   }
 
   @Override
-  public boolean has(final int index) {
+  public boolean has(int index) {
     return 0 <= index && index < length();
   }
 
   @Override
-  public ArrayData delete(final int index) {
+  public ArrayData delete(int index) {
     return new DeletedRangeArrayFilter(this, index, index);
   }
 
   @Override
-  public ArrayData delete(final long fromIndex, final long toIndex) {
+  public ArrayData delete(long fromIndex, long toIndex) {
     return new DeletedRangeArrayFilter(this, fromIndex, toIndex);
   }
 
   @Override
   public Object pop() {
-    final int len = (int) length();
+    var len = (int) length();
     if (len == 0) {
       return ScriptRuntime.UNDEFINED;
     }
-
-    final int newLength = len - 1;
-    final int elem = array[newLength];
+    var newLength = len - 1;
+    var elem = array[newLength];
     array[newLength] = 0;
     setLength(newLength);
-
     return elem;
   }
 
   @Override
-  public ArrayData slice(final long from, final long to) {
+  public ArrayData slice(long from, long to) {
     return new IntArrayData(Arrays.copyOfRange(array, (int) from, (int) to), (int) (to - (from < 0 ? from + length() : from)));
   }
 
   @Override
-  public ArrayData fastSplice(final int start, final int removed, final int added) throws UnsupportedOperationException {
-    final long oldLength = length();
-    final long newLength = oldLength - removed + added;
+  public ArrayData fastSplice(int start, int removed, int added) throws UnsupportedOperationException {
+    var oldLength = length();
+    var newLength = oldLength - removed + added;
     if (newLength > SparseArrayData.MAX_DENSE_LENGTH && newLength > array.length) {
       throw new UnsupportedOperationException();
     }
-    final ArrayData returnValue = removed == 0
-            ? EMPTY_ARRAY
-            : new IntArrayData(
-                    Arrays.copyOfRange(
-                            array,
-                            start,
-                            start + removed),
-                    removed);
-
+    var returnValue = removed == 0 ? EMPTY_ARRAY : new IntArrayData(Arrays.copyOfRange(array, start, start + removed), removed);
     if (newLength != oldLength) {
-      final int[] newArray;
-
+      int[] newArray;
       if (newLength > array.length) {
         newArray = new int[ArrayData.nextSize((int) newLength)];
         System.arraycopy(array, 0, newArray, 0, start);
       } else {
         newArray = array;
       }
-
       System.arraycopy(array, start + removed, newArray, start + added, (int) (oldLength - start - removed));
       array = newArray;
       setLength(newLength);
     }
-
     return returnValue;
   }
 
   @Override
-  public double fastPush(final int arg) {
-    final int len = (int) length();
+  public double fastPush(int arg) {
+    var len = (int) length();
     if (len == array.length) {
       array = Arrays.copyOf(array, nextSize(len));
     }
@@ -332,14 +305,14 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
     return increaseLength();
   }
 
-  //length must not be zero
+  // length must not be zero
   @Override
   public int fastPopInt() {
     if (length() == 0) {
-      throw new ClassCastException(); //relink
+      throw new ClassCastException(); // relink
     }
-    final int newLength = (int) decreaseLength();
-    final int elem = array[newLength];
+    var newLength = (int) decreaseLength();
+    var elem = array[newLength];
     array[newLength] = 0;
     return elem;
   }
@@ -355,18 +328,15 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
   }
 
   @Override
-  public ContinuousArrayData fastConcat(final ContinuousArrayData otherData) {
-    final int otherLength = (int) otherData.length();
-    final int thisLength = (int) length();
+  public ContinuousArrayData fastConcat(ContinuousArrayData otherData) {
+    var otherLength = (int) otherData.length();
+    var thisLength = (int) length();
     assert otherLength > 0 && thisLength > 0;
-
-    final int[] otherArray = ((IntArrayData) otherData).array;
-    final int newLength = otherLength + thisLength;
-    final int[] newArray = new int[ArrayData.alignUp(newLength)];
-
+    var otherArray = ((IntArrayData) otherData).array;
+    var newLength = otherLength + thisLength;
+    var newArray = new int[ArrayData.alignUp(newLength)];
     System.arraycopy(array, 0, newArray, 0, thisLength);
     System.arraycopy(otherArray, 0, newArray, thisLength, otherLength);
-
     return new IntArrayData(newArray, newLength);
   }
 
@@ -375,4 +345,5 @@ final class IntArrayData extends ContinuousArrayData implements IntElements {
     assert length() <= array.length : length() + " > " + array.length;
     return getClass().getSimpleName() + ':' + Arrays.toString(Arrays.copyOf(array, (int) length()));
   }
+
 }

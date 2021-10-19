@@ -12,7 +12,7 @@ final class ReverseJavaArrayIterator extends JavaArrayIterator {
    * @param array array to iterate over
    * @param includeUndefined should undefined elements be included in iteration
    */
-  public ReverseJavaArrayIterator(final Object array, final boolean includeUndefined) {
+  public ReverseJavaArrayIterator(Object array, boolean includeUndefined) {
     super(array, includeUndefined);
     this.index = Array.getLength(array) - 1;
   }
@@ -31,4 +31,5 @@ final class ReverseJavaArrayIterator extends JavaArrayIterator {
   protected long bumpIndex() {
     return index--;
   }
+
 }
