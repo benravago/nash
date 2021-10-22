@@ -7,7 +7,6 @@ import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.Undefined;
-
 import static es.runtime.ECMAErrors.typeError;
 
 @ScriptClass("ArrayIterator")
@@ -21,34 +20,33 @@ public class ArrayIterator extends AbstractIterator {
   private final IterationKind iterationKind;
   private final Global global;
 
-  private ArrayIterator(final Object iteratedObject, final IterationKind iterationKind, final Global global) {
+  ArrayIterator(Object iteratedObject, IterationKind iterationKind, Global global) {
     super(global.getArrayIteratorPrototype(), $nasgenmap$);
     this.iteratedObject = iteratedObject instanceof ScriptObject ? (ScriptObject) iteratedObject : null;
     this.iterationKind = iterationKind;
     this.global = global;
   }
 
-  static ArrayIterator newArrayValueIterator(final Object iteratedObject) {
+  static ArrayIterator newArrayValueIterator(Object iteratedObject) {
     return new ArrayIterator(Global.toObject(iteratedObject), IterationKind.VALUE, Global.instance());
   }
 
-  static ArrayIterator newArrayKeyIterator(final Object iteratedObject) {
+  static ArrayIterator newArrayKeyIterator(Object iteratedObject) {
     return new ArrayIterator(Global.toObject(iteratedObject), IterationKind.KEY, Global.instance());
   }
 
-  static ArrayIterator newArrayKeyValueIterator(final Object iteratedObject) {
+  static ArrayIterator newArrayKeyValueIterator(Object iteratedObject) {
     return new ArrayIterator(Global.toObject(iteratedObject), IterationKind.KEY_VALUE, Global.instance());
   }
 
   /**
    * 22.1.5.2.1 %ArrayIteratorPrototype%.next()
-   *
    * @param self the self reference
    * @param arg the argument
    * @return the next result
    */
   @Function
-  public static Object next(final Object self, final Object arg) {
+  public static Object next(Object self, Object arg) {
     if (!(self instanceof ArrayIterator)) {
       throw typeError("not.a.array.iterator", ScriptRuntime.safeToString(self));
     }
@@ -61,25 +59,19 @@ public class ArrayIterator extends AbstractIterator {
   }
 
   @Override
-  protected IteratorResult next(final Object arg) {
-    final long index = nextIndex;
-
+  protected IteratorResult next(Object arg) {
+    var index = nextIndex;
     if (iteratedObject == null || index >= JSType.toUint32(iteratedObject.getLength())) {
       // ES6 22.1.5.2.1 step 10
       iteratedObject = null;
       return makeResult(Undefined.getUndefined(), Boolean.TRUE, global);
     }
-
     nextIndex++;
-
     if (iterationKind == IterationKind.KEY_VALUE) {
-      final NativeArray value = new NativeArray(
-              new Object[]{JSType.toNarrowestNumber(index), iteratedObject.get((double) index)});
+      var value = new NativeArray(new Object[]{JSType.toNarrowestNumber(index), iteratedObject.get((double) index)});
       return makeResult(value, Boolean.FALSE, global);
     }
-
-    final Object value = iterationKind == IterationKind.KEY
-            ? JSType.toNarrowestNumber(index) : iteratedObject.get((double) index);
+    var value = iterationKind == IterationKind.KEY ? JSType.toNarrowestNumber(index) : iteratedObject.get((double) index);
     return makeResult(value, Boolean.FALSE, global);
   }
 

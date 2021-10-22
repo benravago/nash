@@ -1,7 +1,5 @@
 package es.objects;
 
-import static es.runtime.ScriptRuntime.UNDEFINED;
-
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
 import es.objects.annotations.Property;
@@ -10,6 +8,7 @@ import es.objects.annotations.Where;
 import es.runtime.JSType;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
+import static es.runtime.ScriptRuntime.UNDEFINED;
 
 /**
  * ECMA 15.11.6.5 TypeError
@@ -38,7 +37,7 @@ public final class NativeTypeError extends ScriptObject {
   private static PropertyMap $nasgenmap$;
 
   @SuppressWarnings("LeakingThisInConstructor")
-  NativeTypeError(final Object msg, final Global global) {
+  NativeTypeError(Object msg, Global global) {
     super(global.getTypeErrorPrototype(), $nasgenmap$);
     if (msg != UNDEFINED) {
       this.instMessage = JSType.toString(msg);
@@ -48,7 +47,7 @@ public final class NativeTypeError extends ScriptObject {
     NativeError.initException(this);
   }
 
-  private NativeTypeError(final Object msg) {
+  NativeTypeError(Object msg) {
     this(msg, Global.instance());
   }
 
@@ -69,7 +68,8 @@ public final class NativeTypeError extends ScriptObject {
    * @return new TypeError
    */
   @Constructor(name = "TypeError")
-  public static NativeTypeError constructor(final boolean newObj, final Object self, final Object msg) {
+  public static NativeTypeError constructor(boolean newObj, Object self, Object msg) {
     return new NativeTypeError(msg);
   }
+
 }

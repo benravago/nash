@@ -1,7 +1,5 @@
 package es.objects;
 
-import static es.runtime.ScriptRuntime.UNDEFINED;
-
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
 import es.objects.annotations.Property;
@@ -10,6 +8,7 @@ import es.objects.annotations.Where;
 import es.runtime.JSType;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
+import static es.runtime.ScriptRuntime.UNDEFINED;
 
 /**
  * ECMA 15.11.6.3 ReferenceError
@@ -38,7 +37,7 @@ public final class NativeReferenceError extends ScriptObject {
   private static PropertyMap $nasgenmap$;
 
   @SuppressWarnings("LeakingThisInConstructor")
-  private NativeReferenceError(final Object msg, final ScriptObject proto, final PropertyMap map) {
+  NativeReferenceError(Object msg, ScriptObject proto, PropertyMap map) {
     super(proto, map);
     if (msg != UNDEFINED) {
       this.instMessage = JSType.toString(msg);
@@ -48,11 +47,11 @@ public final class NativeReferenceError extends ScriptObject {
     NativeError.initException(this);
   }
 
-  NativeReferenceError(final Object msg, final Global global) {
+  NativeReferenceError(Object msg, Global global) {
     this(msg, global.getReferenceErrorPrototype(), $nasgenmap$);
   }
 
-  private NativeReferenceError(final Object msg) {
+  NativeReferenceError(Object msg) {
     this(msg, Global.instance());
   }
 
@@ -69,11 +68,11 @@ public final class NativeReferenceError extends ScriptObject {
    * @param newObj was this error instantiated with the new operator
    * @param self   self reference
    * @param msg    error message
-   *
    * @return new ReferenceError
    */
   @Constructor(name = "ReferenceError")
-  public static NativeReferenceError constructor(final boolean newObj, final Object self, final Object msg) {
+  public static NativeReferenceError constructor(boolean newObj, Object self, Object msg) {
     return new NativeReferenceError(msg);
   }
+
 }

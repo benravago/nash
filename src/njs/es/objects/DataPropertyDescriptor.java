@@ -1,8 +1,7 @@
 package es.objects;
 
-import static es.runtime.ScriptRuntime.sameValue;
-
 import java.util.Objects;
+
 import es.objects.annotations.Property;
 import es.objects.annotations.ScriptClass;
 import es.runtime.JSType;
@@ -10,13 +9,11 @@ import es.runtime.PropertyDescriptor;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
+import static es.runtime.ScriptRuntime.sameValue;
 
 /**
- * Data Property descriptor is used to represent attributes an object property
- * that has data value (instead of a getter or setter function).
- *
+ * Data Property descriptor is used to represent attributes an object property that has data value (instead of a getter or setter function).
  * See ECMA 8.10 The Property Descriptor and Property Identifier Specification Types
- *
  */
 @ScriptClass("DataPropertyDescriptor")
 public final class DataPropertyDescriptor extends ScriptObject implements PropertyDescriptor {
@@ -40,7 +37,7 @@ public final class DataPropertyDescriptor extends ScriptObject implements Proper
   // initialized by nasgen
   private static PropertyMap $nasgenmap$;
 
-  DataPropertyDescriptor(final boolean configurable, final boolean enumerable, final boolean writable, final Object value, final Global global) {
+  DataPropertyDescriptor(boolean configurable, boolean enumerable, boolean writable, Object value, Global global) {
     super(global.getObjectPrototype(), $nasgenmap$);
     this.configurable = configurable;
     this.enumerable = enumerable;
@@ -79,61 +76,57 @@ public final class DataPropertyDescriptor extends ScriptObject implements Proper
   }
 
   @Override
-  public void setConfigurable(final boolean flag) {
+  public void setConfigurable(boolean flag) {
     this.configurable = flag;
   }
 
   @Override
-  public void setEnumerable(final boolean flag) {
+  public void setEnumerable(boolean flag) {
     this.enumerable = flag;
   }
 
   @Override
-  public void setWritable(final boolean flag) {
+  public void setWritable(boolean flag) {
     this.writable = flag;
   }
 
   @Override
-  public void setValue(final Object value) {
+  public void setValue(Object value) {
     this.value = value;
   }
 
   @Override
-  public void setGetter(final Object getter) {
+  public void setGetter(Object getter) {
     throw new UnsupportedOperationException("set getter");
   }
 
   @Override
-  public void setSetter(final Object setter) {
+  public void setSetter(Object setter) {
     throw new UnsupportedOperationException("set setter");
   }
 
   @Override
-  public PropertyDescriptor fillFrom(final ScriptObject sobj) {
+  public PropertyDescriptor fillFrom(ScriptObject sobj) {
     if (sobj.has(CONFIGURABLE)) {
       this.configurable = JSType.toBoolean(sobj.get(CONFIGURABLE));
     } else {
       delete(CONFIGURABLE);
     }
-
     if (sobj.has(ENUMERABLE)) {
       this.enumerable = JSType.toBoolean(sobj.get(ENUMERABLE));
     } else {
       delete(ENUMERABLE);
     }
-
     if (sobj.has(WRITABLE)) {
       this.writable = JSType.toBoolean(sobj.get(WRITABLE));
     } else {
       delete(WRITABLE);
     }
-
     if (sobj.has(VALUE)) {
       this.value = sobj.get(VALUE);
     } else {
       delete(VALUE);
     }
-
     return this;
   }
 
@@ -143,32 +136,30 @@ public final class DataPropertyDescriptor extends ScriptObject implements Proper
   }
 
   @Override
-  public boolean hasAndEquals(final PropertyDescriptor otherDesc) {
+  public boolean hasAndEquals(PropertyDescriptor otherDesc) {
     if (!(otherDesc instanceof DataPropertyDescriptor)) {
       return false;
     }
-
-    final DataPropertyDescriptor other = (DataPropertyDescriptor) otherDesc;
+    var other = (DataPropertyDescriptor) otherDesc;
     return (!has(CONFIGURABLE) || sameValue(configurable, other.configurable))
-            && (!has(ENUMERABLE) || sameValue(enumerable, other.enumerable))
-            && (!has(WRITABLE) || sameValue(writable, other.writable))
-            && (!has(VALUE) || sameValue(value, other.value));
+        && (!has(ENUMERABLE) || sameValue(enumerable, other.enumerable))
+        && (!has(WRITABLE) || sameValue(writable, other.writable))
+        && (!has(VALUE) || sameValue(value, other.value));
   }
 
   @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
     if (!(obj instanceof DataPropertyDescriptor)) {
       return false;
     }
-
-    final DataPropertyDescriptor other = (DataPropertyDescriptor) obj;
+    var other = (DataPropertyDescriptor) obj;
     return sameValue(configurable, other.configurable)
-            && sameValue(enumerable, other.enumerable)
-            && sameValue(writable, other.writable)
-            && sameValue(value, other.value);
+        && sameValue(enumerable, other.enumerable)
+        && sameValue(writable, other.writable)
+        && sameValue(value, other.value);
   }
 
   @Override
@@ -178,11 +169,12 @@ public final class DataPropertyDescriptor extends ScriptObject implements Proper
 
   @Override
   public int hashCode() {
-    int hash = 5;
+    var hash = 5;
     hash = 43 * hash + Objects.hashCode(this.configurable);
     hash = 43 * hash + Objects.hashCode(this.enumerable);
     hash = 43 * hash + Objects.hashCode(this.writable);
     hash = 43 * hash + Objects.hashCode(this.value);
     return hash;
   }
+
 }

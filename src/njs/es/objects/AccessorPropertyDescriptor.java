@@ -1,10 +1,7 @@
 package es.objects;
 
-import static es.runtime.ECMAErrors.typeError;
-import static es.runtime.ScriptRuntime.UNDEFINED;
-import static es.runtime.ScriptRuntime.sameValue;
-
 import java.util.Objects;
+
 import es.objects.annotations.Property;
 import es.objects.annotations.ScriptClass;
 import es.runtime.JSType;
@@ -13,13 +10,13 @@ import es.runtime.PropertyMap;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
+import static es.runtime.ECMAErrors.typeError;
+import static es.runtime.ScriptRuntime.UNDEFINED;
+import static es.runtime.ScriptRuntime.sameValue;
 
 /**
- * Accessor Property descriptor is used to represent attributes an object property
- * that either has a getter or a setter.
- *
+ * Accessor Property descriptor is used to represent attributes an object property that either has a getter or a setter.
  * See ECMA 8.10 The Property Descriptor and Property Identifier Specification Types
- *
  */
 @ScriptClass("AccessorPropertyDescriptor")
 public final class AccessorPropertyDescriptor extends ScriptObject implements PropertyDescriptor {
@@ -43,7 +40,7 @@ public final class AccessorPropertyDescriptor extends ScriptObject implements Pr
   // initialized by nasgen
   private static PropertyMap $nasgenmap$;
 
-  AccessorPropertyDescriptor(final boolean configurable, final boolean enumerable, final Object get, final Object set, final Global global) {
+  AccessorPropertyDescriptor(boolean configurable, boolean enumerable, Object get, Object set, Global global) {
     super(global.getObjectPrototype(), $nasgenmap$);
     this.configurable = configurable;
     this.enumerable = enumerable;
@@ -83,51 +80,49 @@ public final class AccessorPropertyDescriptor extends ScriptObject implements Pr
   }
 
   @Override
-  public void setConfigurable(final boolean flag) {
+  public void setConfigurable(boolean flag) {
     this.configurable = flag;
   }
 
   @Override
-  public void setEnumerable(final boolean flag) {
+  public void setEnumerable(boolean flag) {
     this.enumerable = flag;
   }
 
   @Override
-  public void setWritable(final boolean flag) {
+  public void setWritable(boolean flag) {
     throw new UnsupportedOperationException("set writable");
   }
 
   @Override
-  public void setValue(final Object value) {
+  public void setValue(Object value) {
     throw new UnsupportedOperationException("set value");
   }
 
   @Override
-  public void setGetter(final Object getter) {
+  public void setGetter(Object getter) {
     this.get = getter;
   }
 
   @Override
-  public void setSetter(final Object setter) {
+  public void setSetter(Object setter) {
     this.set = setter;
   }
 
   @Override
-  public PropertyDescriptor fillFrom(final ScriptObject sobj) {
+  public PropertyDescriptor fillFrom(ScriptObject sobj) {
     if (sobj.has(CONFIGURABLE)) {
       this.configurable = JSType.toBoolean(sobj.get(CONFIGURABLE));
     } else {
       delete(CONFIGURABLE);
     }
-
     if (sobj.has(ENUMERABLE)) {
       this.enumerable = JSType.toBoolean(sobj.get(ENUMERABLE));
     } else {
       delete(ENUMERABLE);
     }
-
     if (sobj.has(GET)) {
-      final Object getter = sobj.get(GET);
+      var getter = sobj.get(GET);
       if (getter == UNDEFINED || getter instanceof ScriptFunction) {
         this.get = getter;
       } else {
@@ -136,9 +131,8 @@ public final class AccessorPropertyDescriptor extends ScriptObject implements Pr
     } else {
       delete(GET);
     }
-
     if (sobj.has(SET)) {
-      final Object setter = sobj.get(SET);
+      var setter = sobj.get(SET);
       if (setter == UNDEFINED || setter instanceof ScriptFunction) {
         this.set = setter;
       } else {
@@ -147,7 +141,6 @@ public final class AccessorPropertyDescriptor extends ScriptObject implements Pr
     } else {
       delete(SET);
     }
-
     return this;
   }
 
@@ -157,31 +150,30 @@ public final class AccessorPropertyDescriptor extends ScriptObject implements Pr
   }
 
   @Override
-  public boolean hasAndEquals(final PropertyDescriptor otherDesc) {
+  public boolean hasAndEquals(PropertyDescriptor otherDesc) {
     if (!(otherDesc instanceof AccessorPropertyDescriptor)) {
       return false;
     }
-    final AccessorPropertyDescriptor other = (AccessorPropertyDescriptor) otherDesc;
+    var other = (AccessorPropertyDescriptor) otherDesc;
     return (!has(CONFIGURABLE) || sameValue(configurable, other.configurable))
-            && (!has(ENUMERABLE) || sameValue(enumerable, other.enumerable))
-            && (!has(GET) || sameValue(get, other.get))
-            && (!has(SET) || sameValue(set, other.set));
+        && (!has(ENUMERABLE) || sameValue(enumerable, other.enumerable))
+        && (!has(GET) || sameValue(get, other.get))
+        && (!has(SET) || sameValue(set, other.set));
   }
 
   @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
     if (!(obj instanceof AccessorPropertyDescriptor)) {
       return false;
     }
-
-    final AccessorPropertyDescriptor other = (AccessorPropertyDescriptor) obj;
+    var other = (AccessorPropertyDescriptor) obj;
     return sameValue(configurable, other.configurable)
-            && sameValue(enumerable, other.enumerable)
-            && sameValue(get, other.get)
-            && sameValue(set, other.set);
+        && sameValue(enumerable, other.enumerable)
+        && sameValue(get, other.get)
+        && sameValue(set, other.set);
   }
 
   @Override
@@ -191,11 +183,12 @@ public final class AccessorPropertyDescriptor extends ScriptObject implements Pr
 
   @Override
   public int hashCode() {
-    int hash = 7;
+    var hash = 7;
     hash = 41 * hash + Objects.hashCode(this.configurable);
     hash = 41 * hash + Objects.hashCode(this.enumerable);
     hash = 41 * hash + Objects.hashCode(this.get);
     hash = 41 * hash + Objects.hashCode(this.set);
     return hash;
   }
+
 }

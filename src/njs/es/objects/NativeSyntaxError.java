@@ -1,7 +1,5 @@
 package es.objects;
 
-import static es.runtime.ScriptRuntime.UNDEFINED;
-
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
 import es.objects.annotations.Property;
@@ -10,6 +8,7 @@ import es.objects.annotations.Where;
 import es.runtime.JSType;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
+import static es.runtime.ScriptRuntime.UNDEFINED;
 
 /**
  * ECMA 15.11.6.4 SyntaxError
@@ -38,7 +37,7 @@ public final class NativeSyntaxError extends ScriptObject {
   private static PropertyMap $nasgenmap$;
 
   @SuppressWarnings("LeakingThisInConstructor")
-  NativeSyntaxError(final Object msg, final Global global) {
+  NativeSyntaxError(Object msg, Global global) {
     super(global.getSyntaxErrorPrototype(), $nasgenmap$);
     if (msg != UNDEFINED) {
       this.instMessage = JSType.toString(msg);
@@ -48,7 +47,7 @@ public final class NativeSyntaxError extends ScriptObject {
     NativeError.initException(this);
   }
 
-  private NativeSyntaxError(final Object msg) {
+  NativeSyntaxError(Object msg) {
     this(msg, Global.instance());
   }
 
@@ -65,11 +64,11 @@ public final class NativeSyntaxError extends ScriptObject {
    * @param newObj was this error instantiated with the new operator
    * @param self   self reference
    * @param msg    error message
-   *
    * @return new SyntaxError
    */
   @Constructor(name = "SyntaxError")
-  public static NativeSyntaxError constructor(final boolean newObj, final Object self, final Object msg) {
+  public static NativeSyntaxError constructor(boolean newObj, Object self, Object msg) {
     return new NativeSyntaxError(msg);
   }
+
 }

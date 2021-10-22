@@ -12,8 +12,7 @@ import es.runtime.arrays.ArrayData;
 import es.runtime.regexp.RegExpResult;
 
 /**
- * Objects of this class are used to represent return values from
- * RegExp.prototype.exec method.
+ * Objects of this class are used to represent return values from RegExp.prototype.exec method.
  */
 @ScriptClass("RegExpExecResult")
 public final class NativeRegExpExecResult extends ScriptObject {
@@ -29,7 +28,7 @@ public final class NativeRegExpExecResult extends ScriptObject {
   // initialized by nasgen
   private static PropertyMap $nasgenmap$;
 
-  NativeRegExpExecResult(final RegExpResult result, final Global global) {
+  NativeRegExpExecResult(RegExpResult result, Global global) {
     super(global.getArrayPrototype(), $nasgenmap$);
     setIsArray();
     this.setArray(ArrayData.allocate(result.getGroups().clone()));
@@ -48,12 +47,8 @@ public final class NativeRegExpExecResult extends ScriptObject {
    * @return length property value
    */
   @Getter(attributes = Attribute.NOT_ENUMERABLE | Attribute.NOT_CONFIGURABLE)
-  public static Object length(final Object self) {
-    if (self instanceof ScriptObject) {
-      return (double) JSType.toUint32(((ScriptObject) self).getArray().length());
-    }
-
-    return 0;
+  public static Object length(Object self) {
+    return (self instanceof ScriptObject) ? (double) JSType.toUint32(((ScriptObject) self).getArray().length()) : 0;
   }
 
   /**
@@ -62,9 +57,10 @@ public final class NativeRegExpExecResult extends ScriptObject {
    * @param length property value
    */
   @Setter(attributes = Attribute.NOT_ENUMERABLE | Attribute.NOT_CONFIGURABLE)
-  public static void length(final Object self, final Object length) {
-    if (self instanceof ScriptObject) {
-      ((ScriptObject) self).setLength(NativeArray.validLength(length));
+  public static void length(Object self, Object length) {
+    if (self instanceof ScriptObject so) {
+      so.setLength(NativeArray.validLength(length));
     }
   }
+
 }

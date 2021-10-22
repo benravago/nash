@@ -1,13 +1,12 @@
 package es.objects;
 
-import static es.lookup.Lookup.MH;
-import static es.runtime.ECMAErrors.typeError;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+
 import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
+
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
 import es.objects.annotations.Function;
@@ -17,6 +16,8 @@ import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.linker.PrimitiveLookup;
+import static es.lookup.Lookup.MH;
+import static es.runtime.ECMAErrors.typeError;
 
 /**
  * ECMA 15.6 Boolean Objects.
@@ -26,24 +27,25 @@ public final class NativeBoolean extends ScriptObject {
 
   private final boolean value;
 
-  /** Method handle to create an object wrapper for a primitive boolean. */
+  // Method handle to create an object wrapper for a primitive boolean.
   static final MethodHandle WRAPFILTER = findOwnMH("wrapFilter", MH.type(NativeBoolean.class, Object.class));
-  /** Method handle to retrieve the Boolean prototype object. */
+
+  // Method handle to retrieve the Boolean prototype object.
   private static final MethodHandle PROTOFILTER = findOwnMH("protoFilter", MH.type(Object.class, Object.class));
 
   // initialized by nasgen
   private static PropertyMap $nasgenmap$;
 
-  private NativeBoolean(final boolean value, final ScriptObject proto, final PropertyMap map) {
+  NativeBoolean(boolean value, ScriptObject proto, PropertyMap map) {
     super(proto, map);
     this.value = value;
   }
 
-  NativeBoolean(final boolean flag, final Global global) {
+  NativeBoolean(boolean flag, Global global) {
     this(flag, global.getBooleanPrototype(), $nasgenmap$);
   }
 
-  NativeBoolean(final boolean flag) {
+  NativeBoolean(boolean flag) {
     this(flag, Global.instance());
   }
 
@@ -80,50 +82,42 @@ public final class NativeBoolean extends ScriptObject {
 
   /**
    * ECMA 15.6.4.2 Boolean.prototype.toString ( )
-   *
    * @param self self reference
    * @return string representation of this boolean
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toString(final Object self) {
+  public static String toString(Object self) {
     return getBoolean(self).toString();
   }
 
   /**
    * ECMA 15.6.4.3 Boolean.prototype.valueOf ( )
-   *
    * @param self self reference
    * @return value of this boolean
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static boolean valueOf(final Object self) {
+  public static boolean valueOf(Object self) {
     return getBoolean(self);
   }
 
   /**
    * ECMA 15.6.2.1 new Boolean (value)
-   *
    * @param newObj is the new operator used to instantiate this NativeBoolean
    * @param self   self reference
    * @param value  value of boolean
    * @return the new NativeBoolean
    */
   @Constructor(arity = 1)
-  public static Object constructor(final boolean newObj, final Object self, final Object value) {
-    final boolean flag = JSType.toBoolean(value);
-
-    if (newObj) {
-      return new NativeBoolean(flag);
-    }
-
-    return flag;
+  public static Object constructor(boolean newObj, Object self, Object value) {
+    var flag = JSType.toBoolean(value);
+    return newObj ? new NativeBoolean(flag) : flag;
   }
 
-  private static Boolean getBoolean(final Object self) {
-    if (self instanceof Boolean) {
-      return ((Boolean) self);
-    } else if (self instanceof NativeBoolean) {
-      return ((NativeBoolean) self).getValue();
+  static Boolean getBoolean(Object self) {
+    if (self instanceof Boolean b) {
+      return b;
+    } else if (self instanceof NativeBoolean nb) {
+      return nb.getValue();
     } else if (self != null && self == Global.instance().getBooleanPrototype()) {
       return false;
     } else {
@@ -133,32 +127,31 @@ public final class NativeBoolean extends ScriptObject {
 
   /**
    * Lookup the appropriate method for an invoke dynamic call.
-   *
    * @param request  The link request
    * @param receiver The receiver for the call
    * @return Link to be invoked at call site.
    */
-  public static GuardedInvocation lookupPrimitive(final LinkRequest request, final Object receiver) {
+  public static GuardedInvocation lookupPrimitive(LinkRequest request, Object receiver) {
     return PrimitiveLookup.lookupPrimitive(request, Boolean.class, new NativeBoolean((Boolean) receiver), WRAPFILTER, PROTOFILTER);
   }
 
   /**
    * Wrap a native boolean in a NativeBoolean object.
-   *
    * @param receiver Native boolean.
    * @return Wrapped object.
    */
   @SuppressWarnings("unused")
-  private static NativeBoolean wrapFilter(final Object receiver) {
+  static NativeBoolean wrapFilter(Object receiver) {
     return new NativeBoolean((Boolean) receiver);
   }
 
   @SuppressWarnings("unused")
-  private static Object protoFilter(final Object object) {
+  static Object protoFilter(Object object) {
     return Global.instance().getBooleanPrototype();
   }
 
-  private static MethodHandle findOwnMH(final String name, final MethodType type) {
+  static MethodHandle findOwnMH(String name, MethodType type) {
     return MH.findStatic(MethodHandles.lookup(), NativeBoolean.class, name, type);
   }
+
 }

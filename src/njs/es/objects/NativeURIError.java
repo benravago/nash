@@ -1,7 +1,5 @@
 package es.objects;
 
-import static es.runtime.ScriptRuntime.UNDEFINED;
-
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
 import es.objects.annotations.Property;
@@ -10,6 +8,7 @@ import es.objects.annotations.Where;
 import es.runtime.JSType;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
+import static es.runtime.ScriptRuntime.UNDEFINED;
 
 /**
  * ECMA 15.11.6.6 URIError
@@ -34,10 +33,10 @@ public final class NativeURIError extends ScriptObject {
   public Object nashornException;
 
   // initialized by nasgen
-  private static PropertyMap $nasgenmap$;
+  static PropertyMap $nasgenmap$;
 
   @SuppressWarnings("LeakingThisInConstructor")
-  NativeURIError(final Object msg, final Global global) {
+  NativeURIError(Object msg, Global global) {
     super(global.getURIErrorPrototype(), $nasgenmap$);
     if (msg != UNDEFINED) {
       this.instMessage = JSType.toString(msg);
@@ -47,7 +46,7 @@ public final class NativeURIError extends ScriptObject {
     NativeError.initException(this);
   }
 
-  private NativeURIError(final Object msg) {
+  private NativeURIError(Object msg) {
     this(msg, Global.instance());
   }
 
@@ -68,7 +67,8 @@ public final class NativeURIError extends ScriptObject {
    * @return new URIError
    */
   @Constructor(name = "URIError")
-  public static NativeURIError constructor(final boolean newObj, final Object self, final Object msg) {
+  public static NativeURIError constructor(boolean newObj, Object self, Object msg) {
     return new NativeURIError(msg);
   }
+
 }

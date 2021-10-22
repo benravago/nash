@@ -1,23 +1,14 @@
 package es.objects;
 
-import static jdk.dynalink.StandardNamespace.METHOD;
-import static jdk.dynalink.StandardNamespace.PROPERTY;
-import static jdk.dynalink.StandardOperation.GET;
-import static jdk.dynalink.StandardOperation.SET;
-import static es.lookup.Lookup.MH;
-import static es.runtime.ECMAErrors.typeError;
-import static es.runtime.ScriptRuntime.UNDEFINED;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+
 import jdk.dynalink.CallSiteDescriptor;
 import jdk.dynalink.Operation;
 import jdk.dynalink.beans.BeansLinker;
@@ -26,7 +17,13 @@ import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.GuardingDynamicLinker;
 import jdk.dynalink.linker.LinkRequest;
 import jdk.dynalink.linker.support.SimpleLinkRequest;
+import static jdk.dynalink.StandardNamespace.METHOD;
+import static jdk.dynalink.StandardNamespace.PROPERTY;
+import static jdk.dynalink.StandardOperation.GET;
+import static jdk.dynalink.StandardOperation.SET;
+
 import nash.scripting.ScriptObjectMirror;
+
 import es.lookup.Lookup;
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
@@ -46,14 +43,16 @@ import es.runtime.linker.Bootstrap;
 import es.runtime.linker.InvokeByName;
 import es.runtime.linker.NashornBeansLinker;
 import es.runtime.linker.NashornCallSiteDescriptor;
+import static es.lookup.Lookup.MH;
+import static es.runtime.ECMAErrors.typeError;
+import static es.runtime.ScriptRuntime.UNDEFINED;
 
 /**
- * ECMA 15.2 Object objects
+ * ECMA 15.2 Object objects: JavaScript Object constructor/prototype.
  *
- * JavaScript Object constructor/prototype. Note: instances of this class are
- * never created. This class is not even a subclass of ScriptObject. But, we use
- * this class to generate prototype and constructor for "Object".
- *
+ * Note: instances of this class are never created.
+ * This class is not even a subclass of ScriptObject.
+ * But, we use this class to generate prototype and constructor for "Object".
  */
 @ScriptClass("Object")
 public final class NativeObject {
@@ -66,14 +65,8 @@ public final class NativeObject {
 
   private static final Object TO_STRING = new Object();
 
-  private static InvokeByName getTO_STRING() {
-    return Global.instance().getInvokeByName(TO_STRING,
-            new Callable<InvokeByName>() {
-      @Override
-      public InvokeByName call() {
-        return new InvokeByName("toString", ScriptObject.class);
-      }
-    });
+  static InvokeByName getTO_STRING() {
+    return Global.instance().getInvokeByName(TO_STRING, () -> new InvokeByName("toString", ScriptObject.class));
   }
 
   private static final Operation GET_METHOD = GET.withNamespace(METHOD);
@@ -81,15 +74,15 @@ public final class NativeObject {
   private static final Operation SET_PROPERTY = SET.withNamespace(PROPERTY);
 
   @SuppressWarnings("unused")
-  private static ScriptObject get__proto__(final Object self) {
+  static ScriptObject get__proto__(Object self) {
     // See ES6 draft spec: B.2.2.1.1 get Object.prototype.__proto__
     // Step 1 Let O be the result of calling ToObject passing the this.
-    final ScriptObject sobj = Global.checkObject(Global.toObject(self));
+    var sobj = Global.checkObject(Global.toObject(self));
     return sobj.getProto();
   }
 
   @SuppressWarnings("unused")
-  private static Object set__proto__(final Object self, final Object proto) {
+  static Object set__proto__(Object self, Object proto) {
     // See ES6 draft spec: B.2.2.1.2 set Object.prototype.__proto__
     // Step 1
     Global.checkObjectCoercible(self);
@@ -97,8 +90,7 @@ public final class NativeObject {
     if (!(self instanceof ScriptObject)) {
       return UNDEFINED;
     }
-
-    final ScriptObject sobj = (ScriptObject) self;
+    var sobj = (ScriptObject) self;
     // __proto__ assignment ignores non-nulls and non-objects
     // step 3: If Type(proto) is neither Object nor Null, then return undefined.
     if (proto == null || proto instanceof ScriptObject) {
@@ -112,57 +104,47 @@ public final class NativeObject {
 
   // initialized by nasgen
   @SuppressWarnings("unused")
-  private static PropertyMap $nasgenmap$;
+  static PropertyMap $nasgenmap$;
 
-  private NativeObject() {
-    // don't create me!
-    throw new UnsupportedOperationException();
-  }
-
-  private static ECMAException notAnObject(final Object obj) {
+  static ECMAException notAnObject(Object obj) {
     return typeError("not.an.object", ScriptRuntime.safeToString(obj));
   }
 
   /**
    * Nashorn extension: setIndexedPropertiesToExternalArrayData
-   *
    * @param self self reference
    * @param obj object whose index properties are backed by buffer
    * @param buf external buffer - should be a nio ByteBuffer
    * @return the 'obj' object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject setIndexedPropertiesToExternalArrayData(final Object self, final Object obj, final Object buf) {
+  public static ScriptObject setIndexedPropertiesToExternalArrayData(Object self, Object obj, Object buf) {
     Global.checkObject(obj);
-    final ScriptObject sobj = (ScriptObject) obj;
-    if (buf instanceof ByteBuffer) {
-      sobj.setArray(ArrayData.allocate((ByteBuffer) buf));
-    } else {
-      throw typeError("not.a.bytebuffer", "setIndexedPropertiesToExternalArrayData's buf argument");
+    var sobj = (ScriptObject) obj;
+    if (buf instanceof ByteBuffer b) {
+      sobj.setArray(ArrayData.allocate(b));
     }
-    return sobj;
+    throw typeError("not.a.bytebuffer", "setIndexedPropertiesToExternalArrayData's buf argument");
   }
 
   /**
    * ECMA 15.2.3.2 Object.getPrototypeOf ( O )
-   *
    * @param  self self reference
    * @param  obj object to get prototype from
    * @return the prototype of an object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object getPrototypeOf(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).getProto();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).getProto();
+  public static Object getPrototypeOf(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.getProto();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.getProto();
     } else {
-      final JSType type = JSType.of(obj);
+      var type = JSType.of(obj);
       if (type == JSType.OBJECT) {
         // host (Java) objects have null __proto__
         return null;
       }
-
       // must be some JS primitive
       throw notAnObject(obj);
     }
@@ -171,44 +153,37 @@ public final class NativeObject {
   /**
    * Nashorn extension: Object.setPrototypeOf ( O, proto )
    * Also found in ES6 draft specification.
-   *
    * @param  self self reference
    * @param  obj object to set prototype for
    * @param  proto prototype object to be used
    * @return object whose prototype is set
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object setPrototypeOf(final Object self, final Object obj, final Object proto) {
-    if (obj instanceof ScriptObject) {
-      ((ScriptObject) obj).setPrototypeOf(proto);
+  public static Object setPrototypeOf(Object self, Object obj, Object proto) {
+    if (obj instanceof ScriptObject so) {
+      so.setPrototypeOf(proto);
       return obj;
-    } else if (obj instanceof ScriptObjectMirror) {
-      ((ScriptObjectMirror) obj).setProto(proto);
+    } else if (obj instanceof ScriptObjectMirror som) {
+      som.setProto(proto);
       return obj;
     }
-
     throw notAnObject(obj);
   }
 
   /**
    * ECMA 15.2.3.3 Object.getOwnPropertyDescriptor ( O, P )
-   *
    * @param self  self reference
    * @param obj   object from which to get property descriptor for {@code ToString(prop)}
    * @param prop  property descriptor
    * @return property descriptor
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object getOwnPropertyDescriptor(final Object self, final Object obj, final Object prop) {
-    if (obj instanceof ScriptObject) {
-      final String key = JSType.toString(prop);
-      final ScriptObject sobj = (ScriptObject) obj;
-
+  public static Object getOwnPropertyDescriptor(Object self, Object obj, Object prop) {
+    if (obj instanceof ScriptObject sobj) {
+      var key = JSType.toString(prop);
       return sobj.getOwnPropertyDescriptor(key);
-    } else if (obj instanceof ScriptObjectMirror) {
-      final String key = JSType.toString(prop);
-      final ScriptObjectMirror sobjMirror = (ScriptObjectMirror) obj;
-
+    } else if (obj instanceof ScriptObjectMirror sobjMirror) {
+      var key = JSType.toString(prop);
       return sobjMirror.getOwnPropertyDescriptor(key);
     } else {
       throw notAnObject(obj);
@@ -217,17 +192,16 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.4 Object.getOwnPropertyNames ( O )
-   *
    * @param self self reference
    * @param obj  object to query for property names
    * @return array of property names
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject getOwnPropertyNames(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return new NativeArray(((ScriptObject) obj).getOwnKeys(true));
-    } else if (obj instanceof ScriptObjectMirror) {
-      return new NativeArray(((ScriptObjectMirror) obj).getOwnKeys(true));
+  public static ScriptObject getOwnPropertyNames(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return new NativeArray(so.getOwnKeys(true));
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return new NativeArray(som.getOwnKeys(true));
     } else {
       throw notAnObject(obj);
     }
@@ -235,15 +209,14 @@ public final class NativeObject {
 
   /**
    * ECMA 2 19.1.2.8 Object.getOwnPropertySymbols ( O )
-   *
    * @param self self reference
    * @param obj  object to query for property names
    * @return array of property names
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject getOwnPropertySymbols(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return new NativeArray(((ScriptObject) obj).getOwnSymbols(true));
+  public static ScriptObject getOwnPropertySymbols(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return new NativeArray(so.getOwnSymbols(true));
     } else {
       // TODO: we don't support this on ScriptObjectMirror objects yet
       throw notAnObject(obj);
@@ -252,32 +225,27 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.5 Object.create ( O [, Properties] )
-   *
    * @param self  self reference
    * @param proto prototype object
    * @param props properties to define
    * @return object created
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject create(final Object self, final Object proto, final Object props) {
+  public static ScriptObject create(Object self, Object proto, Object props) {
     if (proto != null) {
       Global.checkObject(proto);
     }
-
-    // FIXME: should we create a proper object with correct number of
-    // properties?
-    final ScriptObject newObj = Global.newEmptyInstance();
+    // FIXME: should we create a proper object with correct number of properties?
+    var newObj = Global.newEmptyInstance();
     newObj.setProto((ScriptObject) proto);
     if (props != UNDEFINED) {
       NativeObject.defineProperties(self, newObj, props);
     }
-
     return newObj;
   }
 
   /**
    * ECMA 15.2.3.6 Object.defineProperty ( O, P, Attributes )
-   *
    * @param self self reference
    * @param obj  object in which to define a property
    * @param prop property to define
@@ -285,30 +253,28 @@ public final class NativeObject {
    * @return object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject defineProperty(final Object self, final Object obj, final Object prop, final Object attr) {
-    final ScriptObject sobj = Global.checkObject(obj);
+  public static ScriptObject defineProperty(Object self, Object obj, Object prop, Object attr) {
+    var sobj = Global.checkObject(obj);
     sobj.defineOwnProperty(JSType.toPropertyKey(prop), attr, true);
     return sobj;
   }
 
   /**
    * ECMA 5.2.3.7 Object.defineProperties ( O, Properties )
-   *
    * @param self  self reference
    * @param obj   object in which to define properties
    * @param props properties
    * @return object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject defineProperties(final Object self, final Object obj, final Object props) {
-    final ScriptObject sobj = Global.checkObject(obj);
-    final Object propsObj = Global.toObject(props);
-
-    if (propsObj instanceof ScriptObject) {
-      final Object[] keys = ((ScriptObject) propsObj).getOwnKeys(false);
-      for (final Object key : keys) {
-        final String prop = JSType.toString(key);
-        sobj.defineOwnProperty(prop, ((ScriptObject) propsObj).get(prop), true);
+  public static ScriptObject defineProperties(Object self, Object obj, Object props) {
+    var sobj = Global.checkObject(obj);
+    var propsObj = Global.toObject(props);
+    if (propsObj instanceof ScriptObject so) {
+      var keys = so.getOwnKeys(false);
+      for (var key : keys) {
+        var prop = JSType.toString(key);
+        sobj.defineOwnProperty(prop, so.get(prop), true);
       }
     }
     return sobj;
@@ -316,17 +282,16 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.8 Object.seal ( O )
-   *
    * @param self self reference
    * @param obj  object to seal
    * @return sealed object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object seal(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).seal();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).seal();
+  public static Object seal(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.seal();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.seal();
     } else {
       throw notAnObject(obj);
     }
@@ -334,17 +299,16 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.9 Object.freeze ( O )
-   *
    * @param self self reference
    * @param obj object to freeze
    * @return frozen object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object freeze(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).freeze();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).freeze();
+  public static Object freeze(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.freeze();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.freeze();
     } else {
       throw notAnObject(obj);
     }
@@ -352,17 +316,16 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.10 Object.preventExtensions ( O )
-   *
    * @param self self reference
    * @param obj  object, for which to set the internal extensible property to false
    * @return object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object preventExtensions(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).preventExtensions();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).preventExtensions();
+  public static Object preventExtensions(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.preventExtensions();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.preventExtensions();
     } else {
       throw notAnObject(obj);
     }
@@ -370,17 +333,16 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.11 Object.isSealed ( O )
-   *
    * @param self self reference
    * @param obj check whether an object is sealed
    * @return true if sealed, false otherwise
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static boolean isSealed(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).isSealed();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).isSealed();
+  public static boolean isSealed(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.isSealed();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.isSealed();
     } else {
       throw notAnObject(obj);
     }
@@ -388,17 +350,16 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.12 Object.isFrozen ( O )
-   *
    * @param self self reference
    * @param obj check whether an object
    * @return true if object is frozen, false otherwise
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static boolean isFrozen(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).isFrozen();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).isFrozen();
+  public static boolean isFrozen(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.isFrozen();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.isFrozen();
     } else {
       throw notAnObject(obj);
     }
@@ -412,11 +373,11 @@ public final class NativeObject {
    * @return true if object is extensible, false otherwise
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static boolean isExtensible(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      return ((ScriptObject) obj).isExtensible();
-    } else if (obj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) obj).isExtensible();
+  public static boolean isExtensible(Object self, Object obj) {
+    if (obj instanceof ScriptObject so) {
+      return so.isExtensible();
+    } else if (obj instanceof ScriptObjectMirror som) {
+      return som.isExtensible();
     } else {
       throw notAnObject(obj);
     }
@@ -424,18 +385,15 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.3.14 Object.keys ( O )
-   *
    * @param self self reference
    * @param obj  object from which to extract keys
    * @return array of keys in object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static ScriptObject keys(final Object self, final Object obj) {
-    if (obj instanceof ScriptObject) {
-      final ScriptObject sobj = (ScriptObject) obj;
+  public static ScriptObject keys(Object self, Object obj) {
+    if (obj instanceof ScriptObject sobj) {
       return new NativeArray(sobj.getOwnKeys(false));
-    } else if (obj instanceof ScriptObjectMirror) {
-      final ScriptObjectMirror sobjMirror = (ScriptObjectMirror) obj;
+    } else if (obj instanceof ScriptObjectMirror sobjMirror) {
       return new NativeArray(sobjMirror.getOwnKeys(false));
     } else {
       throw notAnObject(obj);
@@ -444,167 +402,129 @@ public final class NativeObject {
 
   /**
    * ECMA 15.2.2.1 , 15.2.1.1 new Object([value]) and Object([value])
-   *
    * Constructor
-   *
    * @param newObj is the new object instantiated with the new operator
    * @param self   self reference
    * @param value  value of object to be instantiated
    * @return the new NativeObject
    */
   @Constructor
-  public static Object construct(final boolean newObj, final Object self, final Object value) {
-    final JSType type = JSType.ofNoFunction(value);
-
+  public static Object construct(boolean newObj, Object self, Object value) {
+    var type = JSType.ofNoFunction(value);
     // Object(null), Object(undefined), Object() are same as "new Object()"
     if (newObj || type == JSType.NULL || type == JSType.UNDEFINED) {
-      switch (type) {
-        case BOOLEAN:
-        case NUMBER:
-        case STRING:
-        case SYMBOL:
-          return Global.toObject(value);
-        case OBJECT:
-          return value;
-        case NULL:
-        case UNDEFINED:
-        // fall through..
-        default:
-          break;
-      }
-
-      return Global.newEmptyInstance();
+      return switch (type) {
+        case BOOLEAN, NUMBER, STRING, SYMBOL -> Global.toObject(value);
+        case OBJECT -> value;
+        // case NULL, UNDEFINED:
+        default -> Global.newEmptyInstance();
+      };
     }
-
     return Global.toObject(value);
   }
 
   /**
    * ECMA 15.2.4.2 Object.prototype.toString ( )
-   *
    * @param self self reference
    * @return ToString of object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toString(final Object self) {
+  public static String toString(Object self) {
     return ScriptRuntime.builtinObjectToString(self);
   }
 
   /**
    * ECMA 15.2.4.3 Object.prototype.toLocaleString ( )
-   *
    * @param self self reference
    * @return localized ToString
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static Object toLocaleString(final Object self) {
-    final Object obj = JSType.toScriptObject(self);
-    if (obj instanceof ScriptObject) {
-      final InvokeByName toStringInvoker = getTO_STRING();
-      final ScriptObject sobj = (ScriptObject) obj;
+  public static Object toLocaleString(Object self) {
+    var obj = JSType.toScriptObject(self);
+    if (obj instanceof ScriptObject sobj) {
+      var toStringInvoker = getTO_STRING();
       try {
-        final Object toString = toStringInvoker.getGetter().invokeExact(sobj);
-
+        var toString = toStringInvoker.getGetter().invokeExact(sobj);
         if (Bootstrap.isCallable(toString)) {
           return toStringInvoker.getInvoker().invokeExact(toString, sobj);
         }
-      } catch (final RuntimeException | Error e) {
+      } catch (RuntimeException | Error e) {
         throw e;
-      } catch (final Throwable t) {
+      } catch (Throwable t) {
         throw new RuntimeException(t);
       }
-
       throw typeError("not.a.function", "toString");
     }
-
     return ScriptRuntime.builtinObjectToString(self);
   }
 
   /**
    * ECMA 15.2.4.4 Object.prototype.valueOf ( )
-   *
    * @param self self reference
    * @return value of object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static Object valueOf(final Object self) {
+  public static Object valueOf(Object self) {
     return Global.toObject(self);
   }
 
   /**
    * ECMA 15.2.4.5 Object.prototype.hasOwnProperty (V)
-   *
    * @param self self reference
    * @param v property to check for
    * @return true if property exists in object
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static boolean hasOwnProperty(final Object self, final Object v) {
-    // Convert ScriptObjects to primitive with String.class hint
-    // but no need to convert other primitives to string.
-    final Object key = JSType.toPrimitive(v, String.class);
-    final Object obj = Global.toObject(self);
-
-    return obj instanceof ScriptObject && ((ScriptObject) obj).hasOwnProperty(key);
+  public static boolean hasOwnProperty(Object self, Object v) {
+    // Convert ScriptObjects to primitive with String.class hint but no need to convert other primitives to string.
+    var key = JSType.toPrimitive(v, String.class);
+    var obj = Global.toObject(self);
+    return obj instanceof ScriptObject so && so.hasOwnProperty(key);
   }
 
   /**
    * ECMA 15.2.4.6 Object.prototype.isPrototypeOf (V)
-   *
    * @param self self reference
    * @param v v prototype object to check against
    * @return true if object is prototype of v
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static boolean isPrototypeOf(final Object self, final Object v) {
-    if (!(v instanceof ScriptObject)) {
-      return false;
+  public static boolean isPrototypeOf(Object self, Object v) {
+    if (v instanceof ScriptObject proto) {
+      var obj = Global.toObject(self);
+      do {
+        proto = proto.getProto();
+        if (proto == obj) {
+          return true;
+        }
+      } while (proto != null);
     }
-
-    final Object obj = Global.toObject(self);
-    ScriptObject proto = (ScriptObject) v;
-
-    do {
-      proto = proto.getProto();
-      if (proto == obj) {
-        return true;
-      }
-    } while (proto != null);
-
     return false;
   }
 
   /**
    * ECMA 15.2.4.7 Object.prototype.propertyIsEnumerable (V)
-   *
    * @param self self reference
    * @param v property to check if enumerable
    * @return true if property is enumerable
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static boolean propertyIsEnumerable(final Object self, final Object v) {
-    final String str = JSType.toString(v);
-    final Object obj = Global.toObject(self);
-
-    if (obj instanceof ScriptObject) {
-      final ScriptObject sobj = (ScriptObject) obj;
-      final Property property = sobj.getProperty(str);
-      if (property != null) {
-        return property.isEnumerable();
-      } else {
-        return (sobj.getArray().has(ArrayIndex.getArrayIndex(v)));
-      }
+  public static boolean propertyIsEnumerable(Object self, Object v) {
+    var str = JSType.toString(v);
+    var obj = Global.toObject(self);
+    if (obj instanceof ScriptObject sobj) {
+      var property = sobj.getProperty(str);
+      return (property != null) ? property.isEnumerable() : (sobj.getArray().has(ArrayIndex.getArrayIndex(v)));
     }
-
     return false;
   }
 
   /**
    * Nashorn extension: Object.bindProperties
-   *
-   * Binds the source object's properties to the target object. Binding
-   * properties allows two-way read/write for the properties of the source object.
-   *
+   * <p>
+   * Binds the source object's properties to the target object.
+   * Binding properties allows two-way read/write for the properties of the source object.
+   * <p>
    * Example:
    * <pre>
    * var obj = { x: 34, y: 100 };
@@ -626,7 +546,7 @@ public final class NativeObject {
    * <p>
    * The source object bound can be a ScriptObject or a ScriptOjectMirror.
    * null or undefined source object results in TypeError being thrown.
-   * </p>
+   * <p>
    * Example:
    * <pre>
    * var obj = loadWithNewGlobal({
@@ -641,158 +561,136 @@ public final class NativeObject {
    * x = Math.PI;      // changes obj.x to Math.PI
    * print(obj.x);     // prints Math.PI
    * </pre>
-   *
+   * <p>
    * Limitations of property binding:
    * <ul>
    * <li> Only enumerable, immediate (not proto inherited) properties of the source object are bound.
    * <li> If the target object already contains a property called "foo", the source's "foo" is skipped (not bound).
    * <li> Properties added to the source object after binding to the target are not bound.
    * <li> Property configuration changes on the source object (or on the target) is not propagated.
-   * <li> Delete of property on the target (or the source) is not propagated -
-   * only the property value is set to 'undefined' if the property happens to be a data property.
+   * <li> Delete of property on the target (or the source) is not propagated - only the property value is set to 'undefined' if the property happens to be a data property.
    * </ul>
    * <p>
-   * It is recommended that the bound properties be treated as non-configurable
-   * properties to avoid surprises.
-   * </p>
-   *
+   * It is recommended that the bound properties be treated as non-configurable properties to avoid surprises.
+   * <p>
    * @param self self reference
    * @param target the target object to which the source object's properties are bound
    * @param source the source object whose properties are bound to the target
    * @return the target object after property binding
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static Object bindProperties(final Object self, final Object target, final Object source) {
+  public static Object bindProperties(Object self, Object target, Object source) {
     // target object has to be a ScriptObject
-    final ScriptObject targetObj = Global.checkObject(target);
+    var targetObj = Global.checkObject(target);
     // check null or undefined source object
     Global.checkObjectCoercible(source);
-
-    if (source instanceof ScriptObject) {
-      final ScriptObject sourceObj = (ScriptObject) source;
-
-      final PropertyMap sourceMap = sourceObj.getMap();
-      final Property[] properties = sourceMap.getProperties();
-      //replace the map and blow up everything to objects to work with dual fields :-(
-
+    if (source instanceof ScriptObject sourceObj) {
+      var sourceMap = sourceObj.getMap();
+      var properties = sourceMap.getProperties();
+      // replace the map and blow up everything to objects to work with dual fields :-(
       // filter non-enumerable properties
-      final ArrayList<Property> propList = new ArrayList<>();
-      for (final Property prop : properties) {
+      var propList = new ArrayList<Property>();
+      for (var prop : properties) {
         if (prop.isEnumerable()) {
-          final Object value = sourceObj.get(prop.getKey());
+          var value = sourceObj.get(prop.getKey());
           prop.setType(Object.class);
           prop.setValue(sourceObj, sourceObj, value);
           propList.add(prop);
         }
       }
-
       if (!propList.isEmpty()) {
         targetObj.addBoundProperties(sourceObj, propList.toArray(new Property[0]));
       }
-    } else if (source instanceof ScriptObjectMirror) {
+    } else if (source instanceof ScriptObjectMirror mirror) {
       // get enumerable, immediate properties of mirror
-      final ScriptObjectMirror mirror = (ScriptObjectMirror) source;
-      final String[] keys = mirror.getOwnKeys(false);
+      var keys = mirror.getOwnKeys(false);
       if (keys.length == 0) {
         // nothing to bind
         return target;
       }
-
       // make accessor properties using dynamic invoker getters and setters
-      final AccessorProperty[] props = new AccessorProperty[keys.length];
-      for (int idx = 0; idx < keys.length; idx++) {
+      var props = new AccessorProperty[keys.length];
+      for (var idx = 0; idx < keys.length; idx++) {
         props[idx] = createAccessorProperty(keys[idx]);
       }
-
       targetObj.addBoundProperties(source, props);
-    } else if (source instanceof StaticClass) {
-      final Class<?> clazz = ((StaticClass) source).getRepresentedClass();
-      Bootstrap.checkReflectionAccess(clazz, true);
-      bindBeanProperties(targetObj, source, BeansLinker.getReadableStaticPropertyNames(clazz),
-              BeansLinker.getWritableStaticPropertyNames(clazz), BeansLinker.getStaticMethodNames(clazz));
+    } else if (source instanceof StaticClass sc) {
+      var type = sc.getRepresentedClass();
+      Bootstrap.checkReflectionAccess(type, true);
+      bindBeanProperties(targetObj, source, BeansLinker.getReadableStaticPropertyNames(type), BeansLinker.getWritableStaticPropertyNames(type), BeansLinker.getStaticMethodNames(type));
     } else {
-      final Class<?> clazz = source.getClass();
-      Bootstrap.checkReflectionAccess(clazz, false);
-      bindBeanProperties(targetObj, source, BeansLinker.getReadableInstancePropertyNames(clazz),
-              BeansLinker.getWritableInstancePropertyNames(clazz), BeansLinker.getInstanceMethodNames(clazz));
+      assert source != null;
+      var type = source.getClass();
+      Bootstrap.checkReflectionAccess(type, false);
+      bindBeanProperties(targetObj, source, BeansLinker.getReadableInstancePropertyNames(type), BeansLinker.getWritableInstancePropertyNames(type), BeansLinker.getInstanceMethodNames(type));
     }
-
     return target;
   }
 
-  private static AccessorProperty createAccessorProperty(final String name) {
-    final MethodHandle getter = Bootstrap.createDynamicInvoker(name, NashornCallSiteDescriptor.GET_METHOD_PROPERTY, MIRROR_GETTER_TYPE);
-    final MethodHandle setter = Bootstrap.createDynamicInvoker(name, NashornCallSiteDescriptor.SET_PROPERTY, MIRROR_SETTER_TYPE);
+  static AccessorProperty createAccessorProperty(String name) {
+    var getter = Bootstrap.createDynamicInvoker(name, NashornCallSiteDescriptor.GET_METHOD_PROPERTY, MIRROR_GETTER_TYPE);
+    var setter = Bootstrap.createDynamicInvoker(name, NashornCallSiteDescriptor.SET_PROPERTY, MIRROR_SETTER_TYPE);
     return AccessorProperty.create(name, 0, getter, setter);
   }
 
   /**
-   * Binds the source mirror object's properties to the target object. Binding
-   * properties allows two-way read/write for the properties of the source object.
-   * All inherited, enumerable properties are also bound. This method is used to
-   * to make 'with' statement work with ScriptObjectMirror as scope object.
-   *
+   * Binds the source mirror object's properties to the target object.
+   * Binding properties allows two-way read/write for the properties of the source object.
+   * All inherited, enumerable properties are also bound.
+   * This method is used to to make 'with' statement work with ScriptObjectMirror as scope object.
    * @param target the target object to which the source object's properties are bound
    * @param source the source object whose properties are bound to the target
    * @return the target object after property binding
    */
-  public static Object bindAllProperties(final ScriptObject target, final ScriptObjectMirror source) {
-    final Set<String> keys = source.keySet();
+  public static Object bindAllProperties(ScriptObject target, ScriptObjectMirror source) {
+    var keys = source.keySet();
     // make accessor properties using dynamic invoker getters and setters
-    final AccessorProperty[] props = new AccessorProperty[keys.size()];
-    int idx = 0;
-    for (final String name : keys) {
+    var props = new AccessorProperty[keys.size()];
+    var idx = 0;
+    for (var name : keys) {
       props[idx] = createAccessorProperty(name);
       idx++;
     }
-
     target.addBoundProperties(source, props);
     return target;
   }
 
-  private static void bindBeanProperties(final ScriptObject targetObj, final Object source,
-          final Collection<String> readablePropertyNames, final Collection<String> writablePropertyNames,
-          final Collection<String> methodNames) {
-    final Set<String> propertyNames = new HashSet<>(readablePropertyNames);
+  static void bindBeanProperties(ScriptObject targetObj, Object source, Collection<String> readablePropertyNames, Collection<String> writablePropertyNames, Collection<String> methodNames) {
+    var propertyNames = new HashSet<String>(readablePropertyNames);
     propertyNames.addAll(writablePropertyNames);
-
-    final Class<?> clazz = source.getClass();
-
-    final MethodType getterType = MethodType.methodType(Object.class, clazz);
-    final MethodType setterType = MethodType.methodType(Object.class, clazz, Object.class);
-
-    final GuardingDynamicLinker linker = Bootstrap.getBeanLinkerForClass(clazz);
-
-    final List<AccessorProperty> properties = new ArrayList<>(propertyNames.size() + methodNames.size());
-    for (final String methodName : methodNames) {
-      final MethodHandle method;
+    var type = source.getClass();
+    var getterType = MethodType.methodType(Object.class, type);
+    var setterType = MethodType.methodType(Object.class, type, Object.class);
+    var linker = Bootstrap.getBeanLinkerForClass(type);
+    var properties = new ArrayList<AccessorProperty>(propertyNames.size() + methodNames.size());
+    for (var methodName : methodNames) {
+      MethodHandle method;
       try {
         method = getBeanOperation(linker, GET_METHOD, methodName, getterType, source);
-      } catch (final IllegalAccessError e) {
+      } catch (IllegalAccessError e) {
         // Presumably, this was a caller sensitive method. Ignore it and carry on.
         continue;
       }
-      properties.add(AccessorProperty.create(methodName, Property.NOT_WRITABLE, getBoundBeanMethodGetter(source,
-              method), Lookup.EMPTY_SETTER));
+      properties.add(AccessorProperty.create(methodName, Property.NOT_WRITABLE, getBoundBeanMethodGetter(source, method), Lookup.EMPTY_SETTER));
     }
-    for (final String propertyName : propertyNames) {
+    for (var propertyName : propertyNames) {
       MethodHandle getter;
       if (readablePropertyNames.contains(propertyName)) {
         try {
           getter = getBeanOperation(linker, GET_PROPERTY, propertyName, getterType, source);
-        } catch (final IllegalAccessError e) {
+        } catch (IllegalAccessError e) {
           // Presumably, this was a caller sensitive method. Ignore it and carry on.
           getter = Lookup.EMPTY_GETTER;
         }
       } else {
         getter = Lookup.EMPTY_GETTER;
       }
-      final boolean isWritable = writablePropertyNames.contains(propertyName);
+      var isWritable = writablePropertyNames.contains(propertyName);
       MethodHandle setter;
       if (isWritable) {
         try {
           setter = getBeanOperation(linker, SET_PROPERTY, propertyName, setterType, source);
-        } catch (final IllegalAccessError e) {
+        } catch (IllegalAccessError e) {
           // Presumably, this was a caller sensitive method. Ignore it and carry on.
           setter = Lookup.EMPTY_SETTER;
         }
@@ -803,33 +701,30 @@ public final class NativeObject {
         properties.add(AccessorProperty.create(propertyName, isWritable ? 0 : Property.NOT_WRITABLE, getter, setter));
       }
     }
-
     targetObj.addBoundProperties(source, properties.toArray(new AccessorProperty[0]));
   }
 
-  private static MethodHandle getBoundBeanMethodGetter(final Object source, final MethodHandle methodGetter) {
+  static MethodHandle getBoundBeanMethodGetter(Object source, MethodHandle methodGetter) {
     try {
-      // NOTE: we're relying on the fact that StandardOperation.GET_METHOD return value is constant for any given method
-      // name and object linked with BeansLinker. (Actually, an even stronger assumption is true: return value is
-      // constant for any given method name and object's class.)
-      return MethodHandles.dropArguments(MethodHandles.constant(Object.class,
-              Bootstrap.bindCallable(methodGetter.invoke(source), source, null)), 0, Object.class);
+      // NOTE: we're relying on the fact that StandardOperation.GET_METHOD return value is constant for any given method name and object linked with BeansLinker.
+      // (Actually, an even stronger assumption is true: return value is constant for any given method name and object's class.)
+      return MethodHandles.dropArguments(
+        MethodHandles.constant(Object.class, Bootstrap.bindCallable(methodGetter.invoke(source), source, null)), 0, Object.class);
     } catch (RuntimeException | Error e) {
       throw e;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
-  private static MethodHandle getBeanOperation(final GuardingDynamicLinker linker, final Operation operation,
-          final String name, final MethodType methodType, final Object source) {
-    final GuardedInvocation inv;
+  static MethodHandle getBeanOperation(GuardingDynamicLinker linker, Operation operation, String name, MethodType methodType, Object source) {
+    GuardedInvocation inv;
     try {
       inv = NashornBeansLinker.getGuardedInvocation(linker, createLinkRequest(operation.named(name), methodType, source), Bootstrap.getLinkerServices());
       assert passesGuard(source, inv.getGuard());
     } catch (RuntimeException | Error e) {
       throw e;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
     assert inv.getSwitchPoints() == null; // Linkers in Dynalink's beans package don't use switchpoints.
@@ -837,16 +732,16 @@ public final class NativeObject {
     return inv.getInvocation();
   }
 
-  private static boolean passesGuard(final Object obj, final MethodHandle guard) throws Throwable {
+  static boolean passesGuard(Object obj, MethodHandle guard) throws Throwable {
     return guard == null || (boolean) guard.invoke(obj);
   }
 
-  private static LinkRequest createLinkRequest(final Operation operation, final MethodType methodType, final Object source) {
-    return new SimpleLinkRequest(new CallSiteDescriptor(MethodHandles.publicLookup(), operation,
-            methodType), false, source);
+  static LinkRequest createLinkRequest(Operation operation, MethodType methodType, Object source) {
+    return new SimpleLinkRequest(new CallSiteDescriptor(MethodHandles.publicLookup(), operation, methodType), false, source);
   }
 
-  private static MethodHandle findOwnMH(final String name, final Class<?> rtype, final Class<?>... types) {
+  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NativeObject.class, name, MH.type(rtype, types));
   }
+
 }

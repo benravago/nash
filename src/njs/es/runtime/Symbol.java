@@ -55,7 +55,7 @@ public final class Symbol implements Serializable {
     }
 
     private Object readResolve() {
-      return NativeSymbol._for(null, name);
+      return NativeSymbol.from(null, name);
     }
   }
 }

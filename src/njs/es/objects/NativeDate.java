@@ -1,14 +1,11 @@
 package es.objects;
 
-import static java.lang.Double.NaN;
-import static java.lang.Double.isInfinite;
-import static java.lang.Double.isNaN;
-import static es.runtime.ECMAErrors.rangeError;
-import static es.runtime.ECMAErrors.typeError;
+import java.time.Instant;
+import static java.lang.Double.*;
 
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
+
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Constructor;
 import es.objects.annotations.Function;
@@ -18,12 +15,13 @@ import es.objects.annotations.Where;
 
 import es.runtime.JSType;
 import es.runtime.PropertyMap;
-import es.runtime.ScriptEnvironment;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.linker.Bootstrap;
 import es.runtime.linker.InvokeByName;
-import java.time.Instant;
+
+import static es.runtime.ECMAErrors.rangeError;
+import static es.runtime.ECMAErrors.typeError;
 
 /**
  * ECMA 15.9 Date Objects
@@ -73,14 +71,8 @@ public final class NativeDate extends ScriptObject {
 
   private static final Object TO_ISO_STRING = new Object();
 
-  private static InvokeByName getTO_ISO_STRING() {
-    return Global.instance().getInvokeByName(TO_ISO_STRING,
-            new Callable<InvokeByName>() {
-      @Override
-      public InvokeByName call() {
-        return new InvokeByName("toISOString", ScriptObject.class, Object.class, Object.class);
-      }
-    });
+  static InvokeByName getTO_ISO_STRING() {
+    return Global.instance().getInvokeByName(TO_ISO_STRING, () -> new InvokeByName("toISOString", ScriptObject.class, Object.class, Object.class));
   }
 
   private double time;
@@ -89,27 +81,26 @@ public final class NativeDate extends ScriptObject {
   // initialized by nasgen
   private static PropertyMap $nasgenmap$;
 
-  private NativeDate(final double time, final ScriptObject proto, final PropertyMap map) {
+  NativeDate(double time, ScriptObject proto, PropertyMap map) {
     super(proto, map);
-    final ScriptEnvironment env = Global.getEnv();
-
+    var env = Global.getEnv();
     this.time = time;
     this.timezone = env._timezone;
   }
 
-  NativeDate(final double time, final ScriptObject proto) {
+  NativeDate(double time, ScriptObject proto) {
     this(time, proto, $nasgenmap$);
   }
 
-  NativeDate(final double time, final Global global) {
+  NativeDate(double time, Global global) {
     this(time, global.getDatePrototype(), $nasgenmap$);
   }
 
-  private NativeDate(final double time) {
+  NativeDate(double time) {
     this(time, Global.instance());
   }
 
-  private NativeDate() {
+  NativeDate() {
     this(System.currentTimeMillis());
   }
 
@@ -120,67 +111,60 @@ public final class NativeDate extends ScriptObject {
 
   // ECMA 8.12.8 [[DefaultValue]] (hint)
   @Override
-  public Object getDefaultValue(final Class<?> hint) {
-    // When the [[DefaultValue]] internal method of O is called with no hint,
-    // then it behaves as if the hint were Number, unless O is a Date object
-    // in which case it behaves as if the hint were String.
+  public Object getDefaultValue(Class<?> hint) {
+    // When the [[DefaultValue]] internal method of O is called with no hint, then it behaves as if the hint were Number, unless O is a Date object in which case it behaves as if the hint were String.
     return super.getDefaultValue(hint == null ? String.class : hint);
   }
 
   /**
    * Constructor - ECMA 15.9.3.1 new Date
-   *
    * @param isNew is this Date constructed with the new operator
    * @param self  self references
    * @return Date representing now
    */
   @SpecializedFunction(isConstructor = true)
-  public static Object construct(final boolean isNew, final Object self) {
-    final NativeDate result = new NativeDate();
+  public static Object construct(boolean isNew, Object self) {
+    var result = new NativeDate();
     return isNew ? result : toStringImpl(result, FORMAT_DATE_TIME);
   }
 
   /**
    * Constructor - ECMA 15.9.3.1 new Date (year, month [, date [, hours [, minutes [, seconds [, ms ] ] ] ] ] )
-   *
    * @param isNew is this Date constructed with the new operator
    * @param self  self reference
    * @param args  arguments
    * @return new Date
    */
   @Constructor(arity = 7)
-  public static Object construct(final boolean isNew, final Object self, final Object... args) {
+  public static Object construct(boolean isNew, Object self, Object... args) {
     if (!isNew) {
       return toStringImpl(new NativeDate(), FORMAT_DATE_TIME);
     }
-
     NativeDate result;
     switch (args.length) {
-      case 0:
+      case 0 -> {
         result = new NativeDate();
-        break;
-
-      case 1:
+      }
+      case 1 -> {
         double num;
-        final Object arg = JSType.toPrimitive(args[0]);
+        var arg = JSType.toPrimitive(args[0]);
         if (JSType.isString(arg)) {
           num = parseDateString(arg.toString());
         } else {
           num = timeClip(JSType.toNumber(args[0]));
         }
         result = new NativeDate(num);
-        break;
-
-      default:
+      }
+      default -> {
         result = new NativeDate(0);
-        final double[] d = convertCtorArgs(args);
+        var d = convertCtorArgs(args);
         if (d == null) {
           result.setTime(Double.NaN);
         } else {
-          final double time = timeClip(utc(makeDate(d), result.getTimeZone()));
+          var time = timeClip(utc(makeDate(d), result.getTimeZone()));
           result.setTime(time);
         }
-        break;
+      }
     }
 
     return result;
@@ -188,7 +172,7 @@ public final class NativeDate extends ScriptObject {
 
   @Override
   public String safeToString() {
-    final String str = isValidDate() ? toISOStringImpl(this) : INVALID_DATE;
+    var str = isValidDate() ? toISOStringImpl(this) : INVALID_DATE;
     return "[Date " + str + "]";
   }
 
@@ -199,119 +183,109 @@ public final class NativeDate extends ScriptObject {
 
   /**
    * ECMA 15.9.4.2 Date.parse (string)
-   *
    * @param self self reference
    * @param string string to parse as date
    * @return Date interpreted from the string, or NaN for illegal values
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static double parse(final Object self, final Object string) {
+  public static double parse(Object self, Object string) {
     return parseDateString(JSType.toString(string));
   }
 
   /**
    * ECMA 15.9.4.3 Date.UTC (year, month [, date [, hours [, minutes [, seconds [, ms ] ] ] ] ] )
-   *
    * @param self self reference
    * @param args mandatory args are year, month. Optional are date, hours, minutes, seconds and milliseconds
    * @return a time clip according to the ECMA specification
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 7, where = Where.CONSTRUCTOR)
-  public static double UTC(final Object self, final Object... args) {
-    final NativeDate nd = new NativeDate(0);
-    final double[] d = convertCtorArgs(args);
-    final double time = d == null ? Double.NaN : timeClip(makeDate(d));
+  public static double UTC(Object self, Object... args) {
+    var nd = new NativeDate(0);
+    var d = convertCtorArgs(args);
+    var time = d == null ? Double.NaN : timeClip(makeDate(d));
     nd.setTime(time);
     return time;
   }
 
   /**
    * ECMA 15.9.4.4 Date.now ( )
-   *
    * @param self self reference
    * @return a Date that points to the current moment in time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
-  public static double now(final Object self) {
+  public static double now(Object self) {
     // convert to double as long does not represent the primitive JS number type
     return (double) System.currentTimeMillis();
   }
 
   /**
    * ECMA 15.9.5.2 Date.prototype.toString ( )
-   *
    * @param self self reference
    * @return string value that represents the Date in the current time zone
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toString(final Object self) {
+  public static String toString(Object self) {
     return toStringImpl(self, FORMAT_DATE_TIME);
   }
 
   /**
    * ECMA 15.9.5.3 Date.prototype.toDateString ( )
-   *
    * @param self self reference
    * @return string value with the "date" part of the Date in the current time zone
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toDateString(final Object self) {
+  public static String toDateString(Object self) {
     return toStringImpl(self, FORMAT_DATE);
   }
 
   /**
    * ECMA 15.9.5.4 Date.prototype.toTimeString ( )
-   *
    * @param self self reference
    * @return string value with "time" part of Date in the current time zone
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toTimeString(final Object self) {
+  public static String toTimeString(Object self) {
     return toStringImpl(self, FORMAT_TIME);
   }
 
   /**
    * ECMA 15.9.5.5 Date.prototype.toLocaleString ( )
-   *
    * @param self self reference
    * @return string value that represents the Data in the current time zone and locale
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toLocaleString(final Object self) {
+  public static String toLocaleString(Object self) {
     return toStringImpl(self, FORMAT_LOCAL_DATE_TIME);
   }
 
   /**
    * ECMA 15.9.5.6 Date.prototype.toLocaleDateString ( )
-   *
    * @param self self reference
    * @return string value with the "date" part of the Date in the current time zone and locale
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toLocaleDateString(final Object self) {
+  public static String toLocaleDateString(Object self) {
     return toStringImpl(self, FORMAT_LOCAL_DATE);
   }
 
   /**
    * ECMA 15.9.5.7 Date.prototype.toLocaleTimeString ( )
-   *
    * @param self self reference
    * @return string value with the "time" part of Date in the current time zone and locale
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toLocaleTimeString(final Object self) {
+  public static String toLocaleTimeString(Object self) {
     return toStringImpl(self, FORMAT_LOCAL_TIME);
   }
 
   /**
    * ECMA 15.9.5.8 Date.prototype.valueOf ( )
-   *
    * @param self self reference
    * @return valueOf - a number which is this time value
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double valueOf(final Object self) {
-    final NativeDate nd = getNativeDate(self);
+  public static double valueOf(Object self) {
+    var nd = getNativeDate(self);
     return (nd != null) ? nd.getTime() : Double.NaN;
   }
 
@@ -322,19 +296,18 @@ public final class NativeDate extends ScriptObject {
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getTime(final Object self) {
-    final NativeDate nd = getNativeDate(self);
+  public static double getTime(Object self) {
+    var nd = getNativeDate(self);
     return (nd != null) ? nd.getTime() : Double.NaN;
   }
 
   /**
    * ECMA 15.9.5.10 Date.prototype.getFullYear ( )
-   *
    * @param self self reference
    * @return full year
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static Object getFullYear(final Object self) {
+  public static Object getFullYear(Object self) {
     return getField(self, YEAR);
   }
 
@@ -345,7 +318,7 @@ public final class NativeDate extends ScriptObject {
    * @return UTC full year
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCFullYear(final Object self) {
+  public static double getUTCFullYear(Object self) {
     return getUTCField(self, YEAR);
   }
 
@@ -356,8 +329,8 @@ public final class NativeDate extends ScriptObject {
    * @return year
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getYear(final Object self) {
-    final NativeDate nd = getNativeDate(self);
+  public static double getYear(Object self) {
+    var nd = getNativeDate(self);
     return (nd != null && nd.isValidDate()) ? (yearFromTime(nd.getLocalTime()) - 1900) : Double.NaN;
   }
 
@@ -368,7 +341,7 @@ public final class NativeDate extends ScriptObject {
    * @return month
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getMonth(final Object self) {
+  public static double getMonth(Object self) {
     return getField(self, MONTH);
   }
 
@@ -379,53 +352,49 @@ public final class NativeDate extends ScriptObject {
    * @return UTC month
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCMonth(final Object self) {
+  public static double getUTCMonth(Object self) {
     return getUTCField(self, MONTH);
   }
 
   /**
    * ECMA 15.9.5.14 Date.prototype.getDate ( )
-   *
    * @param self self reference
    * @return date
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getDate(final Object self) {
+  public static double getDate(Object self) {
     return getField(self, DAY);
   }
 
   /**
    * ECMA 15.9.5.15 Date.prototype.getUTCDate ( )
-   *
    * @param self self reference
    * @return UTC Date
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCDate(final Object self) {
+  public static double getUTCDate(Object self) {
     return getUTCField(self, DAY);
   }
 
   /**
    * ECMA 15.9.5.16 Date.prototype.getDay ( )
-   *
    * @param self self reference
    * @return day
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getDay(final Object self) {
-    final NativeDate nd = getNativeDate(self);
+  public static double getDay(Object self) {
+    var nd = getNativeDate(self);
     return (nd != null && nd.isValidDate()) ? weekDay(nd.getLocalTime()) : Double.NaN;
   }
 
   /**
    * ECMA 15.9.5.17 Date.prototype.getUTCDay ( )
-   *
    * @param self self reference
    * @return UTC day
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCDay(final Object self) {
-    final NativeDate nd = getNativeDate(self);
+  public static double getUTCDay(Object self) {
+    var nd = getNativeDate(self);
     return (nd != null && nd.isValidDate()) ? weekDay(nd.getTime()) : Double.NaN;
   }
 
@@ -436,98 +405,90 @@ public final class NativeDate extends ScriptObject {
    * @return hours
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getHours(final Object self) {
+  public static double getHours(Object self) {
     return getField(self, HOUR);
   }
 
   /**
    * ECMA 15.9.5.19 Date.prototype.getUTCHours ( )
-   *
    * @param self self reference
    * @return UTC hours
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCHours(final Object self) {
+  public static double getUTCHours(Object self) {
     return getUTCField(self, HOUR);
   }
 
   /**
    * ECMA 15.9.5.20 Date.prototype.getMinutes ( )
-   *
    * @param self self reference
    * @return minutes
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getMinutes(final Object self) {
+  public static double getMinutes(Object self) {
     return getField(self, MINUTE);
   }
 
   /**
    * ECMA 15.9.5.21 Date.prototype.getUTCMinutes ( )
-   *
    * @param self self reference
    * @return UTC minutes
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCMinutes(final Object self) {
+  public static double getUTCMinutes(Object self) {
     return getUTCField(self, MINUTE);
   }
 
   /**
    * ECMA 15.9.5.22 Date.prototype.getSeconds ( )
-   *
    * @param self self reference
    * @return seconds
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getSeconds(final Object self) {
+  public static double getSeconds(Object self) {
     return getField(self, SECOND);
   }
 
   /**
    * ECMA 15.9.5.23 Date.prototype.getUTCSeconds ( )
-   *
    * @param self self reference
    * @return UTC seconds
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCSeconds(final Object self) {
+  public static double getUTCSeconds(Object self) {
     return getUTCField(self, SECOND);
   }
 
   /**
    * ECMA 15.9.5.24 Date.prototype.getMilliseconds ( )
-   *
    * @param self self reference
    * @return milliseconds
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getMilliseconds(final Object self) {
+  public static double getMilliseconds(Object self) {
     return getField(self, MILLISECOND);
   }
 
   /**
    * ECMA 15.9.5.25 Date.prototype.getUTCMilliseconds ( )
-   *
    * @param self self reference
    * @return UTC milliseconds
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getUTCMilliseconds(final Object self) {
+  public static double getUTCMilliseconds(Object self) {
     return getUTCField(self, MILLISECOND);
   }
 
   /**
    * ECMA 15.9.5.26 Date.prototype.getTimezoneOffset ( )
-   *
    * @param self self reference
    * @return time zone offset or NaN if N/A
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double getTimezoneOffset(final Object self) {
-    final NativeDate nd = getNativeDate(self);
+  public static double getTimezoneOffset(Object self) {
+    var nd = getNativeDate(self);
     if (nd != null && nd.isValidDate()) {
-      final long msec = (long) nd.getTime();
+      var msec = (long) nd.getTime();
       return -nd.getTimeZone().getOffset(msec) / msPerMinute;
     }
     return Double.NaN;
@@ -535,154 +496,143 @@ public final class NativeDate extends ScriptObject {
 
   /**
    * ECMA 15.9.5.27 Date.prototype.setTime (time)
-   *
    * @param self self reference
    * @param time time
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double setTime(final Object self, final Object time) {
-    final NativeDate nd = getNativeDate(self);
-    final double num = timeClip(JSType.toNumber(time));
+  public static double setTime(Object self, Object time) {
+    var nd = getNativeDate(self);
+    var num = timeClip(JSType.toNumber(time));
     nd.setTime(num);
     return num;
   }
 
   /**
    * ECMA 15.9.5.28 Date.prototype.setMilliseconds (ms)
-   *
    * @param self self reference
    * @param args milliseconds
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 1)
-  public static double setMilliseconds(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setMilliseconds(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, MILLISECOND, args, true);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.29 Date.prototype.setUTCMilliseconds (ms)
-   *
    * @param self self reference
    * @param args utc milliseconds
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 1)
-  public static double setUTCMilliseconds(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setUTCMilliseconds(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, MILLISECOND, args, false);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.30 Date.prototype.setSeconds (sec [, ms ] )
-   *
    * @param self self reference
    * @param args seconds (milliseconds optional second argument)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 2)
-  public static double setSeconds(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setSeconds(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, SECOND, args, true);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.31 Date.prototype.setUTCSeconds (sec [, ms ] )
-   *
    * @param self self reference
    * @param args UTC seconds (milliseconds optional second argument)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 2)
-  public static double setUTCSeconds(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setUTCSeconds(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, SECOND, args, false);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.32 Date.prototype.setMinutes (min [, sec [, ms ] ] )
-   *
    * @param self self reference
    * @param args minutes (seconds and milliseconds are optional second and third arguments)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 3)
-  public static double setMinutes(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setMinutes(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, MINUTE, args, true);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.33 Date.prototype.setUTCMinutes (min [, sec [, ms ] ] )
-   *
    * @param self self reference
    * @param args minutes (seconds and milliseconds are optional second and third arguments)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 3)
-  public static double setUTCMinutes(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setUTCMinutes(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, MINUTE, args, false);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.34 Date.prototype.setHours (hour [, min [, sec [, ms ] ] ] )
-   *
    * @param self self reference
    * @param args hour (optional arguments after are minutes, seconds, milliseconds)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 4)
-  public static double setHours(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setHours(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, HOUR, args, true);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.35 Date.prototype.setUTCHours (hour [, min [, sec [, ms ] ] ] )
-   *
    * @param self self reference
    * @param args hour (optional arguments after are minutes, seconds, milliseconds)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 4)
-  public static double setUTCHours(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setUTCHours(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, HOUR, args, false);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.36 Date.prototype.setDate (date)
-   *
    * @param self self reference
    * @param args date
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 1)
-  public static double setDate(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setDate(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, DAY, args, true);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.37 Date.prototype.setUTCDate (date)
-   *
    * @param self self reference
    * @param args UTC date
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 1)
-  public static double setUTCDate(final Object self, final Object... args) {
+  public static double setUTCDate(Object self, Object... args) {
     final NativeDate nd = getNativeDate(self);
     setFields(nd, DAY, args, false);
     return nd.getTime();
@@ -690,46 +640,43 @@ public final class NativeDate extends ScriptObject {
 
   /**
    * ECMA 15.9.5.38 Date.prototype.setMonth (month [, date ] )
-   *
    * @param self self reference
    * @param args month (optional second argument is date)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 2)
-  public static double setMonth(final Object self, final Object... args) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setMonth(Object self, Object... args) {
+    var nd = getNativeDate(self);
     setFields(nd, MONTH, args, true);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.39 Date.prototype.setUTCMonth (month [, date ] )
-   *
    * @param self self reference
    * @param args UTC month (optional second argument is date)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 2)
-  public static double setUTCMonth(final Object self, final Object... args) {
-    final NativeDate nd = ensureNativeDate(self);
+  public static double setUTCMonth(Object self, Object... args) {
+    var nd = ensureNativeDate(self);
     setFields(nd, MONTH, args, false);
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.40 Date.prototype.setFullYear (year [, month [, date ] ] )
-   *
    * @param self self reference
    * @param args year (optional second and third arguments are month and date)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 3)
-  public static double setFullYear(final Object self, final Object... args) {
-    final NativeDate nd = ensureNativeDate(self);
+  public static double setFullYear(Object self, Object... args) {
+    var nd = ensureNativeDate(self);
     if (nd.isValidDate()) {
       setFields(nd, YEAR, args, true);
     } else {
-      final double[] d = convertArgs(args, 0, YEAR, YEAR, 3);
+      var d = convertArgs(args, 0, YEAR, YEAR, 3);
       if (d != null) {
         nd.setTime(timeClip(utc(makeDate(makeDay(d[0], d[1], d[2]), 0), nd.getTimeZone())));
       } else {
@@ -741,18 +688,17 @@ public final class NativeDate extends ScriptObject {
 
   /**
    * ECMA 15.9.5.41 Date.prototype.setUTCFullYear (year [, month [, date ] ] )
-   *
    * @param self self reference
    * @param args UTC full year (optional second and third arguments are month and date)
    * @return time
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE, arity = 3)
-  public static double setUTCFullYear(final Object self, final Object... args) {
-    final NativeDate nd = ensureNativeDate(self);
+  public static double setUTCFullYear(Object self, Object... args) {
+    var nd = ensureNativeDate(self);
     if (nd.isValidDate()) {
       setFields(nd, YEAR, args, false);
     } else {
-      final double[] d = convertArgs(args, 0, YEAR, YEAR, 3);
+      var d = convertArgs(args, 0, YEAR, YEAR, 3);
       nd.setTime(timeClip(makeDate(makeDay(d[0], d[1], d[2]), 0)));
     }
     return nd.getTime();
@@ -760,114 +706,105 @@ public final class NativeDate extends ScriptObject {
 
   /**
    * ECMA B.2.5 Date.prototype.setYear (year)
-   *
    * @param self self reference
    * @param year year
    * @return NativeDate
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static double setYear(final Object self, final Object year) {
-    final NativeDate nd = getNativeDate(self);
+  public static double setYear(Object self, Object year) {
+    var nd = getNativeDate(self);
     if (isNaN(nd.getTime())) {
       nd.setTime(utc(0, nd.getTimeZone()));
     }
-
-    final double yearNum = JSType.toNumber(year);
+    var yearNum = JSType.toNumber(year);
     if (isNaN(yearNum)) {
       nd.setTime(NaN);
       return nd.getTime();
     }
-    int yearInt = (int) yearNum;
+    var yearInt = (int) yearNum;
     if (0 <= yearInt && yearInt <= 99) {
       yearInt += 1900;
     }
     setFields(nd, YEAR, new Object[]{yearInt}, true);
-
     return nd.getTime();
   }
 
   /**
    * ECMA 15.9.5.42 Date.prototype.toUTCString ( )
-   *
    * @param self self reference
    * @return string representation of date
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toUTCString(final Object self) {
+  public static String toUTCString(Object self) {
     return toGMTStringImpl(self);
   }
 
   /**
    * ECMA B.2.6 Date.prototype.toGMTString ( )
-   *
    * See {@link NativeDate#toUTCString(Object)}
-   *
    * @param self self reference
    * @return string representation of date
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toGMTString(final Object self) {
+  public static String toGMTString(Object self) {
     return toGMTStringImpl(self);
   }
 
   /**
    * ECMA 15.9.5.43 Date.prototype.toISOString ( )
-   *
    * @param self self reference
    * @return string representation of date
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static String toISOString(final Object self) {
+  public static String toISOString(Object self) {
     return toISOStringImpl(self);
   }
 
   /**
    * ECMA 15.9.5.44 Date.prototype.toJSON ( key )
-   *
    * Provides a string representation of this Date for use by {@link NativeJSON#stringify(Object, Object, Object, Object)}
-   *
    * @param self self reference
    * @param key ignored
    * @return JSON representation of this date
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static Object toJSON(final Object self, final Object key) {
+  public static Object toJSON(Object self, Object key) {
     // NOTE: Date.prototype.toJSON is generic. Accepts other objects as well.
-    final Object selfObj = Global.toObject(self);
+    var selfObj = Global.toObject(self);
     if (!(selfObj instanceof ScriptObject)) {
       return null;
     }
-    final ScriptObject sobj = (ScriptObject) selfObj;
-    final Object value = sobj.getDefaultValue(Number.class);
-    if (value instanceof Number) {
-      final double num = ((Number) value).doubleValue();
+    var sobj = (ScriptObject) selfObj;
+    var value = sobj.getDefaultValue(Number.class);
+    if (value instanceof Number n) {
+      var num = n.doubleValue();
       if (isInfinite(num) || isNaN(num)) {
         return null;
       }
     }
-
     try {
-      final InvokeByName toIsoString = getTO_ISO_STRING();
-      final Object func = toIsoString.getGetter().invokeExact(sobj);
+      var toIsoString = getTO_ISO_STRING();
+      var func = toIsoString.getGetter().invokeExact(sobj);
       if (Bootstrap.isCallable(func)) {
         return toIsoString.getInvoker().invokeExact(func, sobj, key);
       }
       throw typeError("not.a.function", ScriptRuntime.safeToString(func));
-    } catch (final RuntimeException | Error e) {
+    } catch (RuntimeException | Error e) {
       throw e;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
   // -- Internals below this point
-  private static double parseDateString(final String str) {
+
+  static double parseDateString(String str) {
     // ECMA 15.9.1.15 -> YYYY-MM-DDTHH:mm:ss.sssZ
     var ts = Instant.parse(str);
     return timeClip((double) ts.getEpochSecond());
   }
 
-  private static void zeroPad(final StringBuilder sb, final int n, final int length) {
+  static void zeroPad(StringBuilder sb, int n, int length) {
     for (int l = 1, d = 10; l < length; l++, d *= 10) {
       if (n < d) {
         sb.append('0');
@@ -877,13 +814,11 @@ public final class NativeDate extends ScriptObject {
   }
 
   @SuppressWarnings("fallthrough")
-  private static String toStringImpl(final Object self, final int format) {
-    final NativeDate nd = getNativeDate(self);
-
+  static String toStringImpl(Object self, int format) {
+    var nd = getNativeDate(self);
     if (nd != null && nd.isValidDate()) {
-      final StringBuilder sb = new StringBuilder(40);
-      final double t = nd.getLocalTime();
-
+      var sb = new StringBuilder(40);
+      var t = nd.getLocalTime();
       switch (format) {
 
         case FORMAT_DATE_TIME:
@@ -891,9 +826,9 @@ public final class NativeDate extends ScriptObject {
         case FORMAT_LOCAL_DATE_TIME:
           // EEE MMM dd yyyy
           sb.append(weekDays[weekDay(t)])
-                  .append(' ')
-                  .append(months[monthFromTime(t)])
-                  .append(' ');
+            .append(' ')
+            .append(months[monthFromTime(t)])
+            .append(' ');
           zeroPad(sb, dayFromTime(t), 2);
           sb.append(' ');
           zeroPad(sb, yearFromTime(t), 4);
@@ -903,10 +838,10 @@ public final class NativeDate extends ScriptObject {
           sb.append(' ');
 
         case FORMAT_TIME:
-          final TimeZone tz = nd.getTimeZone();
-          final double utcTime = nd.getTime();
-          int offset = tz.getOffset((long) utcTime) / 60000;
-          final boolean inDaylightTime = offset != tz.getRawOffset() / 60000;
+          var tz = nd.getTimeZone();
+          var utcTime = nd.getTime();
+          var offset = tz.getOffset((long) utcTime) / 60000;
+          var inDaylightTime = offset != tz.getRawOffset() / 60000;
           // Convert minutes to HHmm timezone offset
           offset = (offset / 60) * 100 + offset % 60;
 
@@ -917,11 +852,11 @@ public final class NativeDate extends ScriptObject {
           sb.append(':');
           zeroPad(sb, secFromTime(t), 2);
           sb.append(" GMT")
-                  .append(offset < 0 ? '-' : '+');
+            .append(offset < 0 ? '-' : '+');
           zeroPad(sb, Math.abs(offset), 4);
           sb.append(" (")
-                  .append(tz.getDisplayName(inDaylightTime, TimeZone.SHORT, Locale.US))
-                  .append(')');
+            .append(tz.getDisplayName(inDaylightTime, TimeZone.SHORT, Locale.US))
+            .append(')');
           break;
 
         case FORMAT_LOCAL_DATE:
@@ -945,14 +880,13 @@ public final class NativeDate extends ScriptObject {
         default:
           throw new IllegalArgumentException("format: " + format);
       }
-
       return sb.toString();
     }
 
     return INVALID_DATE;
   }
 
-  private static String toGMTStringImpl(final Object self) {
+  private static String toGMTStringImpl(Object self) {
     final NativeDate nd = getNativeDate(self);
 
     if (nd != null && nd.isValidDate()) {
@@ -979,7 +913,7 @@ public final class NativeDate extends ScriptObject {
     throw rangeError("invalid.date");
   }
 
-  private static String toISOStringImpl(final Object self) {
+  private static String toISOStringImpl(Object self) {
     final NativeDate nd = getNativeDate(self);
 
     if (nd != null && nd.isValidDate()) {
@@ -1007,43 +941,40 @@ public final class NativeDate extends ScriptObject {
   }
 
   // ECMA 15.9.1.2 Day (t)
-  private static double day(final double t) {
+  static double day(double t) {
     return Math.floor(t / msPerDay);
   }
 
   // ECMA 15.9.1.2 TimeWithinDay (t)
-  private static double timeWithinDay(final double t) {
+  static double timeWithinDay(double t) {
     final double val = t % msPerDay;
     return val < 0 ? val + msPerDay : val;
   }
 
   // ECMA 15.9.1.3 InLeapYear (t)
-  private static boolean isLeapYear(final int y) {
+  static boolean isLeapYear(int y) {
     return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
   }
 
   // ECMA 15.9.1.3 DaysInYear (y)
-  private static int daysInYear(final int y) {
+  static int daysInYear(int y) {
     return isLeapYear(y) ? 366 : 365;
   }
 
   // ECMA 15.9.1.3 DayFromYear (y)
-  private static double dayFromYear(final double y) {
-    return 365 * (y - 1970)
-            + Math.floor((y - 1969) / 4.0)
-            - Math.floor((y - 1901) / 100.0)
-            + Math.floor((y - 1601) / 400.0);
+  static double dayFromYear(double y) {
+    return 365 * (y - 1970) + Math.floor((y - 1969) / 4.0) - Math.floor((y - 1901) / 100.0) + Math.floor((y - 1601) / 400.0);
   }
 
   // ECMA 15.9.1.3 Year Number
-  private static double timeFromYear(final int y) {
+  static double timeFromYear(int y) {
     return dayFromYear(y) * msPerDay;
   }
 
   // ECMA 15.9.1.3 Year Number
-  private static int yearFromTime(final double t) {
-    int y = (int) Math.floor(t / (msPerDay * 365.2425)) + 1970;
-    final double t2 = timeFromYear(y);
+  static int yearFromTime(double t) {
+    var y = (int) Math.floor(t / (msPerDay * 365.2425)) + 1970;
+    var t2 = timeFromYear(y);
     if (t2 > t) {
       y--;
     } else if (t2 + msPerDay * daysInYear(y) <= t) {
@@ -1052,205 +983,180 @@ public final class NativeDate extends ScriptObject {
     return y;
   }
 
-  private static int dayWithinYear(final double t, final int year) {
+  static int dayWithinYear(double t, int year) {
     return (int) (day(t) - dayFromYear(year));
   }
 
-  private static int monthFromTime(final double t) {
-    final int year = yearFromTime(t);
-    final int day = dayWithinYear(t, year);
-    final int[] firstDay = firstDayInMonth[isLeapYear(year) ? 1 : 0];
-    int month = 0;
-
+  static int monthFromTime(double t) {
+    var year = yearFromTime(t);
+    var day = dayWithinYear(t, year);
+    var firstDay = firstDayInMonth[isLeapYear(year) ? 1 : 0];
+    var month = 0;
     while (month < 11 && firstDay[month + 1] <= day) {
       month++;
     }
     return month;
   }
 
-  private static int dayFromTime(final double t) {
-    final int year = yearFromTime(t);
-    final int day = dayWithinYear(t, year);
-    final int[] firstDay = firstDayInMonth[isLeapYear(year) ? 1 : 0];
+  static int dayFromTime(double t) {
+    var year = yearFromTime(t);
+    var day = dayWithinYear(t, year);
+    var firstDay = firstDayInMonth[isLeapYear(year) ? 1 : 0];
     int month = 0;
-
     while (month < 11 && firstDay[month + 1] <= day) {
       month++;
     }
     return 1 + day - firstDay[month];
   }
 
-  private static int dayFromMonth(final int month, final int year) {
+  static int dayFromMonth(int month, int year) {
     assert (month >= 0 && month <= 11);
-    final int[] firstDay = firstDayInMonth[isLeapYear(year) ? 1 : 0];
+    var firstDay = firstDayInMonth[isLeapYear(year) ? 1 : 0];
     return firstDay[month];
   }
 
-  private static int weekDay(final double time) {
-    final int day = (int) (day(time) + 4) % 7;
+  static int weekDay(double time) {
+    var day = (int) (day(time) + 4) % 7;
     return day < 0 ? day + 7 : day;
   }
 
   // ECMA 15.9.1.9 LocalTime
-  private static double localTime(final double time, final TimeZone tz) {
+  static double localTime(double time, TimeZone tz) {
     return time + tz.getOffset((long) time);
   }
 
   // ECMA 15.9.1.9 UTC
-  private static double utc(final double time, final TimeZone tz) {
+  static double utc(double time, TimeZone tz) {
     return time - tz.getOffset((long) (time - tz.getRawOffset()));
   }
 
   // ECMA 15.9.1.10 Hours, Minutes, Second, and Milliseconds
-  private static int hourFromTime(final double t) {
-    final int h = (int) (Math.floor(t / msPerHour) % hoursPerDay);
+  static int hourFromTime(double t) {
+    var h = (int) (Math.floor(t / msPerHour) % hoursPerDay);
     return h < 0 ? h + hoursPerDay : h;
   }
 
-  private static int minFromTime(final double t) {
-    final int m = (int) (Math.floor(t / msPerMinute) % minutesPerHour);
+  static int minFromTime(double t) {
+    var m = (int) (Math.floor(t / msPerMinute) % minutesPerHour);
     return m < 0 ? m + minutesPerHour : m;
   }
 
-  private static int secFromTime(final double t) {
-    final int s = (int) (Math.floor(t / msPerSecond) % secondsPerMinute);
+  static int secFromTime(double t) {
+    var s = (int) (Math.floor(t / msPerSecond) % secondsPerMinute);
     return s < 0 ? s + secondsPerMinute : s;
   }
 
-  private static int msFromTime(final double t) {
-    final int m = (int) (t % msPerSecond);
+  static int msFromTime(double t) {
+    var m = (int) (t % msPerSecond);
     return m < 0 ? m + msPerSecond : m;
   }
 
-  private static int valueFromTime(final int unit, final double t) {
-    switch (unit) {
-      case YEAR:
-        return yearFromTime(t);
-      case MONTH:
-        return monthFromTime(t);
-      case DAY:
-        return dayFromTime(t);
-      case HOUR:
-        return hourFromTime(t);
-      case MINUTE:
-        return minFromTime(t);
-      case SECOND:
-        return secFromTime(t);
-      case MILLISECOND:
-        return msFromTime(t);
-      default:
-        throw new IllegalArgumentException(Integer.toString(unit));
-    }
+  static int valueFromTime(int unit, double t) {
+    return switch (unit) {
+      case YEAR -> yearFromTime(t);
+      case MONTH -> monthFromTime(t);
+      case DAY -> dayFromTime(t);
+      case HOUR -> hourFromTime(t);
+      case MINUTE -> minFromTime(t);
+      case SECOND -> secFromTime(t);
+      case MILLISECOND -> msFromTime(t);
+      default -> throw new IllegalArgumentException(Integer.toString(unit));
+    };
   }
 
   // ECMA 15.9.1.11 MakeTime (hour, min, sec, ms)
-  private static double makeTime(final double hour, final double min, final double sec, final double ms) {
+  static double makeTime(double hour, double min, double sec, double ms) {
     return hour * 3600000 + min * 60000 + sec * 1000 + ms;
   }
 
   // ECMA 15.9.1.12 MakeDay (year, month, date)
-  private static double makeDay(final double year, final double month, final double date) {
-    final double y = year + Math.floor(month / 12);
-    int m = (int) (month % 12);
+  static double makeDay(double year, double month, double date) {
+    var y = year + Math.floor(month / 12);
+    var m = (int) (month % 12);
     if (m < 0) {
       m += 12;
     }
-    double d = dayFromYear(y);
+    var d = dayFromYear(y);
     d += dayFromMonth(m, (int) y);
-
     return d + date - 1;
   }
 
   // ECMA 15.9.1.13 MakeDate (day, time)
-  private static double makeDate(final double day, final double time) {
+  static double makeDate(double day, double time) {
     return day * msPerDay + time;
   }
 
-  private static double makeDate(final Integer[] d) {
-    final double time = makeDay(d[0], d[1], d[2]) * msPerDay;
+  static double makeDate(Integer[] d) {
+    var time = makeDay(d[0], d[1], d[2]) * msPerDay;
     return time + makeTime(d[3], d[4], d[5], d[6]);
   }
 
-  private static double makeDate(final double[] d) {
-    final double time = makeDay(d[0], d[1], d[2]) * msPerDay;
+  static double makeDate(double[] d) {
+    var time = makeDay(d[0], d[1], d[2]) * msPerDay;
     return time + makeTime(d[3], d[4], d[5], d[6]);
   }
 
   // Convert Date constructor args, checking for NaN, filling in defaults etc.
-  private static double[] convertCtorArgs(final Object[] args) {
-    final double[] d = new double[7];
-    boolean nullReturn = false;
-
-    // should not bailout on first NaN or infinite. Need to convert all
-    // subsequent args for possible side-effects via valueOf/toString overrides
-    // on argument objects.
-    for (int i = 0; i < d.length; i++) {
+  static double[] convertCtorArgs(Object[] args) {
+    var d = new double[7];
+    var nullReturn = false;
+    // should not bailout on first NaN or infinite.
+    // Need to convert all subsequent args for possible side-effects via valueOf/toString overrides on argument objects.
+    for (var i = 0; i < d.length; i++) {
       if (i < args.length) {
-        final double darg = JSType.toNumber(args[i]);
+        var darg = JSType.toNumber(args[i]);
         if (isNaN(darg) || isInfinite(darg)) {
           nullReturn = true;
         }
-
         d[i] = (long) darg;
       } else {
         d[i] = i == 2 ? 1 : 0; // day in month defaults to 1
       }
     }
-
     if (0 <= d[0] && d[0] <= 99) {
       d[0] += 1900;
     }
-
     return nullReturn ? null : d;
   }
 
-  // This method does the hard work for all setter methods: If a value is provided
-  // as argument it is used, otherwise the value is calculated from the existing time value.
-  private static double[] convertArgs(final Object[] args, final double time, final int fieldId, final int start, final int length) {
-    final double[] d = new double[length];
-    boolean nullReturn = false;
-
-    // Need to call toNumber on all args for side-effects - even if an argument
-    // fails to convert to number, subsequent toNumber calls needed for possible
-    // side-effects via valueOf/toString overrides.
-    for (int i = start; i < start + length; i++) {
+  // This method does the hard work for all setter methods:
+  // If a value is provided as argument it is used, otherwise the value is calculated from the existing time value.
+  static double[] convertArgs(Object[] args, double time, int fieldId, int start, int length) {
+    var d = new double[length];
+    var nullReturn = false;
+    // Need to call toNumber on all args for side-effects - even if an argument fails to convert to number, subsequent toNumber calls needed for possible side-effects via valueOf/toString overrides.
+    for (var i = start; i < start + length; i++) {
       if (fieldId <= i && i < fieldId + args.length) {
-        final double darg = JSType.toNumber(args[i - fieldId]);
+        var darg = JSType.toNumber(args[i - fieldId]);
         if (isNaN(darg) || isInfinite(darg)) {
           nullReturn = true;
         }
-
         d[i - start] = (long) darg;
       } else {
         // Date.prototype.set* methods require first argument to be defined
         if (i == fieldId) {
           nullReturn = true;
         }
-
         if (!nullReturn && !isNaN(time)) {
           d[i - start] = valueFromTime(i, time);
         }
       }
     }
-
     return nullReturn ? null : d;
   }
 
   // ECMA 15.9.1.14 TimeClip (time)
-  private static double timeClip(final double time) {
-    if (isInfinite(time) || isNaN(time) || Math.abs(time) > 8.64e15) {
-      return Double.NaN;
-    }
-    return (long) time;
+  static double timeClip(double time) {
+    return (isInfinite(time) || isNaN(time) || Math.abs(time) > 8.64e15) ? Double.NaN : (long) time;
   }
 
-  private static NativeDate ensureNativeDate(final Object self) {
+  static NativeDate ensureNativeDate(Object self) {
     return getNativeDate(self);
   }
 
-  private static NativeDate getNativeDate(final Object self) {
-    if (self instanceof NativeDate) {
-      return (NativeDate) self;
+  static NativeDate getNativeDate(Object self) {
+    if (self instanceof NativeDate nd) {
+      return nd;
     } else if (self != null && self == Global.instance().getDatePrototype()) {
       return Global.instance().getDefaultDate();
     } else {
@@ -1258,17 +1164,17 @@ public final class NativeDate extends ScriptObject {
     }
   }
 
-  private static double getField(final Object self, final int field) {
-    final NativeDate nd = getNativeDate(self);
+  static double getField(Object self, int field) {
+    var nd = getNativeDate(self);
     return (nd != null && nd.isValidDate()) ? (double) valueFromTime(field, nd.getLocalTime()) : Double.NaN;
   }
 
-  private static double getUTCField(final Object self, final int field) {
-    final NativeDate nd = getNativeDate(self);
+  static double getUTCField(Object self, int field) {
+    var nd = getNativeDate(self);
     return (nd != null && nd.isValidDate()) ? (double) valueFromTime(field, nd.getTime()) : Double.NaN;
   }
 
-  private static void setFields(final NativeDate nd, final int fieldId, final Object[] args, final boolean local) {
+  static void setFields(NativeDate nd, int fieldId, Object[] args, boolean local) {
     int start, length;
     if (fieldId < HOUR) {
       start = YEAR;
@@ -1277,13 +1183,11 @@ public final class NativeDate extends ScriptObject {
       start = HOUR;
       length = 4;
     }
-    final double time = local ? nd.getLocalTime() : nd.getTime();
-    final double d[] = convertArgs(args, time, fieldId, start, length);
-
+    var time = local ? nd.getLocalTime() : nd.getTime();
+    var d = convertArgs(args, time, fieldId, start, length);
     if (!nd.isValidDate()) {
       return;
     }
-
     double newTime;
     if (d == null) {
       newTime = NaN;
@@ -1301,23 +1205,24 @@ public final class NativeDate extends ScriptObject {
     nd.setTime(newTime);
   }
 
-  private boolean isValidDate() {
+  boolean isValidDate() {
     return !isNaN(time);
   }
 
-  private double getLocalTime() {
+  double getLocalTime() {
     return localTime(time, timezone);
   }
 
-  private double getTime() {
+  double getTime() {
     return time;
   }
 
-  private void setTime(final double time) {
+  void setTime(double time) {
     this.time = time;
   }
 
-  private TimeZone getTimeZone() {
+  TimeZone getTimeZone() {
     return timezone;
   }
+
 }
