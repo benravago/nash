@@ -1,10 +1,9 @@
 package es.codegen;
 
-import static es.runtime.UnwarrantedOptimismException.isValid;
-
 import java.util.ArrayDeque;
 import java.util.BitSet;
 import java.util.Deque;
+
 import es.ir.AccessNode;
 import es.ir.BinaryNode;
 import es.ir.CallNode;
@@ -31,11 +30,11 @@ import es.ir.WhileNode;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.parser.TokenType;
 import es.runtime.ScriptObject;
+import static es.runtime.UnwarrantedOptimismException.isValid;
 
 /**
- * Assigns optimistic types to expressions that can have them. This class mainly contains logic for which expressions
- * must not ever be marked as optimistic, assigning narrowest non-invalidated types to program points from the
- * compilation environment, as well as initializing optimistic types of global properties for scripts.
+ * Assigns optimistic types to expressions that can have them.
+ * This class mainly contains logic for which expressions must not ever be marked as optimistic, assigning narrowest non-invalidated types to program points from the compilation environment, as well as initializing optimistic types of global properties for scripts.
  */
 final class OptimisticTypesCalculator extends SimpleNodeVisitor {
 
@@ -44,18 +43,18 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   // Per-function bit set of program points that must never be optimistic.
   final Deque<BitSet> neverOptimistic = new ArrayDeque<>();
 
-  OptimisticTypesCalculator(final Compiler compiler) {
+  OptimisticTypesCalculator(Compiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
-  public boolean enterAccessNode(final AccessNode accessNode) {
+  public boolean enterAccessNode(AccessNode accessNode) {
     tagNeverOptimistic(accessNode.getBase());
     return true;
   }
 
   @Override
-  public boolean enterPropertyNode(final PropertyNode propertyNode) {
+  public boolean enterPropertyNode(PropertyNode propertyNode) {
     if (ScriptObject.PROTO_PROPERTY_NAME.equals(propertyNode.getKeyName())) {
       tagNeverOptimistic(propertyNode.getValue());
     }
@@ -63,22 +62,20 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   }
 
   @Override
-  public boolean enterBinaryNode(final BinaryNode binaryNode) {
+  public boolean enterBinaryNode(BinaryNode binaryNode) {
     if (binaryNode.isAssignment()) {
-      final Expression lhs = binaryNode.lhs();
+      var lhs = binaryNode.lhs();
       if (!binaryNode.isSelfModifying()) {
         tagNeverOptimistic(lhs);
       }
       if (lhs instanceof IdentNode) {
-        final Symbol symbol = ((IdentNode) lhs).getSymbol();
+        var symbol = ((IdentNode) lhs).getSymbol();
         // Assignment to internal symbols is never optimistic, except for self-assignment expressions
         if (symbol.isInternal() && !binaryNode.rhs().isSelfModifying()) {
           tagNeverOptimistic(binaryNode.rhs());
         }
       }
-    } else if (binaryNode.isTokenType(TokenType.INSTANCEOF)
-            || binaryNode.isTokenType(TokenType.EQU)
-            || binaryNode.isTokenType(TokenType.NEQU)) {
+    } else if (binaryNode.isTokenType(TokenType.INSTANCEOF) || binaryNode.isTokenType(TokenType.EQU) || binaryNode.isTokenType(TokenType.NEQU)) {
       tagNeverOptimistic(binaryNode.lhs());
       tagNeverOptimistic(binaryNode.rhs());
     }
@@ -86,21 +83,21 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   }
 
   @Override
-  public boolean enterCallNode(final CallNode callNode) {
+  public boolean enterCallNode(CallNode callNode) {
     tagNeverOptimistic(callNode.getFunction());
     return true;
   }
 
   @Override
-  public boolean enterCatchNode(final CatchNode catchNode) {
+  public boolean enterCatchNode(CatchNode catchNode) {
     // Condition is never optimistic (always coerced to boolean).
     tagNeverOptimistic(catchNode.getExceptionCondition());
     return true;
   }
 
   @Override
-  public boolean enterExpressionStatement(final ExpressionStatement expressionStatement) {
-    final Expression expr = expressionStatement.getExpression();
+  public boolean enterExpressionStatement(ExpressionStatement expressionStatement) {
+    var expr = expressionStatement.getExpression();
     if (!expr.isSelfModifying()) {
       tagNeverOptimistic(expr);
     }
@@ -108,7 +105,7 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   }
 
   @Override
-  public boolean enterForNode(final ForNode forNode) {
+  public boolean enterForNode(ForNode forNode) {
     if (forNode.isForInOrOf()) {
       // for..in has the iterable in its "modify"
       tagNeverOptimistic(forNode.getModify());
@@ -120,10 +117,10 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   }
 
   @Override
-  public boolean enterFunctionNode(final FunctionNode functionNode) {
+  public boolean enterFunctionNode(FunctionNode functionNode) {
     if (!neverOptimistic.isEmpty() && compiler.isOnDemandCompilation()) {
-      // This is a nested function, and we're doing on-demand compilation. In these compilations, we never descend
-      // into nested functions.
+      // This is a nested function, and we're doing on-demand compilation.
+      // In these compilations, we never descend into nested functions.
       return false;
     }
     neverOptimistic.push(new BitSet());
@@ -131,27 +128,27 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   }
 
   @Override
-  public boolean enterIfNode(final IfNode ifNode) {
+  public boolean enterIfNode(IfNode ifNode) {
     // Test is never optimistic (always coerced to boolean).
     tagNeverOptimistic(ifNode.getTest());
     return true;
   }
 
   @Override
-  public boolean enterIndexNode(final IndexNode indexNode) {
+  public boolean enterIndexNode(IndexNode indexNode) {
     tagNeverOptimistic(indexNode.getBase());
     return true;
   }
 
   @Override
-  public boolean enterTernaryNode(final TernaryNode ternaryNode) {
+  public boolean enterTernaryNode(TernaryNode ternaryNode) {
     // Test is never optimistic (always coerced to boolean).
     tagNeverOptimistic(ternaryNode.getTest());
     return true;
   }
 
   @Override
-  public boolean enterUnaryNode(final UnaryNode unaryNode) {
+  public boolean enterUnaryNode(UnaryNode unaryNode) {
     if (unaryNode.isTokenType(TokenType.NOT) || unaryNode.isTokenType(TokenType.NEW)) {
       // Operand of boolean negation is never optimistic (always coerced to boolean).
       // Operand of "new" is never optimistic (always coerced to Object).
@@ -161,7 +158,7 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
   }
 
   @Override
-  public boolean enterVarNode(final VarNode varNode) {
+  public boolean enterVarNode(VarNode varNode) {
     tagNeverOptimistic(varNode.getName());
     return true;
   }
@@ -179,41 +176,36 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
     if (literalNode.isArray() && ((LiteralNode.ArrayLiteralNode) literalNode).getSplitRanges() != null) {
       return false;
     }
-
     return super.enterLiteralNode(literalNode);
   }
 
   @Override
-  public boolean enterWhileNode(final WhileNode whileNode) {
+  public boolean enterWhileNode(WhileNode whileNode) {
     // Test is never optimistic (always coerced to boolean).
     tagNeverOptimisticLoopTest(whileNode);
     return true;
   }
 
   @Override
-  protected Node leaveDefault(final Node node) {
-    if (node instanceof Optimistic) {
-      return leaveOptimistic((Optimistic) node);
-    }
-    return node;
+  protected Node leaveDefault(Node node) {
+    return (node instanceof Optimistic o) ? leaveOptimistic(o) : node;
   }
 
   @Override
-  public Node leaveFunctionNode(final FunctionNode functionNode) {
+  public Node leaveFunctionNode(FunctionNode functionNode) {
     neverOptimistic.pop();
     return functionNode;
   }
 
   @Override
-  public Node leaveIdentNode(final IdentNode identNode) {
-    final Symbol symbol = identNode.getSymbol();
+  public Node leaveIdentNode(IdentNode identNode) {
+    var symbol = identNode.getSymbol();
     if (symbol == null) {
       assert identNode.isPropertyName();
       return identNode;
     } else if (symbol.isBytecodeLocal()) {
-      // Identifiers accessing bytecode local variables will never be optimistic, as type calculation phase over
-      // them will always assign them statically provable types. Note that access to function parameters can still
-      // be optimistic if the parameter needs to be in scope as it's used by a nested function.
+      // Identifiers accessing bytecode local variables will never be optimistic, as type calculation phase over them will always assign them statically provable types.
+      // Note that access to function parameters can still be optimistic if the parameter needs to be in scope as it's used by a nested function.
       return identNode;
     } else if (symbol.isParam() && lc.getCurrentFunction().isVarArg()) {
       // Parameters in vararg methods are not optimistic; we always access them using Object getters.
@@ -224,27 +216,25 @@ final class OptimisticTypesCalculator extends SimpleNodeVisitor {
     }
   }
 
-  private Expression leaveOptimistic(final Optimistic opt) {
-    final int pp = opt.getProgramPoint();
-    if (isValid(pp) && !neverOptimistic.peek().get(pp)) {
-      return (Expression) opt.setType(compiler.getOptimisticType(opt));
-    }
-    return (Expression) opt;
+  Expression leaveOptimistic(Optimistic opt) {
+    var pp = opt.getProgramPoint();
+    return (isValid(pp) && !neverOptimistic.peek().get(pp)) ? (Expression) opt.setType(compiler.getOptimisticType(opt)) : (Expression) opt;
   }
 
-  private void tagNeverOptimistic(final Expression expr) {
-    if (expr instanceof Optimistic) {
-      final int pp = ((Optimistic) expr).getProgramPoint();
+  void tagNeverOptimistic(Expression expr) {
+    if (expr instanceof Optimistic o) {
+      var pp = o.getProgramPoint();
       if (isValid(pp)) {
         neverOptimistic.peek().set(pp);
       }
     }
   }
 
-  private void tagNeverOptimisticLoopTest(final LoopNode loopNode) {
-    final JoinPredecessorExpression test = loopNode.getTest();
+  void tagNeverOptimisticLoopTest(LoopNode loopNode) {
+    var test = loopNode.getTest();
     if (test != null) {
       tagNeverOptimistic(test.getExpression());
     }
   }
+
 }

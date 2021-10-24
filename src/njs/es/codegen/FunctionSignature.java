@@ -1,31 +1,31 @@
 package es.codegen;
 
-import static es.lookup.Lookup.MH;
-
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
+
 import es.codegen.types.Type;
 import es.ir.Expression;
 import es.ir.FunctionNode;
 import es.runtime.ScriptFunction;
 import es.runtime.linker.LinkerCallSite;
+import static es.lookup.Lookup.MH;
 
 /**
  * Class that generates function signatures for dynamic calls
  */
 public final class FunctionSignature {
 
-  /** parameter types that ASM can understand */
+  // parameter types that ASM can understand
   private final Type[] paramTypes;
 
-  /** return type that ASM can understand */
+  // return type that ASM can understand
   private final Type returnType;
 
-  /** valid Java descriptor string for function */
+  // valid Java descriptor string for function
   private final String descriptor;
 
-  /** {@link MethodType} for function */
+  // {@link MethodType} for function
   private final MethodType methodType;
 
   /**
@@ -38,7 +38,7 @@ public final class FunctionSignature {
    * @param retType   what is the return type
    * @param args      argument list of AST Nodes
    */
-  public FunctionSignature(final boolean hasSelf, final boolean hasCallee, final Type retType, final List<? extends Expression> args) {
+  public FunctionSignature(boolean hasSelf, boolean hasCallee, Type retType, List<? extends Expression> args) {
     this(hasSelf, hasCallee, retType, FunctionSignature.typeArray(args));
   }
 
@@ -52,7 +52,7 @@ public final class FunctionSignature {
    * @param retType what is the return type
    * @param nArgs   number of arguments
    */
-  public FunctionSignature(final boolean hasSelf, final boolean hasCallee, final Type retType, final int nArgs) {
+  public FunctionSignature(boolean hasSelf, boolean hasCallee, Type retType, int nArgs) {
     this(hasSelf, hasCallee, retType, FunctionSignature.objectArgs(nArgs));
   }
 
@@ -66,94 +66,71 @@ public final class FunctionSignature {
    * @param retType   what is the return type
    * @param argTypes  argument list of AST Nodes
    */
-  private FunctionSignature(final boolean hasSelf, final boolean hasCallee, final Type retType, final Type... argTypes) {
-    final boolean isVarArg;
-
-    int count = 1;
-
+  FunctionSignature(boolean hasSelf, boolean hasCallee, Type retType, Type... argTypes) {
+    boolean isVarArg;
+    var count = 1;
     if (argTypes == null) {
       isVarArg = true;
     } else {
       isVarArg = argTypes.length > LinkerCallSite.ARGLIMIT;
       count = isVarArg ? 1 : argTypes.length;
     }
-
     if (hasCallee) {
       count++;
     }
     if (hasSelf) {
       count++;
     }
-
     paramTypes = new Type[count];
-
-    int next = 0;
+    var next = 0;
     if (hasCallee) {
       paramTypes[next++] = Type.typeFor(ScriptFunction.class);
     }
-
     if (hasSelf) {
       paramTypes[next++] = Type.OBJECT;
     }
-
     if (isVarArg) {
       paramTypes[next] = Type.OBJECT_ARRAY;
     } else if (argTypes != null) {
-      for (int j = 0; next < count;) {
-        final Type type = argTypes[j++];
+      for (var j = 0; next < count;) {
+        var type = argTypes[j++];
         // TODO: for now, turn java/lang/String into java/lang/Object as we aren't as specific.
         paramTypes[next++] = type.isObject() ? Type.OBJECT : type;
       }
     } else {
       assert false : "isVarArgs cannot be false when argTypes are null";
     }
-
     this.returnType = retType;
     this.descriptor = Type.getMethodDescriptor(returnType, paramTypes);
-
-    final List<Class<?>> paramTypeList = new ArrayList<>();
-    for (final Type paramType : paramTypes) {
+    var paramTypeList = new ArrayList<Class<?>>();
+    for (var paramType : paramTypes) {
       paramTypeList.add(paramType.getTypeClass());
     }
-
     this.methodType = MH.type(returnType.getTypeClass(), paramTypeList.toArray(new Class<?>[0]));
   }
 
   /**
-   * Create a function signature given a function node, using as much
-   * type information for parameters and return types that is available
-   *
+   * Create a function signature given a function node, using as much type information for parameters and return types that is available
    * @param functionNode the function node
    */
-  public FunctionSignature(final FunctionNode functionNode) {
-    this(
-            true,
-            functionNode.needsCallee(),
-            functionNode.getReturnType(),
-            (functionNode.isVarArg() && !functionNode.isProgram())
-            ? null
-            : functionNode.getParameters());
+  public FunctionSignature(FunctionNode functionNode) {
+    this(true, functionNode.needsCallee(), functionNode.getReturnType(), (functionNode.isVarArg() && !functionNode.isProgram()) ? null : functionNode.getParameters());
   }
 
   /**
    * Internal function that converts an array of nodes to their Types
-   *
    * @param args node arg list
-   *
    * @return the array of types
    */
-  private static Type[] typeArray(final List<? extends Expression> args) {
+  static Type[] typeArray(List<? extends Expression> args) {
     if (args == null) {
       return null;
     }
-
-    final Type[] typeArray = new Type[args.size()];
-
-    int pos = 0;
-    for (final Expression arg : args) {
+    var typeArray = new Type[args.size()];
+    var pos = 0;
+    for (var arg : args) {
       typeArray[pos++] = arg.getType();
     }
-
     return typeArray;
   }
 
@@ -193,9 +170,9 @@ public final class FunctionSignature {
     return returnType;
   }
 
-  private static Type[] objectArgs(final int nArgs) {
-    final Type[] array = new Type[nArgs];
-    for (int i = 0; i < nArgs; i++) {
+  static Type[] objectArgs(int nArgs) {
+    var array = new Type[nArgs];
+    for (var i = 0; i < nArgs; i++) {
       array[i] = Type.OBJECT;
     }
     return array;

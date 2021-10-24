@@ -1,38 +1,14 @@
 package es.codegen;
 
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.ACC_SUPER;
-import static org.objectweb.asm.Opcodes.ACC_VARARGS;
-import static org.objectweb.asm.Opcodes.H_INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.H_INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.H_INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.H_INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.H_NEWINVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.V1_7;
-import static es.codegen.CompilerConstants.CLINIT;
-import static es.codegen.CompilerConstants.CONSTANTS;
-import static es.codegen.CompilerConstants.GET_ARRAY_PREFIX;
-import static es.codegen.CompilerConstants.GET_ARRAY_SUFFIX;
-import static es.codegen.CompilerConstants.GET_MAP;
-import static es.codegen.CompilerConstants.GET_STRING;
-import static es.codegen.CompilerConstants.INIT;
-import static es.codegen.CompilerConstants.SET_MAP;
-import static es.codegen.CompilerConstants.SOURCE;
-
-import static es.codegen.CompilerConstants.className;
-import static es.codegen.CompilerConstants.methodDescriptor;
-import static es.codegen.CompilerConstants.typeDescriptor;
-import static es.codegen.CompilerConstants.virtualCallNoLookup;
-
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
+import static org.objectweb.asm.Opcodes.*;
+
 import es.codegen.types.Type;
 import es.ir.FunctionNode;
 import es.runtime.Context;
@@ -40,64 +16,51 @@ import es.runtime.PropertyMap;
 import es.runtime.RewriteException;
 import es.runtime.ScriptObject;
 import es.runtime.Source;
+import static es.codegen.CompilerConstants.*;
 
 /**
- * The interface responsible for speaking to ASM, emitting classes,
- * fields and methods.
+ * The interface responsible for speaking to ASM, emitting classes, fields and methods.
  * <p>
- * This file contains the ClassEmitter, which is the master object
- * responsible for writing byte codes. It utilizes a MethodEmitter
- * for method generation, which also the NodeVisitors own, to keep
- * track of the current code generator and what it is doing.
+ * This file contains the ClassEmitter, which is the master object responsible for writing byte codes.
+ * It utilizes a MethodEmitter for method generation, which also the NodeVisitors own, to keep track of the current code generator and what it is doing.
  * <p>
- * There is, however, nothing stopping you from using this in a
- * completely self contained environment, for example in ObjectGenerator
- * where there are no visitors or external hooks.
+ * There is, however, nothing stopping you from using this in a completely self contained environment, for example in ObjectGenerator where there are no visitors or external hooks.
  * <p>
- * MethodEmitter makes it simple to generate code for methods without
- * having to do arduous type checking. It maintains a type stack
- * and will pick the appropriate operation for all operations sent to it
- * We also allow chained called to a MethodEmitter for brevity, e.g.
- * it is legal to write _new(className).dup() or
- * load(slot).load(slot2).xor().store(slot3);
+ * MethodEmitter makes it simple to generate code for methods without having to do arduous type checking.
+ * It maintains a type stack and will pick the appropriate operation for all operations sent to it.
+ * We also allow chained called to a MethodEmitter for brevity, e.g. it is legal to write new_(className).dup() or load(slot).load(slot2).xor().store(slot3);
  * <p>
- * If running with assertions enabled, any type conflict, such as different
- * bytecode stack sizes or operating on the wrong type will be detected
- * and an error thrown.
+ * If running with assertions enabled, any type conflict, such as different bytecode stack sizes or operating on the wrong type will be detected and an error thrown.
  * <p>
- * There is also a very nice debug interface that can emit formatted
- * bytecodes that have been written. This is enabled by setting the
- * environment "nashorn.codegen.debug" to true, or --log=codegen:{@literal <level>}
+ * There is also a very nice debug interface that can emit formatted bytecodes that have been written.
+ * This is enabled by setting the environment "nashorn.codegen.debug" to true, or --log=codegen:{@literal <level>}
  *
  * @see Compiler
  */
 public class ClassEmitter {
 
-  /** Default flags for class generation - public class */
+  // Default flags for class generation - public class
   private static final EnumSet<Flag> DEFAULT_METHOD_FLAGS = EnumSet.of(Flag.PUBLIC);
 
-  /** Sanity check flag - have we started on a class? */
+  // Sanity check flag - have we started on a class?
   private boolean classStarted;
 
-  /** Sanity check flag - have we ended this emission? */
+  // Sanity check flag - have we ended this emission?
   private boolean classEnded;
 
-  /**
-   * Sanity checks - which methods have we currently
-   * started for generation in this class?
-   */
+  // Sanity checks - which methods have we currently started for generation in this class?
   private final HashSet<MethodEmitter> methodsStarted;
 
-  /** The ASM classwriter that we use for all bytecode operations */
+  // The ASM classwriter that we use for all bytecode operations
   protected final ClassWriter cw;
 
-  /** The script environment */
+  // The script environment
   protected final Context context;
 
-  /** Compile unit class name. */
+  // Compile unit class name.
   private String unitClassName;
 
-  /** Set of constants access methods required. */
+  // Set of constants access methods required.
   private Set<Class<?>> constantMethodNeeded;
 
   private int methodCount;
@@ -111,13 +74,11 @@ public class ClassEmitter {
   private final Set<String> methodNames;
 
   /**
-   * Constructor - only used internally in this class as it breaks
-   * abstraction towards ASM or other code generator below.
-   *
+   * Constructor - only used internally in this class as it breaks abstraction towards ASM or other code generator below.
    * @param env script environment
    * @param cw  ASM classwriter
    */
-  private ClassEmitter(final Context context, final ClassWriter cw) {
+  ClassEmitter(Context context, ClassWriter cw) {
     this.context = context;
     this.cw = cw;
     this.methodsStarted = new HashSet<>();
@@ -126,7 +87,6 @@ public class ClassEmitter {
 
   /**
    * Return the method names encountered.
-   *
    * @return method names
    */
   public Set<String> getMethodNames() {
@@ -135,35 +95,31 @@ public class ClassEmitter {
 
   /**
    * Constructor.
-   *
    * @param env             script environment
    * @param className       name of class to weave
    * @param superClassName  super class name for class
    * @param interfaceNames  names of interfaces implemented by this class, or
    *        {@code null} if none
    */
-  ClassEmitter(final Context context, final String className, final String superClassName, final String... interfaceNames) {
+  ClassEmitter(Context context, String className, String superClassName, String... interfaceNames) {
     this(context, new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS));
     cw.visit(V1_7, ACC_PUBLIC | ACC_SUPER, className, null, superClassName, interfaceNames);
   }
 
   /**
    * Constructor from the compiler.
-   *
    * @param env           Script environment
    * @param sourceName    Source name
    * @param unitClassName Compile unit class name.
    */
-  ClassEmitter(final String sourceName, final String unitClassName, final Context context) {
-    this(context,
-            new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+  ClassEmitter(String sourceName, String unitClassName, Context context) {
+    this(context, new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
       private static final String OBJECT_CLASS = "java/lang/Object";
-
       @Override
-      protected String getCommonSuperClass(final String type1, final String type2) {
+      protected String getCommonSuperClass(String type1, String type2) {
         try {
           return super.getCommonSuperClass(type1, type2);
-        } catch (final RuntimeException e) {
+        } catch (RuntimeException e) {
           if (isScriptObject(Compiler.SCRIPTS_PACKAGE, type1) && isScriptObject(Compiler.SCRIPTS_PACKAGE, type2)) {
             return className(ScriptObject.class);
           }
@@ -171,13 +127,10 @@ public class ClassEmitter {
         }
       }
     });
-
     this.unitClassName = unitClassName;
     this.constantMethodNeeded = new HashSet<>();
-
     cw.visit(V1_7, ACC_PUBLIC | ACC_SUPER, unitClassName, null, pathName(es.scripts.JS.class.getName()), null);
     cw.visitSource(sourceName, null);
-
     defineCommonStatics();
   }
 
@@ -194,7 +147,6 @@ public class ClassEmitter {
 
   /**
    * Get the method count, including init and clinit methods.
-   *
    * @return method count
    */
   public int getMethodCount() {
@@ -203,7 +155,6 @@ public class ClassEmitter {
 
   /**
    * Get the clinit count.
-   *
    * @return clinit count
    */
   public int getClinitCount() {
@@ -212,7 +163,6 @@ public class ClassEmitter {
 
   /**
    * Get the init count.
-   *
    * @return init count
    */
   public int getInitCount() {
@@ -221,7 +171,6 @@ public class ClassEmitter {
 
   /**
    * Get the field count.
-   *
    * @return field count
    */
   public int getFieldCount() {
@@ -230,140 +179,116 @@ public class ClassEmitter {
 
   /**
    * Convert a binary name to a package/class name.
-   *
    * @param name Binary name.
-   *
    * @return Package/class name.
    */
-  private static String pathName(final String name) {
+  static String pathName(String name) {
     return name.replace('.', '/');
   }
 
   /**
    * Define the static fields common in all scripts.
-   *
    */
-  private void defineCommonStatics() {
-    // source - used to store the source data (text) for this script.  Shared across
-    // compile units.  Set externally by the compiler.
+  void defineCommonStatics() {
+    // source - used to store the source data (text) for this script.
+    // Shared across compile units.  Set externally by the compiler.
     field(EnumSet.of(Flag.PRIVATE, Flag.STATIC), SOURCE.symbolName(), Source.class);
-
-    // constants - used to the constants array for this script.  Shared across
-    // compile units.  Set externally by the compiler.
+    // constants - used to the constants array for this script.
+    // Shared across compile units.  Set externally by the compiler.
     field(EnumSet.of(Flag.PRIVATE, Flag.STATIC), CONSTANTS.symbolName(), Object[].class);
   }
 
   /**
-   * Define static utilities common needed in scripts. These are per compile
-   * unit and therefore have to be defined here and not in code gen.
+   * Define static utilities common needed in scripts.
+   * These are per compile unit and therefore have to be defined here and not in code gen.
    */
-  private void defineCommonUtilities() {
+  void defineCommonUtilities() {
     assert unitClassName != null;
-
     if (constantMethodNeeded.contains(String.class)) {
       // $getString - get the ith entry from the constants table and cast to String.
-      final MethodEmitter getStringMethod = method(EnumSet.of(Flag.PRIVATE, Flag.STATIC), GET_STRING.symbolName(), String.class, int.class);
+      var getStringMethod = method(EnumSet.of(Flag.PRIVATE, Flag.STATIC), GET_STRING.symbolName(), String.class, int.class);
       getStringMethod.begin();
       getStringMethod.getStatic(unitClassName, CONSTANTS.symbolName(), CONSTANTS.descriptor())
-              .load(Type.INT, 0)
-              .arrayload()
-              .checkcast(String.class)
-              ._return();
+        .load(Type.INT, 0)
+        .arrayload()
+        .checkcast(String.class)
+        .return_();
       getStringMethod.end();
     }
 
     if (constantMethodNeeded.contains(PropertyMap.class)) {
       // $getMap - get the ith entry from the constants table and cast to PropertyMap.
-      final MethodEmitter getMapMethod = method(EnumSet.of(Flag.PUBLIC, Flag.STATIC), GET_MAP.symbolName(), PropertyMap.class, int.class);
+      var getMapMethod = method(EnumSet.of(Flag.PUBLIC, Flag.STATIC), GET_MAP.symbolName(), PropertyMap.class, int.class);
       getMapMethod.begin();
       getMapMethod.loadConstants()
-              .load(Type.INT, 0)
-              .arrayload()
-              .checkcast(PropertyMap.class)
-              ._return();
+        .load(Type.INT, 0)
+        .arrayload()
+        .checkcast(PropertyMap.class)
+        .return_();
       getMapMethod.end();
-
       // $setMap - overwrite an existing map.
-      final MethodEmitter setMapMethod = method(EnumSet.of(Flag.PUBLIC, Flag.STATIC), SET_MAP.symbolName(), void.class, int.class, PropertyMap.class);
+      var setMapMethod = method(EnumSet.of(Flag.PUBLIC, Flag.STATIC), SET_MAP.symbolName(), void.class, int.class, PropertyMap.class);
       setMapMethod.begin();
       setMapMethod.loadConstants()
-              .load(Type.INT, 0)
-              .load(Type.OBJECT, 1)
-              .arraystore();
+        .load(Type.INT, 0)
+        .load(Type.OBJECT, 1)
+        .arraystore();
       setMapMethod.returnVoid();
       setMapMethod.end();
     }
-
     // $getXXXX$array - get the ith entry from the constants table and cast to XXXX[].
-    for (final Class<?> clazz : constantMethodNeeded) {
-      if (clazz.isArray()) {
-        defineGetArrayMethod(clazz);
+    for (var type : constantMethodNeeded) {
+      if (type.isArray()) {
+        defineGetArrayMethod(type);
       }
     }
   }
 
   /**
-   * Constructs a primitive specific method for getting the ith entry from the
-   * constants table as an array.
-   *
-   * @param clazz Array class.
+   * Constructs a primitive specific method for getting the ith entry from the constants table as an array.
+   * @param type Array class.
    */
-  private void defineGetArrayMethod(final Class<?> clazz) {
+  void defineGetArrayMethod(Class<?> type) {
     assert unitClassName != null;
-
-    final String methodName = getArrayMethodName(clazz);
-    final MethodEmitter getArrayMethod = method(EnumSet.of(Flag.PRIVATE, Flag.STATIC), methodName, clazz, int.class);
-
+    var methodName = getArrayMethodName(type);
+    var getArrayMethod = method(EnumSet.of(Flag.PRIVATE, Flag.STATIC), methodName, type, int.class);
     getArrayMethod.begin();
     getArrayMethod.getStatic(unitClassName, CONSTANTS.symbolName(), CONSTANTS.descriptor())
-            .load(Type.INT, 0)
-            .arrayload()
-            .checkcast(clazz)
-            .invoke(virtualCallNoLookup(clazz, "clone", Object.class))
-            .checkcast(clazz)
-            ._return();
+      .load(Type.INT, 0)
+      .arrayload()
+      .checkcast(type)
+      .invoke(virtualCallNoLookup(type, "clone", Object.class))
+      .checkcast(type)
+      .return_();
     getArrayMethod.end();
   }
 
   /**
    * Generate the name of a get array from constant pool method.
-   *
-   * @param clazz Name of array class.
-   *
+   * @param type Name of array class.
    * @return Method name.
    */
-  static String getArrayMethodName(final Class<?> clazz) {
-    assert clazz.isArray();
-    return GET_ARRAY_PREFIX.symbolName() + clazz.getComponentType().getSimpleName() + GET_ARRAY_SUFFIX.symbolName();
+  static String getArrayMethodName(Class<?> type) {
+    assert type.isArray();
+    return GET_ARRAY_PREFIX.symbolName() + type.getComponentType().getSimpleName() + GET_ARRAY_SUFFIX.symbolName();
   }
 
   /**
    * Ensure a get constant method is issued for the class.
-   *
-   * @param clazz Class of constant.
+   * @param type Class of constant.
    */
-  void needGetConstantMethod(final Class<?> clazz) {
-    constantMethodNeeded.add(clazz);
+  void needGetConstantMethod(Class<?> type) {
+    constantMethodNeeded.add(type);
   }
 
   /**
    * Inspect class name and decide whether we are generating a ScriptObject class.
-   *
    * @param scriptPrefix the script class prefix for the current script
    * @param type         the type to check
-   *
    * @return {@code true} if type is ScriptObject
    */
-  private static boolean isScriptObject(final String scriptPrefix, final String type) {
-    if (type.startsWith(scriptPrefix)) {
-      return true;
-    } else if (type.equals(CompilerConstants.className(ScriptObject.class))) {
-      return true;
-    } else if (type.startsWith(Compiler.OBJECTS_PACKAGE)) {
-      return true;
-    }
-
-    return false;
+  static boolean isScriptObject(String scriptPrefix, String type) {
+    return type.startsWith(scriptPrefix) || type.equals(CompilerConstants.className(ScriptObject.class)) ||type.startsWith(Compiler.OBJECTS_PACKAGE);
   }
 
   /**
@@ -378,74 +303,63 @@ public class ClassEmitter {
    */
   public void end() {
     assert classStarted : "class not started for " + unitClassName;
-
     if (unitClassName != null) {
-      final MethodEmitter initMethod = init(EnumSet.of(Flag.PRIVATE));
+      var initMethod = init(EnumSet.of(Flag.PRIVATE));
       initMethod.begin();
       initMethod.load(Type.OBJECT, 0);
       initMethod.newInstance(es.scripts.JS.class);
       initMethod.returnVoid();
       initMethod.end();
-
       defineCommonUtilities();
     }
-
     cw.visitEnd();
     classStarted = false;
     classEnded = true;
     assert methodsStarted.isEmpty() : "methodsStarted not empty " + methodsStarted;
   }
 
-  // static String disassemble(final byte[] bytecode)
+  // static String disassemble(byte[] bytecode)
 
   /**
    * Call back from MethodEmitter for method start.
-   *
    * @see MethodEmitter
-   *
    * @param method method emitter.
    */
-  void beginMethod(final MethodEmitter method) {
+  void beginMethod(MethodEmitter method) {
     assert !methodsStarted.contains(method);
     methodsStarted.add(method);
   }
 
   /**
    * Call back from MethodEmitter for method end.
-   *
    * @see MethodEmitter
-   *
    * @param method
    */
-  void endMethod(final MethodEmitter method) {
+  void endMethod(MethodEmitter method) {
     assert methodsStarted.contains(method);
     methodsStarted.remove(method);
   }
 
   /**
    * Add a new method to the class - defaults to public method.
-   *
    * @param methodName name of method
    * @param rtype      return type of the method
    * @param ptypes     parameter types the method
-   *
    * @return method emitter to use for weaving this method
    */
-  MethodEmitter method(final String methodName, final Class<?> rtype, final Class<?>... ptypes) {
+  MethodEmitter method(String methodName, Class<?> rtype, Class<?>... ptypes) {
     return method(DEFAULT_METHOD_FLAGS, methodName, rtype, ptypes); //TODO why public default ?
   }
 
   /**
    * Add a new method to the class - defaults to public method.
-   *
    * @param methodFlags access flags for the method
    * @param methodName  name of method
    * @param rtype       return type of the method
    * @param ptypes      parameter types the method
-   *
    * @return method emitter to use for weaving this method
    */
-  MethodEmitter method(final EnumSet<Flag> methodFlags, final String methodName, final Class<?> rtype, final Class<?>... ptypes) {
+  MethodEmitter method(EnumSet<Flag> methodFlags, String methodName, Class<?> rtype, Class<?>... ptypes) {
     methodCount++;
     methodNames.add(methodName);
     return new MethodEmitter(this, methodVisitor(methodFlags, methodName, rtype, ptypes));
@@ -453,26 +367,22 @@ public class ClassEmitter {
 
   /**
    * Add a new method to the class - defaults to public method.
-   *
    * @param methodName name of method
    * @param descriptor descriptor of method
-   *
    * @return method emitter to use for weaving this method
    */
-  MethodEmitter method(final String methodName, final String descriptor) {
+  MethodEmitter method(String methodName, String descriptor) {
     return method(DEFAULT_METHOD_FLAGS, methodName, descriptor);
   }
 
   /**
    * Add a new method to the class - defaults to public method.
-   *
    * @param methodFlags access flags for the method
    * @param methodName  name of method
    * @param descriptor  descriptor of method
-   *
    * @return method emitter to use for weaving this method
    */
-  MethodEmitter method(final EnumSet<Flag> methodFlags, final String methodName, final String descriptor) {
+  MethodEmitter method(EnumSet<Flag> methodFlags, String methodName, String descriptor) {
     methodCount++;
     methodNames.add(methodName);
     return new MethodEmitter(this, cw.visitMethod(Flag.getValue(methodFlags), methodName, descriptor, null, null));
@@ -480,49 +390,31 @@ public class ClassEmitter {
 
   /**
    * Add a new method to the class, representing a function node.
-   *
    * @param functionNode the function node to generate a method for
-   *
    * @return method emitter to use for weaving this method
    */
-  MethodEmitter method(final FunctionNode functionNode) {
+  MethodEmitter method(FunctionNode functionNode) {
     methodCount++;
     methodNames.add(functionNode.getName());
-    final FunctionSignature signature = new FunctionSignature(functionNode);
-    final MethodVisitor mv = cw.visitMethod(
-            ACC_PUBLIC | ACC_STATIC | (functionNode.isVarArg() ? ACC_VARARGS : 0),
-            functionNode.getName(),
-            signature.toString(),
-            null,
-            null);
-
+    var signature = new FunctionSignature(functionNode);
+    var mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC | (functionNode.isVarArg() ? ACC_VARARGS : 0), functionNode.getName(), signature.toString(), null, null);
     return new MethodEmitter(this, mv, functionNode);
   }
 
   /**
-   * Add a new method to the class, representing a rest-of version of the
-   * function node.
-   *
+   * Add a new method to the class, representing a rest-of version of the function node.
    * @param functionNode the function node to generate a method for
-   *
    * @return method emitter to use for weaving this method
    */
-  MethodEmitter restOfMethod(final FunctionNode functionNode) {
+  MethodEmitter restOfMethod(FunctionNode functionNode) {
     methodCount++;
     methodNames.add(functionNode.getName());
-    final MethodVisitor mv = cw.visitMethod(
-            ACC_PUBLIC | ACC_STATIC,
-            functionNode.getName(),
-            Type.getMethodDescriptor(functionNode.getReturnType().getTypeClass(), RewriteException.class),
-            null,
-            null);
-
+    var mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, functionNode.getName(), Type.getMethodDescriptor(functionNode.getReturnType().getTypeClass(), RewriteException.class), null, null);
     return new MethodEmitter(this, mv, functionNode);
   }
 
   /**
    * Start generating the <clinit> method in the class.
-   *
    * @return method emitter to use for weaving <clinit>
    */
   MethodEmitter clinit() {
@@ -532,7 +424,6 @@ public class ClassEmitter {
 
   /**
    * Start generating an <init>()V method in the class.
-   *
    * @return method emitter to use for weaving <init>()V
    */
   MethodEmitter init() {
@@ -542,86 +433,75 @@ public class ClassEmitter {
 
   /**
    * Start generating an <init>()V method in the class.
-   *
    * @param ptypes parameter types for constructor
    * @return method emitter to use for weaving <init>()V
    */
-  MethodEmitter init(final Class<?>... ptypes) {
+  MethodEmitter init(Class<?>... ptypes) {
     initCount++;
     return method(INIT.symbolName(), void.class, ptypes);
   }
 
   /**
    * Start generating an <init>(...)V method in the class.
-   *
    * @param flags  access flags for the constructor
    * @param ptypes parameter types for the constructor
-   *
    * @return method emitter to use for weaving <init>(...)V
    */
-  MethodEmitter init(final EnumSet<Flag> flags, final Class<?>... ptypes) {
+  MethodEmitter init(EnumSet<Flag> flags, Class<?>... ptypes) {
     initCount++;
     return method(flags, INIT.symbolName(), void.class, ptypes);
   }
 
   /**
    * Add a field to the class, initialized to a value.
-   *
    * @param fieldFlags flags, e.g. should it be static or public etc
    * @param fieldName  name of field
    * @param fieldType  the type of the field
    * @param value      the value
-   *
    * @see ClassEmitter.Flag
    */
-  final void field(final EnumSet<Flag> fieldFlags, final String fieldName, final Class<?> fieldType, final Object value) {
+  final void field(EnumSet<Flag> fieldFlags, String fieldName, Class<?> fieldType, Object value) {
     fieldCount++;
     cw.visitField(Flag.getValue(fieldFlags), fieldName, typeDescriptor(fieldType), null, value).visitEnd();
   }
 
   /**
    * Add a field to the class.
-   *
    * @param fieldFlags access flags for the field
    * @param fieldName  name of field
    * @param fieldType  type of the field
-   *
    * @see ClassEmitter.Flag
    */
-  final void field(final EnumSet<Flag> fieldFlags, final String fieldName, final Class<?> fieldType) {
+  final void field(EnumSet<Flag> fieldFlags, String fieldName, Class<?> fieldType) {
     field(fieldFlags, fieldName, fieldType, null);
   }
 
   /**
    * Add a field to the class - defaults to public.
-   *
    * @param fieldName  name of field
    * @param fieldType  type of field
    */
-  final void field(final String fieldName, final Class<?> fieldType) {
+  final void field(String fieldName, Class<?> fieldType) {
     field(EnumSet.of(Flag.PUBLIC), fieldName, fieldType, null);
   }
 
   /**
-   * Return a bytecode array from this ClassEmitter. The ClassEmitter must
-   * have been ended (having its end function called) for this to work.
-   *
-   * @return byte code array for generated class, {@code null} if class
-   *         generation hasn't been ended with {@link ClassEmitter#end()}.
+   * Return a bytecode array from this ClassEmitter.
+   * The ClassEmitter must have been ended (having its end function called) for this to work.
+   * @return byte code array for generated class, {@code null} if class generation hasn't been ended with {@link ClassEmitter#end()}.
    */
   byte[] toByteArray() {
     assert classEnded;
     if (!classEnded) {
       return null;
     }
-
     return cw.toByteArray();
   }
 
   /**
-   * Abstraction for flags used in class emission. We provide abstraction
-   * separating these from the underlying bytecode emitter. Flags are provided
-   * for method handles, protection levels, static/virtual fields/methods.
+   * Abstraction for flags used in class emission.
+   * We provide abstraction separating these from the underlying bytecode emitter.
+   * Flags are provided for method handles, protection levels, static/virtual fields/methods.
    */
   static enum Flag {
     /** method handle with static access */
@@ -643,9 +523,9 @@ public class ClassEmitter {
     /** private access */
     PRIVATE(ACC_PRIVATE);
 
-    private final int value;
+    final int value;
 
-    private Flag(final int value) {
+    Flag(int value) {
       this.value = value;
     }
 
@@ -659,22 +539,19 @@ public class ClassEmitter {
 
     /**
      * Return the corresponding ASM flag value for an enum set of flags.
-     *
      * @param flags enum set of flags
-     *
-     * @return an integer value representing the flags intrinsic values
-     *         or:ed together
+     * @return an integer value representing the flags intrinsic values or'ed together
      */
-    static int getValue(final EnumSet<Flag> flags) {
-      int v = 0;
-      for (final Flag flag : flags) {
+    static int getValue(EnumSet<Flag> flags) {
+      var v = 0;
+      for (var flag : flags) {
         v |= flag.getValue();
       }
       return v;
     }
   }
 
-  private MethodVisitor methodVisitor(final EnumSet<Flag> flags, final String methodName, final Class<?> rtype, final Class<?>... ptypes) {
+  MethodVisitor methodVisitor(EnumSet<Flag> flags, String methodName, Class<?> rtype, Class<?>... ptypes) {
     return cw.visitMethod(Flag.getValue(flags), methodName, methodDescriptor(rtype, ptypes), null, null);
   }
 

@@ -10,18 +10,18 @@ import java.util.Objects;
 import es.runtime.PropertyMap;
 
 /**
- * Manages constants needed by code generation.  Objects are maintained in an
- * interning maps to remove duplicates.
+ * Manages constants needed by code generation.
+ * Objects are maintained in an interning maps to remove duplicates.
  */
 final class ConstantData {
 
-  /** Constant table. */
+  // Constant table.
   final List<Object> constants;
 
-  /** Constant table string interning map. */
+  // Constant table string interning map.
   final Map<String, Integer> stringMap;
 
-  /** Constant table object interning map. */
+  // Constant table object interning map.
   final Map<Object, Integer> objectMap;
 
   private static class ArrayWrapper {
@@ -29,7 +29,7 @@ final class ConstantData {
     private final Object array;
     private final int hashCode;
 
-    public ArrayWrapper(final Object array) {
+    public ArrayWrapper(Object array) {
       this.array = array;
       this.hashCode = calcHashCode();
     }
@@ -38,9 +38,8 @@ final class ConstantData {
      * Calculate a shallow hashcode for the array.
      * @return Hashcode with elements factored in.
      */
-    private int calcHashCode() {
-      final Class<?> cls = array.getClass();
-
+    int calcHashCode() {
+      var cls = array.getClass();
       if (!cls.getComponentType().isPrimitive()) {
         return Arrays.hashCode((Object[]) array);
       } else if (cls == double[].class) {
@@ -52,24 +51,19 @@ final class ConstantData {
       if (cls == int[].class) {
         return Arrays.hashCode((int[]) array);
       }
-
       throw new AssertionError("ConstantData doesn't support " + cls);
     }
 
     @Override
-    public boolean equals(final Object other) {
+    public boolean equals(Object other) {
       if (!(other instanceof ArrayWrapper)) {
         return false;
       }
-
-      final Object otherArray = ((ArrayWrapper) other).array;
-
+      var otherArray = ((ArrayWrapper) other).array;
       if (array == otherArray) {
         return true;
       }
-
-      final Class<?> cls = array.getClass();
-
+      var cls = array.getClass();
       if (cls == otherArray.getClass()) {
         if (!cls.getComponentType().isPrimitive()) {
           return Arrays.equals((Object[]) array, (Object[]) otherArray);
@@ -81,7 +75,6 @@ final class ConstantData {
           return Arrays.equals((int[]) array, (int[]) otherArray);
         }
       }
-
       return false;
     }
 
@@ -92,16 +85,15 @@ final class ConstantData {
   }
 
   /**
-   * {@link PropertyMap} wrapper class that provides implementations for the {@code hashCode} and {@code equals}
-   * methods that are based on the map layout. {@code PropertyMap} itself inherits the identity based implementations
-   * from {@code java.lang.Object}.
+   * {@link PropertyMap} wrapper class that provides implementations for the {@code hashCode} and {@code equals} methods that are based on the map layout.
+   * {@code PropertyMap} itself inherits the identity based implementations from {@code java.lang.Object}.
    */
   private static class PropertyMapWrapper {
 
     private final PropertyMap propertyMap;
     private final int hashCode;
 
-    public PropertyMapWrapper(final PropertyMap map) {
+    public PropertyMapWrapper(PropertyMap map) {
       this.hashCode = Arrays.hashCode(map.getProperties()) + 31 * Objects.hashCode(map.getClassName());
       this.propertyMap = map;
     }
@@ -112,14 +104,14 @@ final class ConstantData {
     }
 
     @Override
-    public boolean equals(final Object other) {
+    public boolean equals(Object other) {
       if (!(other instanceof PropertyMapWrapper)) {
         return false;
       }
-      final PropertyMap otherMap = ((PropertyMapWrapper) other).propertyMap;
+      var otherMap = ((PropertyMapWrapper) other).propertyMap;
       return propertyMap == otherMap
-              || (Arrays.equals(propertyMap.getProperties(), otherMap.getProperties())
-              && Objects.equals(propertyMap.getClassName(), otherMap.getClassName()));
+          || (Arrays.equals(propertyMap.getProperties(), otherMap.getProperties())
+          && Objects.equals(propertyMap.getClassName(), otherMap.getClassName()));
     }
   }
 
@@ -134,54 +126,42 @@ final class ConstantData {
 
   /**
    * Add a string to the constant data
-   *
    * @param string the string to add
    * @return the index in the constant pool that the string was given
    */
-  public int add(final String string) {
-    final Integer value = stringMap.get(string);
-
+  public int add(String string) {
+    var value = stringMap.get(string);
     if (value != null) {
       return value;
     }
-
     constants.add(string);
-    final int index = constants.size() - 1;
+    var index = constants.size() - 1;
     stringMap.put(string, index);
-
     return index;
   }
 
   /**
    * Add an object to the constant data
-   *
    * @param object the string to add
    * @return the index in the constant pool that the object was given
    */
-  public int add(final Object object) {
+  public int add(Object object) {
     assert object != null;
-    final Object entry;
-    if (object.getClass().isArray()) {
-      entry = new ArrayWrapper(object);
-    } else if (object instanceof PropertyMap) {
-      entry = new PropertyMapWrapper((PropertyMap) object);
-    } else {
-      entry = object;
-    }
-    final Integer value = objectMap.get(entry);
-
+    var entry = (object.getClass().isArray()) ? new ArrayWrapper(object)
+              : (object instanceof PropertyMap) ? new PropertyMapWrapper((PropertyMap) object)
+              : object;
+    var value = objectMap.get(entry);
     if (value != null) {
       return value;
     }
-
     constants.add(object);
-    final int index = constants.size() - 1;
+    var index = constants.size() - 1;
     objectMap.put(entry, index);
-
     return index;
   }
 
   Object[] toArray() {
     return constants.toArray();
   }
+
 }

@@ -1,8 +1,10 @@
 package es.codegen;
 
-import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
+
+import java.lang.invoke.MethodType;
+
 import es.codegen.types.Type;
 import es.ir.FunctionNode;
 import es.runtime.ScriptFunction;
@@ -23,13 +25,12 @@ public final class TypeMap {
    * @param type           method type found at runtime corresponding to parameter guess
    * @param needsCallee    does the function using this type map need a callee
    */
-  public TypeMap(final int functionNodeId, final MethodType type, final boolean needsCallee) {
-    final Type[] types = new Type[type.parameterCount()];
-    int pos = 0;
-    for (final Class<?> p : type.parameterArray()) {
+  public TypeMap(int functionNodeId, MethodType type, boolean needsCallee) {
+    var types = new Type[type.parameterCount()];
+    var pos = 0;
+    for (var p : type.parameterArray()) {
       types[pos++] = Type.typeFor(p);
     }
-
     this.functionNodeId = functionNodeId;
     this.paramTypes = types;
     this.returnType = Type.typeFor(type.returnType());
@@ -42,34 +43,31 @@ public final class TypeMap {
    * @return an array of parameter types
    * @throws NoSuchElementException if the type map has no mapping for the requested function
    */
-  public Type[] getParameterTypes(final int functionNodeId) {
+  public Type[] getParameterTypes(int functionNodeId) {
     assert this.functionNodeId == functionNodeId;
     return paramTypes.clone();
   }
 
-  MethodType getCallSiteType(final FunctionNode functionNode) {
+  MethodType getCallSiteType(FunctionNode functionNode) {
     assert this.functionNodeId == functionNode.getId();
-    final Type[] types = paramTypes;
-    MethodType mt = MethodType.methodType(returnType.getTypeClass());
+    var types = paramTypes;
+    var mt = MethodType.methodType(returnType.getTypeClass());
     if (needsCallee) {
       mt = mt.appendParameterTypes(ScriptFunction.class);
     }
-
     mt = mt.appendParameterTypes(Object.class); //this
-
-    for (final Type type : types) {
+    for (var type : types) {
       if (type == null) {
         return null; // not all parameter information is supplied
       }
       mt = mt.appendParameterTypes(type.getTypeClass());
     }
-
     return mt;
   }
 
   /**
-   * Does the function using this TypeMap need a callee argument. This is used
-   * to compute correct param index offsets in {@link es.codegen.ApplySpecialization}
+   * Does the function using this TypeMap need a callee argument.
+   * This is used to compute correct param index offsets in {@link es.codegen.ApplySpecialization}
    * @return true if a callee is needed, false otherwise
    */
   public boolean needsCallee() {
@@ -77,25 +75,21 @@ public final class TypeMap {
   }
 
   /**
-   * Get the parameter type for this parameter position, or
-   * null if now known
+   * Get the parameter type for this parameter position, or null if not known
    * @param functionNode functionNode
    * @param pos position
    * @return parameter type for this callsite if known
    */
-  Type get(final FunctionNode functionNode, final int pos) {
+  Type get(FunctionNode functionNode, int pos) {
     assert this.functionNodeId == functionNode.getId();
-    final Type[] types = paramTypes;
+    var types = paramTypes;
     assert types == null || pos < types.length : "fn = " + functionNode.getId() + " " + "types=" + Arrays.toString(types) + " || pos=" + pos + " >= length=" + types.length + " in " + this;
-    if (types != null && pos < types.length) {
-      return types[pos];
-    }
-    return null;
+    return (types != null && pos < types.length) ? types[pos] : null;
   }
 
   /**
-   * Get the return type required for the call site we're compiling for. This only determines
-   * whether object return type is required or not.
+   * Get the return type required for the call site we're compiling for.
+   * This only determines whether object return type is required or not.
    * @return Type.OBJECT for call sites with object return types, Type.UNKNOWN for everything else
    */
   Type getReturnType() {
@@ -107,20 +101,10 @@ public final class TypeMap {
     return toString("");
   }
 
-  String toString(final String prefix) {
-    final StringBuilder sb = new StringBuilder();
-
-    final int id = functionNodeId;
-    sb.append(prefix).append('\t');
-    sb.append("function ").append(id).append('\n');
-    sb.append(prefix).append("\t\tparamTypes=");
-    sb.append(Arrays.toString(paramTypes));
-    sb.append('\n');
-    sb.append(prefix).append("\t\treturnType=");
-    final Type ret = returnType;
-    sb.append(ret == null ? "N/A" : ret);
-    sb.append('\n');
-
-    return sb.toString();
+  String toString(String prefix) {
+    var id = functionNodeId;
+    var ret = returnType;
+    return prefix + '\t' + "function " + id + '\n' + prefix + "\t\tparamTypes=" + Arrays.toString(paramTypes) 
+     + '\n' + prefix + "\t\treturnType=" + (ret == null ? "N/A" : ret) + '\n';
   }
 }

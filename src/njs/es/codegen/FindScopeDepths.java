@@ -1,12 +1,11 @@
 package es.codegen;
 
-import static es.runtime.logging.DebugLogger.quote;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 import es.ir.Block;
 import es.ir.FunctionNode;
 import es.ir.IdentNode;
@@ -20,12 +19,11 @@ import es.runtime.RecompilableScriptFunctionData;
 import es.runtime.logging.DebugLogger;
 import es.runtime.logging.Loggable;
 import es.runtime.logging.Logger;
+import static es.runtime.logging.DebugLogger.quote;
 
 /**
  * Establishes depth of scope for non local symbols at the start of method.
- * If this is a recompilation, the previous data from eager compilation is
- * stored in the RecompilableScriptFunctionData and is transferred to the
- * FunctionNode being compiled
+ * If this is a recompilation, the previous data from eager compilation is stored in the RecompilableScriptFunctionData and is transferred to the FunctionNode being compiled
  */
 @Logger(name = "scopedepths")
 final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
@@ -40,7 +38,7 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
 
   private int dynamicScopeCount;
 
-  FindScopeDepths(final Compiler compiler) {
+  FindScopeDepths(Compiler compiler) {
     this.compiler = compiler;
     this.log = initLogger(compiler.getContext());
   }
@@ -51,16 +49,16 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
   }
 
   @Override
-  public DebugLogger initLogger(final Context context) {
+  public DebugLogger initLogger(Context context) {
     return context.getLogger(this.getClass());
   }
 
-  static int findScopesToStart(final LexicalContext lc, final FunctionNode fn, final Block block) {
-    final Block bodyBlock = findBodyBlock(lc, fn, block);
-    final Iterator<Block> iter = lc.getBlocks(block);
-    Block b = iter.next();
-    int scopesToStart = 0;
-    while (true) {
+  static int findScopesToStart(LexicalContext lc, FunctionNode fn, Block block) {
+    var bodyBlock = findBodyBlock(lc, fn, block);
+    var iter = lc.getBlocks(block);
+    var b = iter.next();
+    var scopesToStart = 0;
+    for (;;) {
       if (b.needsScope()) {
         scopesToStart++;
       }
@@ -72,12 +70,12 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     return scopesToStart;
   }
 
-  static int findInternalDepth(final LexicalContext lc, final FunctionNode fn, final Block block, final Symbol symbol) {
-    final Block bodyBlock = findBodyBlock(lc, fn, block);
-    final Iterator<Block> iter = lc.getBlocks(block);
-    Block b = iter.next();
-    int scopesToStart = 0;
-    while (true) {
+  static int findInternalDepth(LexicalContext lc, FunctionNode fn, Block block, Symbol symbol) {
+    var bodyBlock = findBodyBlock(lc, fn, block);
+    var iter = lc.getBlocks(block);
+    var b = iter.next();
+    var scopesToStart = 0;
+    for (;;) {
       if (definedInBlock(b, symbol)) {
         return scopesToStart;
       }
@@ -92,19 +90,15 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     return -1;
   }
 
-  private static boolean definedInBlock(final Block block, final Symbol symbol) {
-    if (symbol.isGlobal()) {
-      //globals cannot be defined anywhere else
-
-      return block.isGlobalScope();
-    }
-    return block.getExistingSymbol(symbol.getName()) == symbol;
+  static boolean definedInBlock(Block block, Symbol symbol) {
+    // globals cannot be defined anywhere else
+    return (symbol.isGlobal()) ? block.isGlobalScope() : block.getExistingSymbol(symbol.getName()) == symbol;
   }
 
-  static Block findBodyBlock(final LexicalContext lc, final FunctionNode fn, final Block block) {
-    final Iterator<Block> iter = lc.getBlocks(block);
+  static Block findBodyBlock(LexicalContext lc, FunctionNode fn, Block block) {
+    var iter = lc.getBlocks(block);
     while (iter.hasNext()) {
-      final Block next = iter.next();
+      var next = iter.next();
       if (fn.getBody() == next) {
         return next;
       }
@@ -112,8 +106,8 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     return null;
   }
 
-  private static Block findGlobalBlock(final LexicalContext lc, final Block block) {
-    final Iterator<Block> iter = lc.getBlocks(block);
+  static Block findGlobalBlock(LexicalContext lc, Block block) {
+    var iter = lc.getBlocks(block);
     Block globalBlock = null;
     while (iter.hasNext()) {
       globalBlock = iter.next();
@@ -121,33 +115,31 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     return globalBlock;
   }
 
-  private boolean isDynamicScopeBoundary(final Block block) {
+  boolean isDynamicScopeBoundary(Block block) {
     return withBodies.contains(block);
   }
 
   @Override
-  public boolean enterFunctionNode(final FunctionNode functionNode) {
+  public boolean enterFunctionNode(FunctionNode functionNode) {
     if (compiler.isOnDemandCompilation()) {
       return true;
     }
-
-    final int fnId = functionNode.getId();
-    Map<Integer, RecompilableScriptFunctionData> nestedFunctions = fnIdToNestedFunctions.get(fnId);
+    var fnId = functionNode.getId();
+    var nestedFunctions = fnIdToNestedFunctions.get(fnId);
     if (nestedFunctions == null) {
       nestedFunctions = new HashMap<>();
       fnIdToNestedFunctions.put(fnId, nestedFunctions);
     }
-
     return true;
   }
 
   //external symbols hold the scope depth of sc11 from global at the start of the method
   @Override
-  public Node leaveFunctionNode(final FunctionNode functionNode) {
-    final String name = functionNode.getName();
-    FunctionNode newFunctionNode = functionNode;
+  public Node leaveFunctionNode(FunctionNode functionNode) {
+    var name = functionNode.getName();
+    var newFunctionNode = functionNode;
     if (compiler.isOnDemandCompilation()) {
-      final RecompilableScriptFunctionData data = compiler.getScriptFunctionData(newFunctionNode.getId());
+      var data = compiler.getScriptFunctionData(newFunctionNode.getId());
       if (data.inDynamicContext()) {
         log.fine("Reviving scriptfunction ", quote(name), " as defined in previous (now lost) dynamic scope.");
         newFunctionNode = newFunctionNode.setInDynamicContext(lc);
@@ -157,43 +149,32 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
       }
       return newFunctionNode;
     }
-
     if (inDynamicScope()) {
       log.fine("Tagging ", quote(name), " as defined in dynamic scope");
       newFunctionNode = newFunctionNode.setInDynamicContext(lc);
     }
-
-    //create recompilable scriptfunctiondata
-    final int fnId = newFunctionNode.getId();
-    final Map<Integer, RecompilableScriptFunctionData> nestedFunctions = fnIdToNestedFunctions.remove(fnId);
-
+    // create recompilable scriptfunctiondata
+    var fnId = newFunctionNode.getId();
+    var nestedFunctions = fnIdToNestedFunctions.remove(fnId);
     assert nestedFunctions != null;
     // Generate the object class and property map in case this function is ever used as constructor
-    final RecompilableScriptFunctionData data = new RecompilableScriptFunctionData(
-            newFunctionNode,
-            compiler.getCodeInstaller(),
-            ObjectClassGenerator.createAllocationStrategy(newFunctionNode.getThisProperties(), compiler.getContext().useDualFields()),
-            nestedFunctions,
-            externalSymbolDepths.get(fnId),
-            internalSymbols.get(fnId));
-
+    var data = new RecompilableScriptFunctionData(newFunctionNode, compiler.getCodeInstaller(), ObjectClassGenerator.createAllocationStrategy(newFunctionNode.getThisProperties(), compiler.getContext().useDualFields()), nestedFunctions, externalSymbolDepths.get(fnId), internalSymbols.get(fnId));
     if (lc.getOutermostFunction() != newFunctionNode) {
-      final FunctionNode parentFn = lc.getParentFunction(newFunctionNode);
+      var parentFn = lc.getParentFunction(newFunctionNode);
       if (parentFn != null) {
         fnIdToNestedFunctions.get(parentFn.getId()).put(fnId, data);
       }
     } else {
       compiler.setData(data);
     }
-
     return newFunctionNode;
   }
 
-  private boolean inDynamicScope() {
+  boolean inDynamicScope() {
     return dynamicScopeCount > 0;
   }
 
-  private void increaseDynamicScopeCount(final Node node) {
+  void increaseDynamicScopeCount(Node node) {
     assert dynamicScopeCount >= 0;
     ++dynamicScopeCount;
     if (log.isEnabled()) {
@@ -201,7 +182,7 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     }
   }
 
-  private void decreaseDynamicScopeCount(final Node node) {
+  void decreaseDynamicScopeCount(Node node) {
     --dynamicScopeCount;
     assert dynamicScopeCount >= 0;
     if (log.isEnabled()) {
@@ -210,35 +191,30 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
   }
 
   @Override
-  public boolean enterWithNode(final WithNode node) {
+  public boolean enterWithNode(WithNode node) {
     withBodies.add(node.getBody());
     return true;
   }
 
   @Override
-  public boolean enterBlock(final Block block) {
+  public boolean enterBlock(Block block) {
     if (compiler.isOnDemandCompilation()) {
       return true;
     }
-
     if (isDynamicScopeBoundary(block)) {
       increaseDynamicScopeCount(block);
     }
-
     if (!lc.isFunctionBody()) {
       return true;
     }
-
-    //the below part only happens on eager compilation when we have the entire hierarchy
-    //block is a function body
-    final FunctionNode fn = lc.getCurrentFunction();
-
-    //get all symbols that are referenced inside this function body
-    final Set<Symbol> symbols = new HashSet<>();
+    // the below part only happens on eager compilation when we have the entire hierarchy block is a function body
+    var fn = lc.getCurrentFunction();
+    // get all symbols that are referenced inside this function body
+    var symbols = new HashSet<Symbol>();
     block.accept(new SimpleNodeVisitor() {
       @Override
-      public boolean enterIdentNode(final IdentNode identNode) {
-        final Symbol symbol = identNode.getSymbol();
+      public boolean enterIdentNode(IdentNode identNode) {
+        var symbol = identNode.getSymbol();
         if (symbol != null && symbol.isScope()) {
           //if this is an internal symbol, skip it.
           symbols.add(symbol);
@@ -246,33 +222,27 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
         return true;
       }
     });
-
-    final Map<String, Integer> internals = new HashMap<>();
-
-    final Block globalBlock = findGlobalBlock(lc, block);
-    final Block bodyBlock = findBodyBlock(lc, fn, block);
-
+    var internals = new HashMap<String, Integer>();
+    var globalBlock = findGlobalBlock(lc, block);
+    var bodyBlock = findBodyBlock(lc, fn, block);
     assert globalBlock != null;
     assert bodyBlock != null;
-
-    for (final Symbol symbol : symbols) {
+    for (var symbol : symbols) {
       Iterator<Block> iter;
-
-      final int internalDepth = findInternalDepth(lc, fn, block, symbol);
-      final boolean internal = internalDepth >= 0;
+      var internalDepth = findInternalDepth(lc, fn, block, symbol);
+      var internal = internalDepth >= 0;
       if (internal) {
         internals.put(symbol.getName(), internalDepth);
       }
-
-      // if not internal, we have to continue walking until we reach the top. We
-      // start outside the body and each new scope adds a depth count. When we
-      // find the symbol, we store its depth count
+      // if not internal, we have to continue walking until we reach the top.
+      // We start outside the body and each new scope adds a depth count.
+      // When we find the symbol, we store its depth count
       if (!internal) {
-        int depthAtStart = 0;
-        //not internal - keep looking.
+        var depthAtStart = 0;
+        // not internal - keep looking.
         iter = lc.getAncestorBlocks(bodyBlock);
         while (iter.hasNext()) {
-          final Block b2 = iter.next();
+          var b2 = iter.next();
           if (definedInBlock(b2, symbol)) {
             addExternalSymbol(fn, symbol, depthAtStart);
             break;
@@ -283,18 +253,15 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
         }
       }
     }
-
     addInternalSymbols(fn, internals.keySet());
-
     if (log.isEnabled()) {
       log.info(fn.getName() + " internals=" + internals + " externals=" + externalSymbolDepths.get(fn.getId()));
     }
-
     return true;
   }
 
   @Override
-  public Node leaveBlock(final Block block) {
+  public Node leaveBlock(Block block) {
     if (compiler.isOnDemandCompilation()) {
       return block;
     }
@@ -304,15 +271,15 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     return block;
   }
 
-  private void addInternalSymbols(final FunctionNode functionNode, final Set<String> symbols) {
-    final int fnId = functionNode.getId();
+  void addInternalSymbols(FunctionNode functionNode, Set<String> symbols) {
+    var fnId = functionNode.getId();
     assert internalSymbols.get(fnId) == null || internalSymbols.get(fnId).equals(symbols); //e.g. cloned finally block
     internalSymbols.put(fnId, symbols);
   }
 
-  private void addExternalSymbol(final FunctionNode functionNode, final Symbol symbol, final int depthAtStart) {
-    final int fnId = functionNode.getId();
-    Map<String, Integer> depths = externalSymbolDepths.get(fnId);
+  void addExternalSymbol(FunctionNode functionNode, Symbol symbol, int depthAtStart) {
+    var fnId = functionNode.getId();
+    var depths = externalSymbolDepths.get(fnId);
     if (depths == null) {
       depths = new HashMap<>();
       externalSymbolDepths.put(fnId, depths);

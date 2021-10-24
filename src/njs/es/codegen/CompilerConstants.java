@@ -1,22 +1,24 @@
 package es.codegen;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import static es.lookup.Lookup.MH;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+
 import es.codegen.types.Type;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
 import es.runtime.Source;
 
 /**
- * This class represents constant names of variables, methods and fields in
- * the compiler
+ * This class represents constant names of variables, methods and fields in  the compiler
  */
 public enum CompilerConstants {
   /** the __FILE__ variable */
@@ -48,9 +50,8 @@ public enum CompilerConstants {
   /** method name for Java method that creates the script function for the program */
   CREATE_PROGRAM_FUNCTION(":createProgramFunction"),
   /**
-   * "this" name symbol for a parameter representing ECMAScript "this" in static methods that are compiled
-   * representations of ECMAScript functions. It is not assigned a slot, as its position in the method signature is
-   * dependent on other factors (most notably, callee can precede it).
+   * "this" name symbol for a parameter representing ECMAScript "this" in static methods that are compiled representations of ECMAScript functions.
+   * It is not assigned a slot, as its position in the method signature is dependent on other factors (most notably, callee can precede it).
    */
   THIS("this", Object.class),
   /** this debugger symbol */
@@ -114,9 +115,9 @@ public enum CompilerConstants {
   GET_ARRAY_SUFFIX("$array");
 
   /** To save memory - intern the compiler constant symbol names, as they are frequently reused */
-  static {
-    for (final CompilerConstants c : values()) {
-      final String symbolName = c.symbolName();
+  static /*<init>*/ {
+    for (var c : values()) {
+      var symbolName = c.symbolName();
       if (symbolName != null) {
         symbolName.intern();
       }
@@ -125,34 +126,32 @@ public enum CompilerConstants {
 
   private static Set<String> symbolNames;
 
-  /**
-   * Prefix used for internal methods generated in script classes.
-   */
+  // Prefix used for internal methods generated in script classes.
   private static final String INTERNAL_METHOD_PREFIX = ":";
 
   private final String symbolName;
   private final Class<?> type;
   private final int slot;
 
-  private CompilerConstants() {
+  CompilerConstants() {
     this.symbolName = name();
     this.type = null;
     this.slot = -1;
   }
 
-  private CompilerConstants(final String symbolName) {
+  CompilerConstants(String symbolName) {
     this(symbolName, -1);
   }
 
-  private CompilerConstants(final String symbolName, final int slot) {
+  CompilerConstants(String symbolName, int slot) {
     this(symbolName, null, slot);
   }
 
-  private CompilerConstants(final String symbolName, final Class<?> type) {
+  CompilerConstants(String symbolName, Class<?> type) {
     this(symbolName, type, -1);
   }
 
-  private CompilerConstants(final String symbolName, final Class<?> type, final int slot) {
+  CompilerConstants(String symbolName, Class<?> type, int slot) {
     this.symbolName = symbolName;
     this.type = type;
     this.slot = slot;
@@ -163,25 +162,24 @@ public enum CompilerConstants {
    * @param name name
    * @return true if compiler constant name
    */
-  public static boolean isCompilerConstant(final String name) {
+  public static boolean isCompilerConstant(String name) {
     ensureSymbolNames();
     return symbolNames.contains(name);
   }
 
-  private static void ensureSymbolNames() {
+  static void ensureSymbolNames() {
     if (symbolNames == null) {
       symbolNames = new HashSet<>();
-      for (final CompilerConstants cc : CompilerConstants.values()) {
+      for (var cc : CompilerConstants.values()) {
         symbolNames.add(cc.symbolName);
       }
     }
   }
 
   /**
-   * Return the tag for this compile constant. Deliberately avoiding "name" here
-   * not to conflate with enum implementation. This is the master string for the
-   * constant - every constant has one.
-   *
+   * Return the tag for this compile constant.
+   * Deliberately avoiding "name" here not to conflate with enum implementation.
+   * This is the master string for the constant - every constant has one.
    * @return the tag
    */
   public final String symbolName() {
@@ -190,7 +188,6 @@ public enum CompilerConstants {
 
   /**
    * Return the type for this compile constant
-   *
    * @return type for this constant's instances, or null if N/A
    */
   public final Class<?> type() {
@@ -199,7 +196,6 @@ public enum CompilerConstants {
 
   /**
    * Return the slot for this compile constant
-   *
    * @return byte code slot where constant is stored or -1 if N/A
    */
   public final int slot() {
@@ -207,9 +203,8 @@ public enum CompilerConstants {
   }
 
   /**
-   * Return a descriptor for this compile constant. Only relevant if it has
-   * a type
-   *
+   * Return a descriptor for this compile constant.
+   * Only relevant if it has a type
    * @return descriptor the descriptor
    */
   public final String descriptor() {
@@ -219,299 +214,256 @@ public enum CompilerConstants {
 
   /**
    * Get the internal class name for a type
-   *
    * @param type a type
    * @return  the internal name for this type
    */
-  public static String className(final Class<?> type) {
+  public static String className(Class<?> type) {
     return Type.getInternalName(type);
   }
 
   /**
    * Get the method descriptor for a given method type collection
-   *
    * @param rtype  return type
    * @param ptypes parameter types
-   *
    * @return internal descriptor for this method
    */
-  public static String methodDescriptor(final Class<?> rtype, final Class<?>... ptypes) {
+  public static String methodDescriptor(Class<?> rtype, Class<?>... ptypes) {
     return Type.getMethodDescriptor(rtype, ptypes);
   }
 
   /**
    * Get the type descriptor for a type
-   *
-   * @param clazz a type
-   *
+   * @param type a type
    * @return the internal descriptor for this type
    */
-  public static String typeDescriptor(final Class<?> clazz) {
-    return Type.typeFor(clazz).getDescriptor();
+  public static String typeDescriptor(Class<?> type) {
+    return Type.typeFor(type).getDescriptor();
   }
 
   /**
-   * Create a call representing a void constructor for a given type. Don't
-   * attempt to look this up at compile time
-   *
-   * @param clazz the class
-   *
+   * Create a call representing a void constructor for a given type.
+   * Don't attempt to look this up at compile time
+   * @param type the class
    * @return Call representing void constructor for type
    */
-  public static Call constructorNoLookup(final Class<?> clazz) {
-    return specialCallNoLookup(clazz, INIT.symbolName(), void.class);
+  public static Call constructorNoLookup(Class<?> type) {
+    return specialCallNoLookup(type, INIT.symbolName(), void.class);
   }
 
   /**
-   * Create a call representing a constructor for a given type. Don't
-   * attempt to look this up at compile time
-   *
+   * Create a call representing a constructor for a given type.
+   * Don't attempt to look this up at compile time
    * @param className the type class name
    * @param ptypes    the parameter types for the constructor
-   *
    * @return Call representing constructor for type
    */
-  public static Call constructorNoLookup(final String className, final Class<?>... ptypes) {
+  public static Call constructorNoLookup(String className, Class<?>... ptypes) {
     return specialCallNoLookup(className, INIT.symbolName(), methodDescriptor(void.class, ptypes));
   }
 
   /**
-   * Create a call representing a constructor for a given type. Don't
-   * attempt to look this up at compile time
-   *
-   * @param clazz  the class name
+   * Create a call representing a constructor for a given type.
+   * Don't attempt to look this up at compile time
+   * @param type  the class name
    * @param ptypes the parameter types for the constructor
-   *
    * @return Call representing constructor for type
    */
-  public static Call constructorNoLookup(final Class<?> clazz, final Class<?>... ptypes) {
-    return specialCallNoLookup(clazz, INIT.symbolName(), void.class, ptypes);
+  public static Call constructorNoLookup(Class<?> type, Class<?>... ptypes) {
+    return specialCallNoLookup(type, INIT.symbolName(), void.class, ptypes);
   }
 
   /**
-   * Create a call representing an invokespecial to a given method. Don't
-   * attempt to look this up at compile time
-   *
+   * Create a call representing an invokespecial to a given method.
+   * Don't attempt to look this up at compile time
    * @param className the class name
    * @param name      the method name
    * @param desc      the descriptor
-   *
    * @return Call representing specified invokespecial call
    */
-  public static Call specialCallNoLookup(final String className, final String name, final String desc) {
+  public static Call specialCallNoLookup(String className, String name, String desc) {
     return new Call(null, className, name, desc) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokespecial(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className, name, desc, false);
       }
     };
   }
 
   /**
-   * Create a call representing an invokespecial to a given method. Don't
-   * attempt to look this up at compile time
-   *
-   * @param clazz  the class
+   * Create a call representing an invokespecial to a given method.
+   * Don't attempt to look this up at compile time
+   * @param type  the class
    * @param name   the method name
    * @param rtype  the return type
    * @param ptypes the parameter types
-   *
    * @return Call representing specified invokespecial call
    */
-  public static Call specialCallNoLookup(final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return specialCallNoLookup(className(clazz), name, methodDescriptor(rtype, ptypes));
+  public static Call specialCallNoLookup(Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return specialCallNoLookup(className(type), name, methodDescriptor(rtype, ptypes));
   }
 
   /**
-   * Create a call representing an invokestatic to a given method. Don't
-   * attempt to look this up at compile time
-   *
+   * Create a call representing an invokestatic to a given method.
+   * Don't attempt to look this up at compile time
    * @param className the class name
    * @param name      the method name
    * @param desc      the descriptor
-   *
    * @return Call representing specified invokestatic call
    */
-  public static Call staticCallNoLookup(final String className, final String name, final String desc) {
+  public static Call staticCallNoLookup(String className, String name, String desc) {
     return new Call(null, className, name, desc) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokestatic(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, name, desc, false);
       }
     };
   }
 
   /**
-   * Create a call representing an invokestatic to a given method. Don't
-   * attempt to look this up at compile time
-   *
-   * @param clazz  the class
+   * Create a call representing an invokestatic to a given method.
+   * Don't attempt to look this up at compile time
+   * @param type  the class
    * @param name   the method name
    * @param rtype  the return type
    * @param ptypes the parameter types
-   *
    * @return Call representing specified invokestatic call
    */
-  public static Call staticCallNoLookup(final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return staticCallNoLookup(className(clazz), name, methodDescriptor(rtype, ptypes));
+  public static Call staticCallNoLookup(Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return staticCallNoLookup(className(type), name, methodDescriptor(rtype, ptypes));
   }
 
   /**
-   * Create a call representing an invokevirtual to a given method. Don't
-   * attempt to look this up at compile time
-   *
-   * @param clazz  the class
+   * Create a call representing an invokevirtual to a given method.
+   * Don't attempt to look this up at compile time
+   * @param type  the class
    * @param name   the method name
    * @param rtype  the return type
    * @param ptypes the parameter types
-   *
    * @return Call representing specified invokevirtual call
    */
-  public static Call virtualCallNoLookup(final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return new Call(null, className(clazz), name, methodDescriptor(rtype, ptypes)) {
+  public static Call virtualCallNoLookup(Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return new Call(null, className(type), name, methodDescriptor(rtype, ptypes)) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokevirtual(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className, name, descriptor, false);
       }
     };
   }
 
   /**
-   * Create a call representing an invokeinterface to a given method. Don't
-   * attempt to look this up at compile time
-   *
-   * @param clazz  the class
+   * Create a call representing an invokeinterface to a given method.
+   * Don't attempt to look this up at compile time
+   * @param type  the class
    * @param name   the method name
    * @param rtype  the return type
    * @param ptypes the parameter types
    *
    * @return Call representing specified invokeinterface call
    */
-  public static Call interfaceCallNoLookup(final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return new Call(null, className(clazz), name, methodDescriptor(rtype, ptypes)) {
+  public static Call interfaceCallNoLookup(Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return new Call(null, className(type), name, methodDescriptor(rtype, ptypes)) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokeinterface(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, className, name, descriptor, true);
       }
     };
   }
 
   /**
-   * Create a FieldAccess representing a virtual field, that can be subject to put
-   * or get operations
-   *
+   * Create a FieldAccess representing a virtual field, that can be subject to put or get operations
    * @param className name of the class where the field is a member
    * @param name      name of the field
    * @param desc      type descriptor of the field
-   *
    * @return a field access object giving access code generation method for the virtual field
    */
-  public static FieldAccess virtualField(final String className, final String name, final String desc) {
+  public static FieldAccess virtualField(String className, String name, String desc) {
     return new FieldAccess(className, name, desc) {
       @Override
-      public MethodEmitter get(final MethodEmitter method) {
+      public MethodEmitter get(MethodEmitter method) {
         return method.getField(className, name, descriptor);
       }
-
       @Override
-      public void put(final MethodEmitter method) {
+      public void put(MethodEmitter method) {
         method.putField(className, name, descriptor);
       }
     };
   }
 
   /**
-   * Create a FieldAccess representing a virtual field, that can be subject to put
-   * or get operations
-   *
-   * @param clazz class where the field is a member
+   * Create a FieldAccess representing a virtual field, that can be subject to put or get operations
+   * @param type class where the field is a member
    * @param name  name of the field
-   * @param type  type of the field
-   *
+   * @param ftype  ftype of the field
    * @return a field access object giving access code generation method for the virtual field
    */
-  public static FieldAccess virtualField(final Class<?> clazz, final String name, final Class<?> type) {
-    return virtualField(className(clazz), name, typeDescriptor(type));
+  public static FieldAccess virtualField(Class<?> type, String name, Class<?> ftype) {
+    return virtualField(className(type), name, typeDescriptor(ftype));
   }
 
   /**
-   * Create a FieldAccess representing a static field, that can be subject to put
-   * or get operations
-   *
+   * Create a FieldAccess representing a static field, that can be subject to put or get operations
    * @param className name of the class where the field is a member
    * @param name      name of the field
    * @param desc      type descriptor of the field
-   *
    * @return a field access object giving access code generation method for the static field
    */
-  public static FieldAccess staticField(final String className, final String name, final String desc) {
+  public static FieldAccess staticField(String className, String name, String desc) {
     return new FieldAccess(className, name, desc) {
       @Override
-      public MethodEmitter get(final MethodEmitter method) {
+      public MethodEmitter get(MethodEmitter method) {
         return method.getStatic(className, name, descriptor);
       }
-
       @Override
-      public void put(final MethodEmitter method) {
+      public void put(MethodEmitter method) {
         method.putStatic(className, name, descriptor);
       }
     };
   }
 
   /**
-   * Create a FieldAccess representing a static field, that can be subject to put
-   * or get operations
-   *
-   * @param clazz class where the field is a member
+   * Create a FieldAccess representing a static field, that can be subject to put or get operations
+   * @param type class where the field is a member
    * @param name  name of the field
-   * @param type  type of the field
-   *
+   * @param ftype  ftype of the field
    * @return a field access object giving access code generation method for the virtual field
    */
-  public static FieldAccess staticField(final Class<?> clazz, final String name, final Class<?> type) {
-    return staticField(className(clazz), name, typeDescriptor(type));
+  public static FieldAccess staticField(Class<?> type, String name, Class<?> ftype) {
+    return staticField(className(type), name, typeDescriptor(ftype));
   }
 
   /**
    * Create a static call, given an explicit lookup, looking up the method handle for it at the same time
-   *
    * @param lookup the lookup
-   * @param clazz  the class
+   * @param type  the class
    * @param name   the name of the method
    * @param rtype  the return type
    * @param ptypes the parameter types
-   *
    * @return the call object representing the static call
    */
-  public static Call staticCall(final MethodHandles.Lookup lookup, final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return new Call(MH.findStatic(lookup, clazz, name, MH.type(rtype, ptypes)), className(clazz), name, methodDescriptor(rtype, ptypes)) {
+  public static Call staticCall(MethodHandles.Lookup lookup, Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return new Call(MH.findStatic(lookup, type, name, MH.type(rtype, ptypes)), className(type), name, methodDescriptor(rtype, ptypes)) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokestatic(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, name, descriptor, false);
       }
     };
@@ -519,24 +471,21 @@ public enum CompilerConstants {
 
   /**
    * Create a virtual call, given an explicit lookup, looking up the method handle for it at the same time
-   *
    * @param lookup the lookup
-   * @param clazz  the class
+   * @param type  the class
    * @param name   the name of the method
    * @param rtype  the return type
    * @param ptypes the parameter types
-   *
    * @return the call object representing the virtual call
    */
-  public static Call virtualCall(final MethodHandles.Lookup lookup, final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return new Call(MH.findVirtual(lookup, clazz, name, MH.type(rtype, ptypes)), className(clazz), name, methodDescriptor(rtype, ptypes)) {
+  public static Call virtualCall(MethodHandles.Lookup lookup, Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return new Call(MH.findVirtual(lookup, type, name, MH.type(rtype, ptypes)), className(type), name, methodDescriptor(rtype, ptypes)) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokevirtual(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className, name, descriptor, false);
       }
     };
@@ -545,46 +494,43 @@ public enum CompilerConstants {
   /**
    * Create a special call, given an explicit lookup, looking up the method handle for it at the same time.
    * clazz is used as this class
-   *
    * @param lookup    the lookup
-   * @param clazz     the class
+   * @param type     the class
    * @param name      the name of the method
    * @param rtype     the return type
    * @param ptypes    the parameter types
-   *
    * @return the call object representing the virtual call
    */
-  public static Call specialCall(final MethodHandles.Lookup lookup, final Class<?> clazz, final String name, final Class<?> rtype, final Class<?>... ptypes) {
-    return new Call(MH.findSpecial(lookup, clazz, name, MH.type(rtype, ptypes), clazz), className(clazz), name, methodDescriptor(rtype, ptypes)) {
+  public static Call specialCall(MethodHandles.Lookup lookup, Class<?> type, String name, Class<?> rtype, Class<?>... ptypes) {
+    return new Call(MH.findSpecial(lookup, type, name, MH.type(rtype, ptypes), type), className(type), name, methodDescriptor(rtype, ptypes)) {
       @Override
-      MethodEmitter invoke(final MethodEmitter method) {
+      MethodEmitter invoke(MethodEmitter method) {
         return method.invokespecial(className, name, descriptor);
       }
-
       @Override
-      public void invoke(final MethodVisitor mv) {
+      public void invoke(MethodVisitor mv) {
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className, name, descriptor, false);
       }
     };
   }
 
   /**
-   * Returns true if the passed string looks like a method name of an internally generated Nashorn method. Basically,
-   * if it starts with a colon character {@code :} but is not the name of the program method {@code :program}.
+   * Returns true if the passed string looks like a method name of an internally generated Nashorn method.
+   * Basically, if it starts with a colon character {@code :} but is not the name of the program method {@code :program}.
    * Program function is not considered internal as we want it to show up in exception stack traces.
    * @param methodName the name of a method
    * @return true if it looks like an internal Nashorn method name.
    * @throws NullPointerException if passed null
    */
-  public static boolean isInternalMethodName(final String methodName) {
+  public static boolean isInternalMethodName(String methodName) {
     return methodName.startsWith(INTERNAL_METHOD_PREFIX) && !methodName.equals(PROGRAM.symbolName);
   }
 
   /**
-   * Private class representing an access. This can generate code into a method code or
-   * a field access.
+   * Private class representing an access.
+   * This can generate code into a method code or a field access.
    */
-  private abstract static class Access {
+  abstract static class Access {
 
     protected final MethodHandle methodHandle;
     protected final String className;
@@ -593,13 +539,12 @@ public enum CompilerConstants {
 
     /**
      * Constructor
-     *
      * @param methodHandle methodHandle or null if none
      * @param className    class name for access
      * @param name         field or method name for access
      * @param descriptor   descriptor for access field or method
      */
-    protected Access(final MethodHandle methodHandle, final String className, final String name, final String descriptor) {
+    protected Access(MethodHandle methodHandle, String className, String name, String descriptor) {
       this.methodHandle = methodHandle;
       this.className = className;
       this.name = name;
@@ -608,7 +553,6 @@ public enum CompilerConstants {
 
     /**
      * Get the method handle, or null if access hasn't been looked up
-     *
      * @return method handle
      */
     public MethodHandle methodHandle() {
@@ -617,7 +561,6 @@ public enum CompilerConstants {
 
     /**
      * Get the class name of the access
-     *
      * @return the class name
      */
     public String className() {
@@ -626,7 +569,6 @@ public enum CompilerConstants {
 
     /**
      * Get the field name or method name of the access
-     *
      * @return the name
      */
     public String name() {
@@ -635,7 +577,6 @@ public enum CompilerConstants {
 
     /**
      * Get the descriptor of the method or field of the access
-     *
      * @return the descriptor
      */
     public String descriptor() {
@@ -644,37 +585,32 @@ public enum CompilerConstants {
   }
 
   /**
-   * Field access - this can be used for generating code for static or
-   * virtual field accesses
+   * Field access - this can be used for generating code for static or virtual field accesses
    */
   public abstract static class FieldAccess extends Access {
 
     /**
      * Constructor
-     *
      * @param className  name of the class where the field is
      * @param name       name of the field
      * @param descriptor descriptor of the field
      */
-    protected FieldAccess(final String className, final String name, final String descriptor) {
+    protected FieldAccess(String className, String name, String descriptor) {
       super(null, className, name, descriptor);
     }
 
     /**
      * Generate get code for the field
-     *
      * @param emitter a method emitter
-     *
      * @return the method emitter
      */
-    protected abstract MethodEmitter get(final MethodEmitter emitter);
+    protected abstract MethodEmitter get(MethodEmitter emitter);
 
     /**
      * Generate put code for the field
-     *
      * @param emitter a method emitter
      */
-    protected abstract void put(final MethodEmitter emitter);
+    protected abstract void put(MethodEmitter emitter);
   }
 
   /**
@@ -684,42 +620,37 @@ public enum CompilerConstants {
 
     /**
      * Constructor
-     *
      * @param className  class name for the method of the call
      * @param name       method name
      * @param descriptor method descriptor
      */
-    protected Call(final String className, final String name, final String descriptor) {
+    protected Call(String className, String name, String descriptor) {
       super(null, className, name, descriptor);
     }
 
     /**
      * Constructor
-     *
      * @param methodHandle method handle for the call if resolved
      * @param className    class name for the method of the call
      * @param name         method name
      * @param descriptor   method descriptor
      */
-    protected Call(final MethodHandle methodHandle, final String className, final String name, final String descriptor) {
+    protected Call(MethodHandle methodHandle, String className, String name, String descriptor) {
       super(methodHandle, className, name, descriptor);
     }
 
     /**
      * Generate invocation code for the method
-     *
      * @param emitter a method emitter
-     *
      * @return the method emitter
      */
-    abstract MethodEmitter invoke(final MethodEmitter emitter);
+    abstract MethodEmitter invoke(MethodEmitter emitter);
 
     /**
      * Generate invocation code for the method
-     *
      * @param mv a method visitor
      */
-    public abstract void invoke(final MethodVisitor mv);
+    public abstract void invoke(MethodVisitor mv);
   }
 
 }

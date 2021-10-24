@@ -2,6 +2,7 @@ package es.codegen;
 
 import java.util.List;
 import java.util.Map;
+
 import es.ir.AccessNode;
 import es.ir.BinaryNode;
 import es.ir.Block;
@@ -36,14 +37,12 @@ import es.ir.WithNode;
 import es.ir.visitor.NodeOperatorVisitor;
 
 /**
- * Computes the "byte code" weight of an AST segment. This is used
- * for Splitting too large class files
+ * Computes the "byte code" weight of an AST segment.
+ * This is used for Splitting too large class files
  */
 final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
 
-  /*
-     * Weight constants.
-   */
+  // Weight constants.
   static final long FUNCTION_WEIGHT = 40;
   static final long AASTORE_WEIGHT = 2;
   static final long ACCESS_WEIGHT = 4;
@@ -67,88 +66,86 @@ final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
   static final long OBJECT_WEIGHT = 16;
   static final long SETPROP_WEIGHT = 5;
 
-  /** Accumulated weight. */
+  // Accumulated weight.
   private long weight;
 
-  /** Optional cache for weight of block nodes. */
+  // Optional cache for weight of block nodes.
   private final Map<Node, Long> weightCache;
 
   private final FunctionNode topFunction;
 
   /**
    * Constructor
-   *
    * @param weightCache cache of already calculated block weights
    */
-  private WeighNodes(final FunctionNode topFunction, final Map<Node, Long> weightCache) {
+  WeighNodes(FunctionNode topFunction, Map<Node, Long> weightCache) {
     super(new LexicalContext());
     this.topFunction = topFunction;
     this.weightCache = weightCache;
   }
 
-  static long weigh(final Node node) {
+  static long weigh(Node node) {
     return weigh(node, null);
   }
 
-  static long weigh(final Node node, final Map<Node, Long> weightCache) {
-    final WeighNodes weighNodes = new WeighNodes(node instanceof FunctionNode ? (FunctionNode) node : null, weightCache);
+  static long weigh(Node node, Map<Node, Long> weightCache) {
+    var weighNodes = new WeighNodes(node instanceof FunctionNode fn ? fn : null, weightCache);
     node.accept(weighNodes);
     return weighNodes.weight;
   }
 
   @Override
-  public Node leaveAccessNode(final AccessNode accessNode) {
+  public Node leaveAccessNode(AccessNode accessNode) {
     weight += ACCESS_WEIGHT;
     return accessNode;
   }
 
   @Override
-  public boolean enterBlock(final Block block) {
+  public boolean enterBlock(Block block) {
     if (weightCache != null && weightCache.containsKey(block)) {
       weight += weightCache.get(block);
       return false;
     }
-
     return true;
   }
 
   @Override
-  public Node leaveBreakNode(final BreakNode breakNode) {
+  public Node leaveBreakNode(BreakNode breakNode) {
     weight += BREAK_WEIGHT;
     return breakNode;
   }
 
   @Override
-  public Node leaveCallNode(final CallNode callNode) {
+  public Node leaveCallNode(CallNode callNode) {
     weight += CALL_WEIGHT;
     return callNode;
   }
 
   @Override
-  public Node leaveCatchNode(final CatchNode catchNode) {
+  public Node leaveCatchNode(CatchNode catchNode) {
     weight += CATCH_WEIGHT;
     return catchNode;
   }
 
   @Override
-  public Node leaveContinueNode(final ContinueNode continueNode) {
+  public Node leaveContinueNode(ContinueNode continueNode) {
     weight += CONTINUE_WEIGHT;
     return continueNode;
   }
 
   @Override
-  public Node leaveExpressionStatement(final ExpressionStatement expressionStatement) {
+  public Node leaveExpressionStatement(ExpressionStatement expressionStatement) {
     return expressionStatement;
   }
 
   @Override
-  public Node leaveForNode(final ForNode forNode) {
+  public Node leaveForNode(ForNode forNode) {
     weight += LOOP_WEIGHT;
     return forNode;
   }
 
   @Override
-  public boolean enterFunctionNode(final FunctionNode functionNode) {
+  public boolean enterFunctionNode(FunctionNode functionNode) {
     if (functionNode == topFunction) {
       // the function being weighted; descend into its statements
       return true;
@@ -159,390 +156,381 @@ final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
   }
 
   @Override
-  public Node leaveIdentNode(final IdentNode identNode) {
+  public Node leaveIdentNode(IdentNode identNode) {
     weight += ACCESS_WEIGHT;
     return identNode;
   }
 
   @Override
-  public Node leaveIfNode(final IfNode ifNode) {
+  public Node leaveIfNode(IfNode ifNode) {
     weight += IF_WEIGHT;
     return ifNode;
   }
 
   @Override
-  public Node leaveIndexNode(final IndexNode indexNode) {
+  public Node leaveIndexNode(IndexNode indexNode) {
     weight += ACCESS_WEIGHT;
     return indexNode;
   }
 
   @Override
-  public Node leaveJumpToInlinedFinally(final JumpToInlinedFinally jumpToInlinedFinally) {
+  public Node leaveJumpToInlinedFinally(JumpToInlinedFinally jumpToInlinedFinally) {
     weight += BREAK_WEIGHT;
     return jumpToInlinedFinally;
   }
 
   @SuppressWarnings("rawtypes")
   @Override
-  public boolean enterLiteralNode(final LiteralNode literalNode) {
+  public boolean enterLiteralNode(LiteralNode literalNode) {
     weight += LITERAL_WEIGHT;
-
-    if (literalNode instanceof ArrayLiteralNode) {
-      final ArrayLiteralNode arrayLiteralNode = (ArrayLiteralNode) literalNode;
-      final Node[] value = arrayLiteralNode.getValue();
-      final int[] postsets = arrayLiteralNode.getPostsets();
-      final List<Splittable.SplitRange> units = arrayLiteralNode.getSplitRanges();
-
+    if (literalNode instanceof ArrayLiteralNode arrayLiteralNode) {
+      var value = arrayLiteralNode.getValue();
+      var postsets = arrayLiteralNode.getPostsets();
+      var units = arrayLiteralNode.getSplitRanges();
       if (units == null) {
-        for (final int postset : postsets) {
+        for (var postset : postsets) {
           weight += AASTORE_WEIGHT;
-          final Node element = value[postset];
-
+          var element = value[postset];
           if (element != null) {
             element.accept(this);
           }
         }
       }
-
       return false;
     }
-
     return true;
   }
 
   @Override
-  public boolean enterObjectNode(final ObjectNode objectNode) {
+  public boolean enterObjectNode(ObjectNode objectNode) {
     weight += OBJECT_WEIGHT;
-    final List<PropertyNode> properties = objectNode.getElements();
-    final boolean isSpillObject = properties.size() > CodeGenerator.OBJECT_SPILL_THRESHOLD;
-
-    for (final PropertyNode property : properties) {
+    var properties = objectNode.getElements();
+    var isSpillObject = properties.size() > CodeGenerator.OBJECT_SPILL_THRESHOLD;
+    for (var property : properties) {
       if (!LiteralNode.isConstant(property.getValue())) {
         weight += SETPROP_WEIGHT;
         property.getValue().accept(this);
       } else if (!isSpillObject) {
-        // constants in spill object are set via preset spill array,
-        // but fields objects need to set constants.
+        // constants in spill object are set via preset spill array, but fields objects need to set constants.
         weight += SETPROP_WEIGHT;
       }
-
     }
-
     return false;
   }
 
   @Override
-  public Node leavePropertyNode(final PropertyNode propertyNode) {
+  public Node leavePropertyNode(PropertyNode propertyNode) {
     weight += LITERAL_WEIGHT;
     return propertyNode;
   }
 
   @Override
-  public Node leaveReturnNode(final ReturnNode returnNode) {
+  public Node leaveReturnNode(ReturnNode returnNode) {
     weight += RETURN_WEIGHT;
     return returnNode;
   }
 
   @Override
-  public Node leaveRuntimeNode(final RuntimeNode runtimeNode) {
+  public Node leaveRuntimeNode(RuntimeNode runtimeNode) {
     weight += CALL_WEIGHT;
     return runtimeNode;
   }
 
   @Override
-  public boolean enterSplitNode(final SplitNode splitNode) {
+  public boolean enterSplitNode(SplitNode splitNode) {
     weight += SPLIT_WEIGHT;
     return false;
   }
 
   @Override
-  public Node leaveSwitchNode(final SwitchNode switchNode) {
+  public Node leaveSwitchNode(SwitchNode switchNode) {
     weight += SWITCH_WEIGHT;
     return switchNode;
   }
 
   @Override
-  public Node leaveThrowNode(final ThrowNode throwNode) {
+  public Node leaveThrowNode(ThrowNode throwNode) {
     weight += THROW_WEIGHT;
     return throwNode;
   }
 
   @Override
-  public Node leaveTryNode(final TryNode tryNode) {
+  public Node leaveTryNode(TryNode tryNode) {
     weight += THROW_WEIGHT;
     return tryNode;
   }
 
   @Override
-  public Node leaveVarNode(final VarNode varNode) {
+  public Node leaveVarNode(VarNode varNode) {
     weight += VAR_WEIGHT;
     return varNode;
   }
 
   @Override
-  public Node leaveWhileNode(final WhileNode whileNode) {
+  public Node leaveWhileNode(WhileNode whileNode) {
     weight += LOOP_WEIGHT;
     return whileNode;
   }
 
   @Override
-  public Node leaveWithNode(final WithNode withNode) {
+  public Node leaveWithNode(WithNode withNode) {
     weight += WITH_WEIGHT;
     return withNode;
   }
 
   @Override
-  public Node leavePOS(final UnaryNode unaryNode) {
+  public Node leavePOS(UnaryNode unaryNode) {
     return unaryNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveBIT_NOT(final UnaryNode unaryNode) {
+  public Node leaveBIT_NOT(UnaryNode unaryNode) {
     return unaryNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveDECINC(final UnaryNode unaryNode) {
+  public Node leaveDECINC(UnaryNode unaryNode) {
     return unaryNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveDELETE(final UnaryNode unaryNode) {
+  public Node leaveDELETE(UnaryNode unaryNode) {
     return runtimeNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveNEW(final UnaryNode unaryNode) {
+  public Node leaveNEW(UnaryNode unaryNode) {
     weight += NEW_WEIGHT;
     return unaryNode;
   }
 
   @Override
-  public Node leaveNOT(final UnaryNode unaryNode) {
+  public Node leaveNOT(UnaryNode unaryNode) {
     return unaryNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveNEG(final UnaryNode unaryNode) {
+  public Node leaveNEG(UnaryNode unaryNode) {
     return unaryNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveTYPEOF(final UnaryNode unaryNode) {
+  public Node leaveTYPEOF(UnaryNode unaryNode) {
     return runtimeNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveVOID(final UnaryNode unaryNode) {
+  public Node leaveVOID(UnaryNode unaryNode) {
     return unaryNodeWeight(unaryNode);
   }
 
   @Override
-  public Node leaveADD(final BinaryNode binaryNode) {
+  public Node leaveADD(BinaryNode binaryNode) {
     weight += ADD_WEIGHT;
     return binaryNode;
   }
 
   @Override
-  public Node leaveAND(final BinaryNode binaryNode) {
+  public Node leaveAND(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN(final BinaryNode binaryNode) {
+  public Node leaveASSIGN(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_ADD(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_ADD(BinaryNode binaryNode) {
     weight += ADD_WEIGHT;
     return binaryNode;
   }
 
   @Override
-  public Node leaveASSIGN_BIT_AND(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_BIT_AND(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_BIT_OR(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_BIT_OR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_BIT_XOR(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_BIT_XOR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_DIV(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_DIV(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_MOD(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_MOD(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_MUL(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_MUL(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_SAR(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_SAR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_SHL(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_SHL(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_SHR(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_SHR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveASSIGN_SUB(final BinaryNode binaryNode) {
+  public Node leaveASSIGN_SUB(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveARROW(final BinaryNode binaryNode) {
+  public Node leaveARROW(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveBIT_AND(final BinaryNode binaryNode) {
+  public Node leaveBIT_AND(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveBIT_OR(final BinaryNode binaryNode) {
+  public Node leaveBIT_OR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveBIT_XOR(final BinaryNode binaryNode) {
+  public Node leaveBIT_XOR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveCOMMARIGHT(final BinaryNode binaryNode) {
+  public Node leaveCOMMARIGHT(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveDIV(final BinaryNode binaryNode) {
+  public Node leaveDIV(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveEQ(final BinaryNode binaryNode) {
+  public Node leaveEQ(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveEQUIV(final BinaryNode binaryNode) {
+  public Node leaveEQUIV(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveGE(final BinaryNode binaryNode) {
+  public Node leaveGE(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveGT(final BinaryNode binaryNode) {
+  public Node leaveGT(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveIN(final BinaryNode binaryNode) {
+  public Node leaveIN(BinaryNode binaryNode) {
     weight += CALL_WEIGHT;
     return binaryNode;
   }
 
   @Override
-  public Node leaveINSTANCEOF(final BinaryNode binaryNode) {
+  public Node leaveINSTANCEOF(BinaryNode binaryNode) {
     weight += CALL_WEIGHT;
     return binaryNode;
   }
 
   @Override
-  public Node leaveLE(final BinaryNode binaryNode) {
+  public Node leaveLE(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveLT(final BinaryNode binaryNode) {
+  public Node leaveLT(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveMOD(final BinaryNode binaryNode) {
+  public Node leaveMOD(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveMUL(final BinaryNode binaryNode) {
+  public Node leaveMUL(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveNE(final BinaryNode binaryNode) {
+  public Node leaveNE(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveNOT_EQUIV(final BinaryNode binaryNode) {
+  public Node leaveNOT_EQUIV(BinaryNode binaryNode) {
     return compareWeight(binaryNode);
   }
 
   @Override
-  public Node leaveOR(final BinaryNode binaryNode) {
+  public Node leaveOR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveSAR(final BinaryNode binaryNode) {
+  public Node leaveSAR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveSHL(final BinaryNode binaryNode) {
+  public Node leaveSHL(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveSHR(final BinaryNode binaryNode) {
+  public Node leaveSHR(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
   @Override
-  public Node leaveSUB(final BinaryNode binaryNode) {
+  public Node leaveSUB(BinaryNode binaryNode) {
     return binaryNodeWeight(binaryNode);
   }
 
-  private Node unaryNodeWeight(final UnaryNode unaryNode) {
+  Node unaryNodeWeight(UnaryNode unaryNode) {
     weight += 1;
     return unaryNode;
   }
 
-  private Node binaryNodeWeight(final BinaryNode binaryNode) {
+  Node binaryNodeWeight(BinaryNode binaryNode) {
     weight += 1;
     return binaryNode;
   }
 
-  private Node runtimeNodeWeight(final UnaryNode unaryNode) {
+  Node runtimeNodeWeight(UnaryNode unaryNode) {
     weight += CALL_WEIGHT;
     return unaryNode;
   }
 
-  private Node compareWeight(final BinaryNode binaryNode) {
+  Node compareWeight(BinaryNode binaryNode) {
     weight += COMPARE_WEIGHT;
     return binaryNode;
   }
+
 }

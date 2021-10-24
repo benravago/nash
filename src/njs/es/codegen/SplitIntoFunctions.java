@@ -1,9 +1,5 @@
 package es.codegen;
 
-import static es.ir.Node.NO_FINISH;
-import static es.ir.Node.NO_LINE_NUMBER;
-import static es.ir.Node.NO_TOKEN;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +7,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+
 import es.ir.AccessNode;
 import es.ir.BinaryNode;
 import es.ir.Block;
@@ -39,19 +36,18 @@ import es.ir.VarNode;
 import es.ir.visitor.NodeVisitor;
 import es.parser.Token;
 import es.parser.TokenType;
+import static es.ir.Node.*;
 
 /**
- * A node visitor that replaces {@link SplitNode}s with anonymous function invocations and some additional constructs
- * to support control flow across splits. By using this transformation, split functions are translated into ordinary
- * JavaScript functions with nested anonymous functions. The transformations however introduce several AST nodes that
- * have no JavaScript source representations ({@link GetSplitState}, {@link SetSplitState}, and {@link SplitReturn}),
- * and therefore such function is no longer reparseable from its source. For that reason, split functions and their
- * fragments are serialized in-memory and deserialized when they need to be recompiled either for deoptimization or
- * for type specialization.
- * NOTE: all {@code leave*()} methods for statements are returning their input nodes. That way, they will not mutate
- * the original statement list in the block containing the statement, which is fine, as it'll be replaced by the
- * lexical context when the block is left. If we returned something else (e.g. null), we'd cause a mutation in the
- * enclosing block's statement list that is otherwise overwritten later anyway.
+ * A node visitor that replaces {@link SplitNode}s with anonymous function invocations and some additional constructs to support control flow across splits.
+ *
+ * By using this transformation, split functions are translated into ordinary JavaScript functions with nested anonymous functions.
+ * The transformations however introduce several AST nodes that have no JavaScript source representations ({@link GetSplitState}, {@link SetSplitState}, and {@link SplitReturn}), and therefore such function is no longer reparseable from its source.
+ * For that reason, split functions and their fragments are serialized in-memory and deserialized when they need to be recompiled either for deoptimization or for type specialization.
+ *
+ * NOTE: all {@code leave*()} methods for statements are returning their input nodes.
+ * That way, they will not mutate the original statement list in the block containing the statement, which is fine, as it'll be replaced by the lexical context when the block is left.
+ * If we returned something else (e.g. null), we'd cause a mutation in the enclosing block's statement list that is otherwise overwritten later anyway.
  */
 final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
 
@@ -74,11 +70,11 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
   // -1 is program; we need to use negative ones
   private int nextFunctionId = -2;
 
-  public SplitIntoFunctions(final Compiler compiler) {
+  public SplitIntoFunctions(Compiler compiler) {
     super(new BlockLexicalContext() {
       @Override
-      protected Block afterSetStatements(final Block block) {
-        for (final Statement stmt : block.getStatements()) {
+      protected Block afterSetStatements(Block block) {
+        for (var stmt : block.getStatements()) {
           assert !(stmt instanceof SplitNode);
         }
         return block;
@@ -88,95 +84,85 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
   }
 
   @Override
-  public boolean enterFunctionNode(final FunctionNode functionNode) {
+  public boolean enterFunctionNode(FunctionNode functionNode) {
     functionStates.push(new FunctionState(functionNode));
     return true;
   }
 
   @Override
-  public Node leaveFunctionNode(final FunctionNode functionNode) {
+  public Node leaveFunctionNode(FunctionNode functionNode) {
     functionStates.pop();
     return functionNode;
   }
 
   @Override
-  protected Node leaveDefault(final Node node) {
-    if (node instanceof Statement) {
-      appendStatement((Statement) node);
+  protected Node leaveDefault(Node node) {
+    if (node instanceof Statement s) {
+      appendStatement(s);
     }
     return node;
   }
 
   @Override
-  public boolean enterSplitNode(final SplitNode splitNode) {
+  public boolean enterSplitNode(SplitNode splitNode) {
     getCurrentFunctionState().splitDepth++;
     splitStates.push(new SplitState(splitNode));
     return true;
   }
 
   @Override
-  public Node leaveSplitNode(final SplitNode splitNode) {
+  public Node leaveSplitNode(SplitNode splitNode) {
     // Replace the split node with an anonymous function expression call.
-
-    final FunctionState fnState = getCurrentFunctionState();
-
-    final String name = splitNode.getName();
-    final Block body = splitNode.getBody();
-    final int firstLineNumber = body.getFirstStatementLineNumber();
-    final long token = body.getToken();
-    final int finish = body.getFinish();
-
-    final FunctionNode originalFn = fnState.fn;
+    var fnState = getCurrentFunctionState();
+    var name = splitNode.getName();
+    var body = splitNode.getBody();
+    var firstLineNumber = body.getFirstStatementLineNumber();
+    var token = body.getToken();
+    var finish = body.getFinish();
+    var originalFn = fnState.fn;
     assert originalFn == lc.getCurrentFunction();
-    final boolean isProgram = originalFn.isProgram();
-
+    var isProgram = originalFn.isProgram();
     // Change SplitNode({...}) into "function () { ... }", or "function (:return-in) () { ... }" (for program)
-    final long newFnToken = Token.toDesc(TokenType.FUNCTION, nextFunctionId--, 0);
-    final FunctionNode fn = new FunctionNode(
-            originalFn.getSource(),
-            body.getFirstStatementLineNumber(),
-            newFnToken,
-            finish,
-            newFnToken,
-            NO_TOKEN,
-            namespace,
-            createIdent(name),
-            originalFn.getName() + "$" + name,
-            isProgram ? Collections.singletonList(createReturnParamIdent()) : Collections.<IdentNode>emptyList(),
-            null,
-            FunctionNode.Kind.NORMAL,
-            // We only need IS_SPLIT conservatively, in case it contains any array units so that we force
-            // the :callee's existence, to force :scope to never be in a slot lower than 2. This is actually
-            // quite a horrible hack to do with CodeGenerator.fixScopeSlot not trampling other parameters
-            // and should go away once we no longer have array unit handling in codegen. Note however that
-            // we still use IS_SPLIT as the criteria in CompilationPhase.SERIALIZE_SPLIT_PHASE.
-            FunctionNode.IS_ANONYMOUS | FunctionNode.USES_ANCESTOR_SCOPE | FunctionNode.IS_SPLIT,
-            body,
-            null,
-            originalFn.getModule(),
-            originalFn.getDebugFlags()
-    )
-            .setCompileUnit(lc, splitNode.getCompileUnit());
+    var newFnToken = Token.toDesc(TokenType.FUNCTION, nextFunctionId--, 0);
+    var fn = new FunctionNode(
+      originalFn.getSource(),
+      body.getFirstStatementLineNumber(),
+      newFnToken,
+      finish,
+      newFnToken,
+      NO_TOKEN,
+      namespace,
+      createIdent(name),
+      originalFn.getName() + "$" + name,
+      isProgram ? Collections.singletonList(createReturnParamIdent()) : Collections.<IdentNode>emptyList(),
+      null,
+      FunctionNode.Kind.NORMAL,
+      // We only need IS_SPLIT conservatively, in case it contains any array units so that we force the :callee's existence, to force :scope to never be in a slot lower than 2.
+      // This is actually quite a horrible hack to do with CodeGenerator.fixScopeSlot not trampling other parameters and should go away once we no longer have array unit handling in codegen.
+      // Note however that we still use IS_SPLIT as the criteria in CompilationPhase.SERIALIZE_SPLIT_PHASE.
+      FunctionNode.IS_ANONYMOUS | FunctionNode.USES_ANCESTOR_SCOPE | FunctionNode.IS_SPLIT,
+      body,
+      null,
+      originalFn.getModule(),
+      originalFn.getDebugFlags()
+    ).setCompileUnit(lc, splitNode.getCompileUnit());
 
     // Call the function:
-    //     either "(function () { ... }).call(this)"
-    //     or     "(function (:return-in) { ... }).call(this, :return)"
+    //   either "(function () { ... }).call(this)"
+    //   or     "(function (:return-in) { ... }).call(this, :return)"
     // NOTE: Function.call() has optimized linking that basically does a pass-through to the function being invoked.
-    // NOTE: CompilationPhase.PROGRAM_POINT_PHASE happens after this, so these calls are subject to optimistic
-    // assumptions on their return value (when they return a value), as they should be.
-    final IdentNode thisIdent = createIdent(THIS_NAME);
-    final CallNode callNode = new CallNode(firstLineNumber, token, finish, new AccessNode(NO_TOKEN, NO_FINISH, fn, "call"),
-            isProgram ? Arrays.<Expression>asList(thisIdent, createReturnIdent())
-                    : Collections.<Expression>singletonList(thisIdent),
-            false);
-
-    final SplitState splitState = splitStates.pop();
+    // NOTE: CompilationPhase.PROGRAM_POINT_PHASE happens after this, so these calls are subject to optimistic assumptions on their return value (when they return a value), as they should be.
+    var thisIdent = createIdent(THIS_NAME);
+    var callNode = new CallNode(firstLineNumber, token, finish, new AccessNode(NO_TOKEN, NO_FINISH, fn, "call"),
+      isProgram ? Arrays.<Expression>asList(thisIdent, createReturnIdent())
+                : Collections.<Expression>singletonList(thisIdent),
+      false);
+    var splitState = splitStates.pop();
     fnState.splitDepth--;
-
-    final Expression callWithReturn;
-    final boolean hasReturn = splitState.hasReturn;
+    Expression callWithReturn;
+    var hasReturn = splitState.hasReturn;
     if (hasReturn && fnState.splitDepth > 0) {
-      final SplitState parentSplit = splitStates.peek();
+      var parentSplit = splitStates.peek();
       if (parentSplit != null) {
         // Propagate hasReturn to parent split
         parentSplit.hasReturn = true;
@@ -190,121 +176,101 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
       callWithReturn = callNode;
     }
     appendStatement(new ExpressionStatement(firstLineNumber, token, finish, callWithReturn));
-
     Statement splitStateHandler;
-
-    final List<JumpStatement> jumpStatements = splitState.jumpStatements;
-    final int jumpCount = jumpStatements.size();
-    // There are jumps (breaks or continues) that need to be propagated outside the split node. We need to
-    // set up a switch statement for them:
-    // switch(:scope.getScopeState()) { ... }
+    var jumpStatements = splitState.jumpStatements;
+    var jumpCount = jumpStatements.size();
+    // There are jumps (breaks or continues) that need to be propagated outside the split node.
+    // We need to set up a switch statement for them:
+    //   switch(:scope.getScopeState()) { ... }
     if (jumpCount > 0) {
-      final List<CaseNode> cases = new ArrayList<>(jumpCount + (hasReturn ? 1 : 0));
+      var cases = new ArrayList<CaseNode>(jumpCount + (hasReturn ? 1 : 0));
       if (hasReturn) {
         // If the split node also contained a return, we'll slip it as a case in the switch statement
         addCase(cases, RETURN_STATE, createReturnFromSplit());
       }
-      int i = FIRST_JUMP_STATE;
-      for (final JumpStatement jump : jumpStatements) {
+      var i = FIRST_JUMP_STATE;
+      for (var jump : jumpStatements) {
         addCase(cases, i++, enblockAndVisit(jump));
       }
       splitStateHandler = new SwitchNode(NO_LINE_NUMBER, token, finish, GetSplitState.INSTANCE, cases, null);
     } else {
       splitStateHandler = null;
     }
-
-    // As the switch statement itself is breakable, an unlabelled break can't be in the switch statement,
-    // so we need to test for it separately.
+    // As the switch statement itself is breakable, an unlabelled break can't be in the switch statement, so we need to test for it separately.
     if (splitState.hasBreak) {
       // if(:scope.getScopeState() == Scope.BREAK) { break; }
-      splitStateHandler = makeIfStateEquals(firstLineNumber, token, finish, BREAK_STATE,
-              enblockAndVisit(new BreakNode(NO_LINE_NUMBER, token, finish, null)), splitStateHandler);
+      splitStateHandler = makeIfStateEquals(firstLineNumber, token, finish, BREAK_STATE, enblockAndVisit(new BreakNode(NO_LINE_NUMBER, token, finish, null)), splitStateHandler);
     }
-
-    // Finally, if the split node had a return statement, but there were no external jumps, we didn't have
-    // the switch statement to handle the return, so we need a separate if for it.
+    // Finally, if the split node had a return statement, but there were no external jumps, we didn't have the switch statement to handle the return, so we need a separate if for it.
     if (hasReturn && jumpCount == 0) {
       // if (:scope.getScopeState() == Scope.RETURN) { return :return; }
-      splitStateHandler = makeIfStateEquals(NO_LINE_NUMBER, token, finish, RETURN_STATE,
-              createReturnFromSplit(), splitStateHandler);
+      splitStateHandler = makeIfStateEquals(NO_LINE_NUMBER, token, finish, RETURN_STATE, createReturnFromSplit(), splitStateHandler);
     }
-
     if (splitStateHandler != null) {
       appendStatement(splitStateHandler);
     }
-
     return splitNode;
   }
 
-  private static void addCase(final List<CaseNode> cases, final int i, final Block body) {
+  static void addCase(List<CaseNode> cases, int i, Block body) {
     cases.add(new CaseNode(NO_TOKEN, NO_FINISH, intLiteral(i), body));
   }
 
-  private static LiteralNode<Number> intLiteral(final int i) {
+  static LiteralNode<Number> intLiteral(int i) {
     return LiteralNode.newInstance(NO_TOKEN, NO_FINISH, i);
   }
 
-  private static Block createReturnFromSplit() {
+  static Block createReturnFromSplit() {
     return new Block(NO_TOKEN, NO_FINISH, createReturnReturn());
   }
 
-  private static ReturnNode createReturnReturn() {
+  static ReturnNode createReturnReturn() {
     return new ReturnNode(NO_LINE_NUMBER, NO_TOKEN, NO_FINISH, createReturnIdent());
   }
 
-  private static IdentNode createReturnIdent() {
+  static IdentNode createReturnIdent() {
     return createIdent(RETURN_NAME);
   }
 
-  private static IdentNode createReturnParamIdent() {
+  static IdentNode createReturnParamIdent() {
     return createIdent(RETURN_PARAM_NAME);
   }
 
-  private static IdentNode createIdent(final String name) {
+  static IdentNode createIdent(String name) {
     return new IdentNode(NO_TOKEN, NO_FINISH, name);
   }
 
-  private Block enblockAndVisit(final JumpStatement jump) {
+  Block enblockAndVisit(JumpStatement jump) {
     artificialBlock = true;
-    final Block block = (Block) new Block(NO_TOKEN, NO_FINISH, jump).accept(this);
+    Block block = (Block) new Block(NO_TOKEN, NO_FINISH, jump).accept(this);
     artificialBlock = false;
     return block;
   }
 
-  private static IfNode makeIfStateEquals(final int lineNumber, final long token, final int finish,
-          final int value, final Block pass, final Statement fail) {
-    return new IfNode(lineNumber, token, finish,
-            new BinaryNode(Token.recast(token, TokenType.EQU),
-                    GetSplitState.INSTANCE, intLiteral(value)),
-            pass,
-            fail == null ? null : new Block(NO_TOKEN, NO_FINISH, fail));
+  static IfNode makeIfStateEquals(int lineNumber, long token, int finish, int value, Block pass, Statement fail) {
+    return new IfNode(lineNumber, token, finish, new BinaryNode(Token.recast(token, TokenType.EQU), GetSplitState.INSTANCE, intLiteral(value)), pass, fail == null ? null : new Block(NO_TOKEN, NO_FINISH, fail));
   }
 
   @Override
-  public boolean enterVarNode(final VarNode varNode) {
+  public boolean enterVarNode(VarNode varNode) {
     // ES6 block scoped declarations are already placed at their proper position by splitter
     if (!inSplitNode() || varNode.isBlockScoped()) {
       return super.enterVarNode(varNode);
     }
-
-    final Expression init = varNode.getInit();
-
+    var init = varNode.getInit();
     // Move a declaration-only var statement to the top of the outermost function.
     getCurrentFunctionState().varStatements.add(varNode.setInit(null));
-    // If it had an initializer, replace it with an assignment expression statement. Note that "var" is a
-    // statement, so it doesn't contribute to :return of the programs, therefore we are _not_ adding a
-    // ":return = ..." assignment around the original assignment.
+    // If it had an initializer, replace it with an assignment expression statement.
+    // Note that "var" is a statement, so it doesn't contribute to :return of the programs, therefore we are _not_ adding a ":return = ..." assignment around the original assignment.
     if (init != null) {
-      final long token = Token.recast(varNode.getToken(), TokenType.ASSIGN);
-      new ExpressionStatement(varNode.getLineNumber(), token, varNode.getFinish(),
-              new BinaryNode(token, varNode.getName(), varNode.getInit())).accept(this);
+      var token = Token.recast(varNode.getToken(), TokenType.ASSIGN);
+      new ExpressionStatement(varNode.getLineNumber(), token, varNode.getFinish(), new BinaryNode(token, varNode.getName(), varNode.getInit())).accept(this);
     }
-
     return false;
   }
 
   @Override
-  public Node leaveBlock(final Block block) {
+  public Node leaveBlock(Block block) {
     if (!artificialBlock) {
       if (lc.isFunctionBody()) {
         // Prepend declaration-only var statements to the top of the statement list.
@@ -312,10 +278,8 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
       } else if (lc.isSplitBody()) {
         appendSplitReturn(FALLTHROUGH_STATE, NO_LINE_NUMBER);
         if (getCurrentFunctionState().fn.isProgram()) {
-          // If we're splitting the program, make sure every shard ends with "return :return" and
-          // begins with ":return = :return-in;".
-          lc.prependStatement(new ExpressionStatement(NO_LINE_NUMBER, NO_TOKEN, NO_FINISH,
-                  new BinaryNode(Token.toDesc(TokenType.ASSIGN, 0, 0), createReturnIdent(), createReturnParamIdent())));
+          // If we're splitting the program, make sure every shard ends with "return :return" and begins with ":return = :return-in;".
+          lc.prependStatement(new ExpressionStatement(NO_LINE_NUMBER, NO_TOKEN, NO_FINISH, new BinaryNode(Token.toDesc(TokenType.ASSIGN, 0, 0), createReturnIdent(), createReturnParamIdent())));
         }
       }
     }
@@ -323,24 +287,24 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
   }
 
   @Override
-  public Node leaveBreakNode(final BreakNode breakNode) {
+  public Node leaveBreakNode(BreakNode breakNode) {
     return leaveJumpNode(breakNode);
   }
 
   @Override
-  public Node leaveContinueNode(final ContinueNode continueNode) {
+  public Node leaveContinueNode(ContinueNode continueNode) {
     return leaveJumpNode(continueNode);
   }
 
   @Override
-  public Node leaveJumpToInlinedFinally(final JumpToInlinedFinally jumpToInlinedFinally) {
+  public Node leaveJumpToInlinedFinally(JumpToInlinedFinally jumpToInlinedFinally) {
     return leaveJumpNode(jumpToInlinedFinally);
   }
 
-  private JumpStatement leaveJumpNode(final JumpStatement jump) {
+  JumpStatement leaveJumpNode(JumpStatement jump) {
     if (inSplitNode()) {
-      final SplitState splitState = getCurrentSplitState();
-      final SplitNode splitNode = splitState.splitNode;
+      var splitState = getCurrentSplitState();
+      var splitNode = splitState.splitNode;
       if (lc.isExternalTarget(splitNode, jump.getTarget(lc))) {
         appendSplitReturn(splitState.getSplitStateIndex(jump), jump.getLineNumber());
         return jump;
@@ -350,7 +314,7 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
     return jump;
   }
 
-  private void appendSplitReturn(final int splitState, final int lineNumber) {
+  void appendSplitReturn(int splitState, int lineNumber) {
     appendStatement(new SetSplitState(splitState, lineNumber));
     if (getCurrentFunctionState().fn.isProgram()) {
       // If we're splitting the program, make sure every fragment passes back :return
@@ -361,7 +325,7 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
   }
 
   @Override
-  public Node leaveReturnNode(final ReturnNode returnNode) {
+  public Node leaveReturnNode(ReturnNode returnNode) {
     if (inSplitNode()) {
       appendStatement(new SetSplitState(RETURN_STATE, returnNode.getLineNumber()));
       getCurrentSplitState().hasReturn = true;
@@ -370,34 +334,34 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
     return returnNode;
   }
 
-  private void appendStatement(final Statement statement) {
+  void appendStatement(Statement statement) {
     lc.appendStatement(statement);
   }
 
-  private boolean inSplitNode() {
+  boolean inSplitNode() {
     return getCurrentFunctionState().splitDepth > 0;
   }
 
-  private FunctionState getCurrentFunctionState() {
+  FunctionState getCurrentFunctionState() {
     return functionStates.peek();
   }
 
-  private SplitState getCurrentSplitState() {
+  SplitState getCurrentSplitState() {
     return splitStates.peek();
   }
 
-  private static class FunctionState {
+  static class FunctionState {
 
     final FunctionNode fn;
     final List<Statement> varStatements = new ArrayList<>();
     int splitDepth;
 
-    FunctionState(final FunctionNode fn) {
+    FunctionState(FunctionNode fn) {
       this.fn = fn;
     }
   }
 
-  private static class SplitState {
+  static class SplitState {
 
     final SplitNode splitNode;
     boolean hasReturn;
@@ -405,15 +369,14 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
 
     final List<JumpStatement> jumpStatements = new ArrayList<>();
 
-    int getSplitStateIndex(final JumpStatement jump) {
+    int getSplitStateIndex(JumpStatement jump) {
       if (jump instanceof BreakNode && jump.getLabelName() == null) {
         // Unlabelled break is a special case
         hasBreak = true;
         return BREAK_STATE;
       }
-
-      int i = 0;
-      for (final JumpStatement exJump : jumpStatements) {
+      var i = 0;
+      for (var exJump : jumpStatements) {
         if (jump.getClass() == exJump.getClass() && Objects.equals(jump.getLabelName(), exJump.getLabelName())) {
           return i + FIRST_JUMP_STATE;
         }
@@ -423,8 +386,9 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
       return i + FIRST_JUMP_STATE;
     }
 
-    SplitState(final SplitNode splitNode) {
+    SplitState(SplitNode splitNode) {
       this.splitNode = splitNode;
     }
   }
+
 }

@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import es.util.IntDeque;
+
 import es.codegen.types.Type;
 import es.ir.Block;
 import es.ir.Expression;
@@ -18,50 +19,48 @@ import es.ir.Symbol;
 import es.ir.WithNode;
 
 /**
- * A lexical context that also tracks if we have any dynamic scopes in the context. Such scopes can have new
- * variables introduced into them at run time - a with block or a function directly containing an eval call.
- * Furthermore, this class keeps track of current discard state, which the current method emitter being used is,
- * the current compile unit, and local variable indexes
+ * A lexical context that also tracks if we have any dynamic scopes in the context.
+ * Such scopes can have new variables introduced into them at run time - a with block or a function directly containing an eval call.
+ * Furthermore, this class keeps track of current discard state, which the current method emitter being used is, the current compile unit, and local variable indexes
  */
 final class CodeGeneratorLexicalContext extends LexicalContext {
 
   private int dynamicScopeCount;
 
-  /** Map of shared scope call sites */
+  // Map of shared scope call sites
   private final Map<SharedScopeCall, SharedScopeCall> scopeCalls = new HashMap<>();
 
-  /** Compile unit stack - every time we start a sub method (e.g. a split) we push one */
+  // Compile unit stack - every time we start a sub method (e.g. a split) we push one
   private final Deque<CompileUnit> compileUnits = new ArrayDeque<>();
 
-  /** Method emitter stack - every time we start a sub method (e.g. a split) we push one */
+  // Method emitter stack - every time we start a sub method (e.g. a split) we push one
   private final Deque<MethodEmitter> methodEmitters = new ArrayDeque<>();
 
-  /** The discard stack - whenever we evaluate an expression that will be discarded, we push it on this stack. Various
-   * implementations of expression code emitter can choose to emit code that'll discard the expression themselves, or
-   * ignore it in which case CodeGenerator.loadAndDiscard() will explicitly emit a pop instruction. */
+  // The discard stack - whenever we evaluate an expression that will be discarded, we push it on this stack.
+  // Various implementations of expression code emitter can choose to emit code that'll discard the expression themselves, or ignore it in which case CodeGenerator.loadAndDiscard() will explicitly emit a pop instruction.
   private final Deque<Expression> discard = new ArrayDeque<>();
 
   private final Deque<Map<String, Collection<Label>>> unwarrantedOptimismHandlers = new ArrayDeque<>();
   private final Deque<StringBuilder> slotTypesDescriptors = new ArrayDeque<>();
   private final IntDeque splitLiterals = new IntDeque();
 
-  /** A stack tracking the next free local variable slot in the blocks. There's one entry for every block
-   *  currently on the lexical context stack. */
+  // A stack tracking the next free local variable slot in the blocks.
+  // There's one entry for every block currently on the lexical context stack.
   private int[] nextFreeSlots = new int[16];
 
-  /** size of next free slot vector */
+  // size of next free slot vector
   private int nextFreeSlotsSize;
 
-  private boolean isWithBoundary(final Object node) {
+  private boolean isWithBoundary(Object node) {
     return node instanceof Block && !isEmpty() && peek() instanceof WithNode;
   }
 
   @Override
-  public <T extends LexicalContextNode> T push(final T node) {
+  public <T extends LexicalContextNode> T push(T node) {
     if (isWithBoundary(node)) {
       dynamicScopeCount++;
-    } else if (node instanceof FunctionNode) {
-      if (((FunctionNode) node).inDynamicContext()) {
+    } else if (node instanceof FunctionNode fn) {
+      if (fn.inDynamicContext()) {
         dynamicScopeCount++;
       }
       splitLiterals.push(0);
@@ -75,18 +74,18 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
   }
 
   void exitSplitLiteral() {
-    final int count = splitLiterals.decrementAndGet();
+    var count = splitLiterals.decrementAndGet();
     assert count >= 0;
   }
 
   @Override
-  public <T extends Node> T pop(final T node) {
-    final T popped = super.pop(node);
+  public <T extends Node> T pop(T node) {
+    var popped = super.pop(node);
     if (isWithBoundary(node)) {
       dynamicScopeCount--;
       assert dynamicScopeCount >= 0;
-    } else if (node instanceof FunctionNode) {
-      if (((FunctionNode) node).inDynamicContext()) {
+    } else if (node instanceof FunctionNode fn) {
+      if (fn.inDynamicContext()) {
         dynamicScopeCount--;
         assert dynamicScopeCount >= 0;
       }
@@ -104,19 +103,19 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
     return !splitLiterals.isEmpty() && splitLiterals.peek() > 0;
   }
 
-  MethodEmitter pushMethodEmitter(final MethodEmitter newMethod) {
+  MethodEmitter pushMethodEmitter(MethodEmitter newMethod) {
     methodEmitters.push(newMethod);
     return newMethod;
   }
 
-  MethodEmitter popMethodEmitter(final MethodEmitter oldMethod) {
+  MethodEmitter popMethodEmitter(MethodEmitter oldMethod) {
     assert methodEmitters.peek() == oldMethod;
     methodEmitters.pop();
     return methodEmitters.isEmpty() ? null : methodEmitters.peek();
   }
 
   void pushUnwarrantedOptimismHandlers() {
-    unwarrantedOptimismHandlers.push(new HashMap<String, Collection<Label>>());
+    unwarrantedOptimismHandlers.push(new HashMap<>());
     slotTypesDescriptors.push(new StringBuilder());
   }
 
@@ -129,14 +128,14 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
     return unwarrantedOptimismHandlers.pop();
   }
 
-  CompileUnit pushCompileUnit(final CompileUnit newUnit) {
+  CompileUnit pushCompileUnit(CompileUnit newUnit) {
     compileUnits.push(newUnit);
     return newUnit;
   }
 
-  CompileUnit popCompileUnit(final CompileUnit oldUnit) {
+  CompileUnit popCompileUnit(CompileUnit oldUnit) {
     assert compileUnits.peek() == oldUnit;
-    final CompileUnit unit = compileUnits.pop();
+    var unit = compileUnits.pop();
     assert unit.hasCode() : "compile unit popped without code";
     unit.setUsed();
     return compileUnits.isEmpty() ? null : compileUnits.peek();
@@ -152,7 +151,6 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
 
   /**
    * Get a shared static method representing a dynamic scope callsite.
-   *
    * @param unit current compile unit
    * @param symbol the symbol
    * @param valueType the value type of the symbol
@@ -162,11 +160,8 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
    * @param isOptimistic is this an optimistic call
    * @return an object representing a shared scope call
    */
-  SharedScopeCall getScopeCall(final CompileUnit unit, final Symbol symbol, final Type valueType,
-          final Type returnType, final Type[] paramTypes, final int flags,
-          final boolean isOptimistic) {
-    final SharedScopeCall scopeCall = new SharedScopeCall(symbol, valueType, returnType, paramTypes, flags,
-            isOptimistic);
+  SharedScopeCall getScopeCall(CompileUnit unit, Symbol symbol, Type valueType, Type returnType, Type[] paramTypes, int flags, boolean isOptimistic) {
+    var scopeCall = new SharedScopeCall(symbol, valueType, returnType, paramTypes, flags, isOptimistic);
     if (scopeCalls.containsKey(scopeCall)) {
       return scopeCalls.get(scopeCall);
     }
@@ -177,7 +172,6 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
 
   /**
    * Get a shared static method representing a dynamic scope get access.
-   *
    * @param unit current compile unit
    * @param symbol the symbol
    * @param valueType the type of the variable
@@ -185,18 +179,17 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
    * @param isOptimistic is this an optimistic get
    * @return an object representing a shared scope get
    */
-  SharedScopeCall getScopeGet(final CompileUnit unit, final Symbol symbol, final Type valueType, final int flags,
-          final boolean isOptimistic) {
+  SharedScopeCall getScopeGet(CompileUnit unit, Symbol symbol, Type valueType, int flags, boolean isOptimistic) {
     return getScopeCall(unit, symbol, valueType, valueType, null, flags, isOptimistic);
   }
 
-  void onEnterBlock(final Block block) {
+  void onEnterBlock(Block block) {
     pushFreeSlots(assignSlots(block, isFunctionBody() ? 0 : getUsedSlotCount()));
   }
 
-  private void pushFreeSlots(final int freeSlots) {
+  void pushFreeSlots(int freeSlots) {
     if (nextFreeSlotsSize == nextFreeSlots.length) {
-      final int[] newNextFreeSlots = new int[nextFreeSlotsSize * 2];
+      var newNextFreeSlots = new int[nextFreeSlotsSize * 2];
       System.arraycopy(nextFreeSlots, 0, newNextFreeSlots, 0, nextFreeSlotsSize);
       nextFreeSlots = newNextFreeSlots;
     }
@@ -209,20 +202,20 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
 
   void releaseSlots() {
     --nextFreeSlotsSize;
-    final int undefinedFromSlot = nextFreeSlotsSize == 0 ? 0 : nextFreeSlots[nextFreeSlotsSize - 1];
+    var undefinedFromSlot = nextFreeSlotsSize == 0 ? 0 : nextFreeSlots[nextFreeSlotsSize - 1];
     if (!slotTypesDescriptors.isEmpty()) {
       slotTypesDescriptors.peek().setLength(undefinedFromSlot);
     }
     methodEmitters.peek().undefineLocalVariables(undefinedFromSlot, false);
   }
 
-  private int assignSlots(final Block block, final int firstSlot) {
-    int fromSlot = firstSlot;
-    final MethodEmitter method = methodEmitters.peek();
-    for (final Symbol symbol : block.getSymbols()) {
+  int assignSlots(Block block, int firstSlot) {
+    var fromSlot = firstSlot;
+    var method = methodEmitters.peek();
+    for (var symbol : block.getSymbols()) {
       if (symbol.hasSlot()) {
         symbol.setFirstSlot(fromSlot);
-        final int toSlot = fromSlot + symbol.slotCount();
+        var toSlot = fromSlot + symbol.slotCount();
         method.defineBlockLocalVariable(fromSlot, toSlot);
         fromSlot = toSlot;
       }
@@ -230,35 +223,24 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
     return fromSlot;
   }
 
-  static Type getTypeForSlotDescriptor(final char typeDesc) {
-    // Recognizing both lowercase and uppercase as we're using both to signify symbol boundaries; see
-    // MethodEmitter.markSymbolBoundariesInLvarTypesDescriptor().
-    switch (typeDesc) {
-      case 'I':
-      case 'i':
-        return Type.INT;
-      case 'J':
-      case 'j':
-        return Type.LONG;
-      case 'D':
-      case 'd':
-        return Type.NUMBER;
-      case 'A':
-      case 'a':
-        return Type.OBJECT;
-      case 'U':
-      case 'u':
-        return Type.UNKNOWN;
-      default:
-        throw new AssertionError();
-    }
+  static Type getTypeForSlotDescriptor(char typeDesc) {
+    // Recognizing both lowercase and uppercase as we're using both to signify symbol boundaries;
+    // see MethodEmitter.markSymbolBoundariesInLvarTypesDescriptor().
+    return switch (typeDesc) {
+      case 'I', 'i' -> Type.INT;
+      case 'J', 'j' -> Type.LONG;
+      case 'D', 'd' -> Type.NUMBER;
+      case 'A', 'a' -> Type.OBJECT;
+      case 'U', 'u' -> Type.UNKNOWN;
+      default -> throw new AssertionError();
+    };
   }
 
-  void pushDiscard(final Expression expr) {
+  void pushDiscard(Expression expr) {
     discard.push(expr);
   }
 
-  boolean popDiscardIfCurrent(final Expression expr) {
+  boolean popDiscardIfCurrent(Expression expr) {
     if (isCurrentDiscard(expr)) {
       discard.pop();
       return true;
@@ -266,11 +248,12 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
     return false;
   }
 
-  boolean isCurrentDiscard(final Expression expr) {
+  boolean isCurrentDiscard(Expression expr) {
     return discard.peek() == expr;
   }
 
-  int quickSlot(final Type type) {
+  int quickSlot(Type type) {
     return methodEmitters.peek().defineTemporaryLocalVariable(type.getSlots());
   }
+
 }

@@ -8,24 +8,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+
 import es.ir.CompileUnitHolder;
 import es.ir.FunctionNode;
 import es.runtime.RecompilableScriptFunctionData;
 
 /**
- * Used to track split class compilation. Note that instances of the class are serializable, but all fields are
- * transient, making the serialized version of the class only useful for tracking the referential topology of other
- * AST nodes referencing the same or different compile units. We do want to preserve this topology though as
- * {@link CompileUnitHolder}s in a deserialized AST will undergo reinitialization.
+ * Used to track split class compilation.
+ *
+ * Note that instances of the class are serializable, but all fields are transient, making the serialized version of the class only useful for tracking the referential topology of other AST nodes referencing the same or different compile units.
+ * We do want to preserve this topology though as {@link CompileUnitHolder}s in a deserialized AST will undergo reinitialization.
  */
 public final class CompileUnit implements Comparable<CompileUnit>, Serializable {
 
-  private static final long serialVersionUID = 1L;
-
-  /** Current class name */
+  // Current class name
   private transient final String className;
 
-  /** Current class generator */
+  // Current class generator
   private transient ClassEmitter classEmitter;
 
   private transient long weight;
@@ -38,7 +37,7 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
 
   private static int emittedUnitCount;
 
-  CompileUnit(final String className, final ClassEmitter classEmitter, final long initialWeight) {
+  CompileUnit(String className, ClassEmitter classEmitter, long initialWeight) {
     this.className = className;
     this.weight = initialWeight;
     this.classEmitter = classEmitter;
@@ -84,9 +83,7 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
   }
 
   /**
-   * Return the class that contains the code for this unit, null if not
-   * generated yet
-   *
+   * Return the class that contains the code for this unit, null if not generated yet
    * @return class with compile unit code
    */
   public Class<?> getCode() {
@@ -95,33 +92,30 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
 
   /**
    * Set class when it exists. Only accessible from compiler
-   * @param clazz class with code for this compile unit
+   * @param type class with code for this compile unit
    */
-  void setCode(final Class<?> clazz) {
-    this.clazz = Objects.requireNonNull(clazz);
-    // Revisit this - refactor to avoid null-ed out non-final fields
-    // null out emitter
+  void setCode(Class<?> type) {
+    this.clazz = Objects.requireNonNull(type);
+    // Revisit this - refactor to avoid null-ed out non-final fields null out emitter
     this.classEmitter = null;
   }
 
-  void addFunctionInitializer(final RecompilableScriptFunctionData data, final FunctionNode functionNode) {
+  void addFunctionInitializer(RecompilableScriptFunctionData data, FunctionNode functionNode) {
     functions.put(functionNode, data);
   }
 
   /**
-   * Returns true if this compile unit is responsible for initializing the specified function data with specified
-   * function node.
+   * Returns true if this compile unit is responsible for initializing the specified function data with specified function node.
    * @param data the function data to check
    * @param functionNode the function node to check
-   * @return true if this unit is responsible for initializing the function data with the function node, otherwise
-   * false
+   * @return true if this unit is responsible for initializing the function data with the function node, otherwise false
    */
-  public boolean isInitializing(final RecompilableScriptFunctionData data, final FunctionNode functionNode) {
+  public boolean isInitializing(RecompilableScriptFunctionData data, FunctionNode functionNode) {
     return functions.get(functionNode) == data;
   }
 
   void initializeFunctionsCode() {
-    for (final Map.Entry<FunctionNode, RecompilableScriptFunctionData> entry : functions.entrySet()) {
+    for (var entry : functions.entrySet()) {
       entry.getValue().initializeCode(entry.getKey());
     }
   }
@@ -134,7 +128,7 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
    * Add weight to this compile unit
    * @param w weight to add
    */
-  void addWeight(final long w) {
+  void addWeight(long w) {
     this.weight += w;
   }
 
@@ -143,7 +137,7 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
    * @param w weight to check if can be added
    * @return true if weight fits in this compile unit
    */
-  public boolean canHold(final long w) {
+  public boolean canHold(long w) {
     return (this.weight + w) < Splitter.SPLIT_THRESHOLD;
   }
 
@@ -163,18 +157,19 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
     return className;
   }
 
-  private static String shortName(final String name) {
+  private static String shortName(String name) {
     return name == null ? null : name.lastIndexOf('/') == -1 ? name : name.substring(name.lastIndexOf('/') + 1);
   }
 
   @Override
   public String toString() {
-    final String methods = classEmitter != null ? classEmitter.getMethodNames().toString() : "<anon>";
+    var methods = classEmitter != null ? classEmitter.getMethodNames().toString() : "<anon>";
     return "[CompileUnit className=" + shortName(className) + " weight=" + weight + '/' + Splitter.SPLIT_THRESHOLD + " hasCode=" + methods + ']';
   }
 
   @Override
-  public int compareTo(final CompileUnit o) {
+  public int compareTo(CompileUnit o) {
     return className.compareTo(o.className);
   }
+
 }

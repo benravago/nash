@@ -14,11 +14,11 @@ class MapTuple<T> {
   final Type type;
   final T value;
 
-  MapTuple(final String key, final Symbol symbol, final Type type) {
+  MapTuple(String key, Symbol symbol, Type type) {
     this(key, symbol, type, null);
   }
 
-  MapTuple(final String key, final Symbol symbol, final Type type, final T value) {
+  MapTuple(String key, Symbol symbol, Type type, T value) {
     this.key = key;
     this.symbol = symbol;
     this.type = type;
@@ -37,4 +37,5 @@ class MapTuple<T> {
   public String toString() {
     return "[key=" + key + ", symbol=" + symbol + ", value=" + value + " (" + (value == null ? "null" : value.getClass().getSimpleName()) + ")]";
   }
+
 }

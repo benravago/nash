@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import es.codegen.types.Type;
 import es.ir.BinaryNode;
-import es.ir.Block;
 import es.ir.BlockStatement;
-import es.ir.CaseNode;
 import es.ir.EmptyNode;
 import es.ir.Expression;
 import es.ir.FunctionNode;
@@ -37,7 +36,7 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
 
   private final DebugLogger log;
 
-  FoldConstants(final Compiler compiler) {
+  FoldConstants(Compiler compiler) {
     this.log = initLogger(compiler.getContext());
   }
 
@@ -47,13 +46,13 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
   }
 
   @Override
-  public DebugLogger initLogger(final Context context) {
+  public DebugLogger initLogger(Context context) {
     return context.getLogger(this.getClass());
   }
 
   @Override
-  public Node leaveUnaryNode(final UnaryNode unaryNode) {
-    final LiteralNode<?> literalNode = new UnaryNodeConstantEvaluator(unaryNode).eval();
+  public Node leaveUnaryNode(UnaryNode unaryNode) {
+    var literalNode = new UnaryNodeConstantEvaluator(unaryNode).eval();
     if (literalNode != null) {
       log.info("Unary constant folded ", unaryNode, " to ", literalNode);
       return literalNode;
@@ -62,8 +61,8 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
   }
 
   @Override
-  public Node leaveBinaryNode(final BinaryNode binaryNode) {
-    final LiteralNode<?> literalNode = new BinaryNodeConstantEvaluator(binaryNode).eval();
+  public Node leaveBinaryNode(BinaryNode binaryNode) {
+    var literalNode = new BinaryNodeConstantEvaluator(binaryNode).eval();
     if (literalNode != null) {
       log.info("Binary constant folded ", binaryNode, " to ", literalNode);
       return literalNode;
@@ -72,19 +71,18 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
   }
 
   @Override
-  public Node leaveFunctionNode(final FunctionNode functionNode) {
+  public Node leaveFunctionNode(FunctionNode functionNode) {
     return functionNode;
   }
 
   @Override
-  public Node leaveIfNode(final IfNode ifNode) {
-    final Node test = ifNode.getTest();
-    if (test instanceof LiteralNode.PrimitiveLiteralNode) {
-      final boolean isTrue = ((LiteralNode.PrimitiveLiteralNode<?>) test).isTrue();
-      final Block executed = isTrue ? ifNode.getPass() : ifNode.getFail();
-      final Block dropped = isTrue ? ifNode.getFail() : ifNode.getPass();
-      final List<Statement> statements = new ArrayList<>();
-
+  public Node leaveIfNode(IfNode ifNode) {
+    var test = ifNode.getTest();
+    if (test instanceof LiteralNode.PrimitiveLiteralNode n) {
+      var isTrue = n.isTrue();
+      var executed = isTrue ? ifNode.getPass() : ifNode.getFail();
+      var dropped = isTrue ? ifNode.getFail() : ifNode.getPass();
+      var statements = new ArrayList<Statement>();
       if (executed != null) {
         statements.addAll(executed.getStatements()); // Get statements form executed branch
       }
@@ -100,23 +98,23 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
   }
 
   @Override
-  public Node leaveTernaryNode(final TernaryNode ternaryNode) {
-    final Node test = ternaryNode.getTest();
-    if (test instanceof LiteralNode.PrimitiveLiteralNode) {
-      return (((LiteralNode.PrimitiveLiteralNode<?>) test).isTrue() ? ternaryNode.getTrueExpression() : ternaryNode.getFalseExpression()).getExpression();
+  public Node leaveTernaryNode(TernaryNode ternaryNode) {
+    var test = ternaryNode.getTest();
+    if (test instanceof LiteralNode.PrimitiveLiteralNode<?> n) {
+      return (n.isTrue() ? ternaryNode.getTrueExpression() : ternaryNode.getFalseExpression()).getExpression();
     }
     return ternaryNode;
   }
 
   @Override
-  public Node leaveSwitchNode(final SwitchNode switchNode) {
+  public Node leaveSwitchNode(SwitchNode switchNode) {
     return switchNode.setUniqueInteger(lc, isUniqueIntegerSwitchNode(switchNode));
   }
 
-  private static boolean isUniqueIntegerSwitchNode(final SwitchNode switchNode) {
-    final Set<Integer> alreadySeen = new HashSet<>();
-    for (final CaseNode caseNode : switchNode.getCases()) {
-      final Expression test = caseNode.getTest();
+  static boolean isUniqueIntegerSwitchNode(SwitchNode switchNode) {
+    var alreadySeen = new HashSet<Integer>();
+    for (var caseNode : switchNode.getCases()) {
+      var test = caseNode.getTest();
       if (test != null && !isUniqueIntegerLiteral(test, alreadySeen)) {
         return false;
       }
@@ -124,20 +122,19 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
     return true;
   }
 
-  private static boolean isUniqueIntegerLiteral(final Expression expr, final Set<Integer> alreadySeen) {
-    if (expr instanceof LiteralNode) {
-      final Object value = ((LiteralNode<?>) expr).getValue();
-      if (value instanceof Integer) {
-        return alreadySeen.add((Integer) value);
+  static boolean isUniqueIntegerLiteral(Expression expr, Set<Integer> alreadySeen) {
+    if (expr instanceof LiteralNode<?> n) {
+      var value = n.getValue();
+      if (value instanceof Integer i) {
+        return alreadySeen.add(i);
       }
     }
     return false;
   }
 
   /**
-   * Helper class to evaluate constant expressions at compile time This is
-   * also a simplifier used by BinaryNode visits, UnaryNode visits and
-   * conversions.
+   * Helper class to evaluate constant expressions at compile time.
+   * This is also a simplifier used by BinaryNode visits, UnaryNode visits and conversions.
    */
   abstract static class ConstantEvaluator<T extends Node> {
 
@@ -145,212 +142,180 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
     protected final long token;
     protected final int finish;
 
-    protected ConstantEvaluator(final T parent) {
+    protected ConstantEvaluator(T parent) {
       this.parent = parent;
       this.token = parent.getToken();
       this.finish = parent.getFinish();
     }
 
     /**
-     * Returns a literal node that replaces the given parent node, or null if replacement
-     * is impossible
+     * Returns a literal node that replaces the given parent node, or null if replacement is impossible
      * @return the literal node
      */
     protected abstract LiteralNode<?> eval();
   }
 
   /**
-   * When we eliminate dead code, we must preserve var declarations as they are scoped to the whole
-   * function. This method gathers var nodes from code passed to it, removing their initializers.
-   *
+   * When we eliminate dead code, we must preserve var declarations as they are scoped to the whole function.
+   * This method gathers var nodes from code passed to it, removing their initializers.
    * @param deadCodeRoot the root node of eliminated dead code
-   * @param statements a list that will be receiving the var nodes from the dead code, with their
-   * initializers removed.
+   * @param statements a list that will be receiving the var nodes from the dead code, with their initializers removed.
    */
-  static void extractVarNodesFromDeadCode(final Node deadCodeRoot, final List<Statement> statements) {
+  static void extractVarNodesFromDeadCode(Node deadCodeRoot, List<Statement> statements) {
     deadCodeRoot.accept(new SimpleNodeVisitor() {
       @Override
-      public boolean enterVarNode(final VarNode varNode) {
+      public boolean enterVarNode(VarNode varNode) {
         statements.add(varNode.setInit(null));
         return false;
       }
-
       @Override
-      public boolean enterFunctionNode(final FunctionNode functionNode) {
+      public boolean enterFunctionNode(FunctionNode functionNode) {
         // Don't descend into nested functions
         return false;
       }
     });
   }
 
-  private static class UnaryNodeConstantEvaluator extends ConstantEvaluator<UnaryNode> {
+  static class UnaryNodeConstantEvaluator extends ConstantEvaluator<UnaryNode> {
 
-    UnaryNodeConstantEvaluator(final UnaryNode parent) {
+    UnaryNodeConstantEvaluator(UnaryNode parent) {
       super(parent);
     }
 
     @Override
     protected LiteralNode<?> eval() {
-      final Node rhsNode = parent.getExpression();
-
+      var rhsNode = parent.getExpression();
       if (!(rhsNode instanceof LiteralNode)) {
         return null;
       }
-
       if (rhsNode instanceof ArrayLiteralNode) {
         return null;
       }
-
-      final LiteralNode<?> rhs = (LiteralNode<?>) rhsNode;
-      final Type rhsType = rhs.getType();
-      final boolean rhsInteger = rhsType.isInteger() || rhsType.isBoolean();
-
-      LiteralNode<?> literalNode;
-
-      switch (parent.tokenType()) {
-        case POS:
-          if (rhsInteger) {
-            literalNode = LiteralNode.newInstance(token, finish, rhs.getInt32());
-          } else if (rhsType.isLong()) {
-            literalNode = LiteralNode.newInstance(token, finish, rhs.getLong());
-          } else {
-            literalNode = LiteralNode.newInstance(token, finish, rhs.getNumber());
-          }
-          break;
-        case NEG:
-          if (rhsInteger && rhs.getInt32() != 0) { // @see test/script/basic/minuszero.js
-            literalNode = LiteralNode.newInstance(token, finish, -rhs.getInt32());
-          } else if (rhsType.isLong() && rhs.getLong() != 0L) {
-            literalNode = LiteralNode.newInstance(token, finish, -rhs.getLong());
-          } else {
-            literalNode = LiteralNode.newInstance(token, finish, -rhs.getNumber());
-          }
-          break;
-        case NOT:
-          literalNode = LiteralNode.newInstance(token, finish, !rhs.getBoolean());
-          break;
-        case BIT_NOT:
-          literalNode = LiteralNode.newInstance(token, finish, ~rhs.getInt32());
-          break;
-        default:
-          return null;
-      }
-
+      var rhs = (LiteralNode<?>) rhsNode;
+      var rhsType = rhs.getType();
+      var rhsInteger = rhsType.isInteger() || rhsType.isBoolean();
+      var literalNode = switch (parent.tokenType()) {
+        case POS -> (rhsInteger) ? LiteralNode.newInstance(token, finish, rhs.getInt32())
+                  : (rhsType.isLong()) ? LiteralNode.newInstance(token, finish, rhs.getLong())
+                  : LiteralNode.newInstance(token, finish, rhs.getNumber());
+        case NEG -> (rhsInteger && rhs.getInt32() != 0) ? LiteralNode.newInstance(token, finish, -rhs.getInt32()) // @see test/script/basic/minuszero.js
+                  : (rhsType.isLong() && rhs.getLong() != 0L) ? LiteralNode.newInstance(token, finish, -rhs.getLong())
+                  : LiteralNode.newInstance(token, finish, -rhs.getNumber());
+        case NOT -> LiteralNode.newInstance(token, finish, !rhs.getBoolean());
+        case BIT_NOT -> LiteralNode.newInstance(token, finish, ~rhs.getInt32());
+        default -> null;
+      };
       return literalNode;
     }
   }
 
-  //TODO add AND and OR with one constant parameter (bitwise)
-  private static class BinaryNodeConstantEvaluator extends ConstantEvaluator<BinaryNode> {
+  // TODO add AND and OR with one constant parameter (bitwise)
+  static class BinaryNodeConstantEvaluator extends ConstantEvaluator<BinaryNode> {
 
-    BinaryNodeConstantEvaluator(final BinaryNode parent) {
+    BinaryNodeConstantEvaluator(BinaryNode parent) {
       super(parent);
     }
 
     @Override
     protected LiteralNode<?> eval() {
       LiteralNode<?> result;
-
       result = reduceTwoLiterals();
       if (result != null) {
         return result;
       }
-
       result = reduceOneLiteral();
       if (result != null) {
         return result;
       }
-
       return null;
     }
 
     @SuppressWarnings("static-method")
-    private LiteralNode<?> reduceOneLiteral() {
-      //TODO handle patterns like AND, OR, numeric ops that can be strength reduced but not replaced by a single literal node etc
+    LiteralNode<?> reduceOneLiteral() {
+      // TODO handle patterns like AND, OR, numeric ops that can be strength reduced but not replaced by a single literal node etc
       return null;
     }
 
-    private LiteralNode<?> reduceTwoLiterals() {
+    LiteralNode<?> reduceTwoLiterals() {
       if (!(parent.lhs() instanceof LiteralNode && parent.rhs() instanceof LiteralNode)) {
         return null;
       }
-
-      final LiteralNode<?> lhs = (LiteralNode<?>) parent.lhs();
-      final LiteralNode<?> rhs = (LiteralNode<?>) parent.rhs();
-
+      var lhs = (LiteralNode<?>) parent.lhs();
+      var rhs = (LiteralNode<?>) parent.rhs();
       if (lhs instanceof ArrayLiteralNode || rhs instanceof ArrayLiteralNode) {
         return null;
       }
-
-      final Type widest = Type.widest(lhs.getType(), rhs.getType());
-
-      boolean isInteger = widest.isInteger();
-      final double value;
+      var widest = Type.widest(lhs.getType(), rhs.getType());
+      var isInteger = widest.isInteger();
+      double value;
 
       switch (parent.tokenType()) {
-        case DIV:
-          value = lhs.getNumber() / rhs.getNumber();
-          break;
-        case ADD:
+        case DIV -> value = lhs.getNumber() / rhs.getNumber();
+        case ADD -> {
           if ((lhs.isString() || rhs.isNumeric()) && (rhs.isString() || rhs.isNumeric())) {
-            final Object res = ScriptRuntime.ADD(lhs.getObject(), rhs.getObject());
-            if (res instanceof Number) {
-              value = ((Number) res).doubleValue();
+            var res = ScriptRuntime.ADD(lhs.getObject(), rhs.getObject());
+            if (res instanceof Number n) {
+              value = n.doubleValue();
               break;
             }
             assert res instanceof CharSequence : res + " was not a CharSequence, it was a " + res.getClass();
             return LiteralNode.newInstance(token, finish, res.toString());
           }
           return null;
-        case MUL:
-          value = lhs.getNumber() * rhs.getNumber();
-          break;
-        case MOD:
-          value = lhs.getNumber() % rhs.getNumber();
-          break;
-        case SUB:
-          value = lhs.getNumber() - rhs.getNumber();
-          break;
-        case SHR:
-          final long result = JSType.toUint32(lhs.getInt32() >>> rhs.getInt32());
+        }
+        case MUL -> value = lhs.getNumber() * rhs.getNumber();
+        case MOD -> value = lhs.getNumber() % rhs.getNumber();
+        case SUB -> value = lhs.getNumber() - rhs.getNumber();
+        case SHR -> {
+          var result = JSType.toUint32(lhs.getInt32() >>> rhs.getInt32());
           return LiteralNode.newInstance(token, finish, JSType.toNarrowestNumber(result));
-        case SAR:
+        }
+        case SAR -> {
           return LiteralNode.newInstance(token, finish, lhs.getInt32() >> rhs.getInt32());
-        case SHL:
+        }
+        case SHL -> {
           return LiteralNode.newInstance(token, finish, lhs.getInt32() << rhs.getInt32());
-        case BIT_XOR:
+        }
+        case BIT_XOR -> {
           return LiteralNode.newInstance(token, finish, lhs.getInt32() ^ rhs.getInt32());
-        case BIT_AND:
+        }
+        case BIT_AND -> {
           return LiteralNode.newInstance(token, finish, lhs.getInt32() & rhs.getInt32());
-        case BIT_OR:
+        }
+        case BIT_OR -> {
           return LiteralNode.newInstance(token, finish, lhs.getInt32() | rhs.getInt32());
-        case GE:
+        }
+        case GE -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.GE(lhs.getObject(), rhs.getObject()));
-        case LE:
+        }
+        case LE -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.LE(lhs.getObject(), rhs.getObject()));
-        case GT:
+        }
+        case GT -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.GT(lhs.getObject(), rhs.getObject()));
-        case LT:
+        }
+        case LT -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.LT(lhs.getObject(), rhs.getObject()));
-        case NE:
+        }
+        case NE -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.NE(lhs.getObject(), rhs.getObject()));
-        case NEQU:
+        }
+        case NEQU -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.NOT_EQUIV(lhs.getObject(), rhs.getObject()));
-        case EQ:
+        }
+        case EQ -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.EQ(lhs.getObject(), rhs.getObject()));
-        case EQU:
+        }
+        case EQU -> {
           return LiteralNode.newInstance(token, finish, ScriptRuntime.EQUIV(lhs.getObject(), rhs.getObject()));
-        default:
+        }
+        default -> {
           return null;
+        }
       }
-
       isInteger &= JSType.isNonNegativeZeroInt(value);
-
-      if (isInteger) {
-        return LiteralNode.newInstance(token, finish, (int) value);
-      }
-
-      return LiteralNode.newInstance(token, finish, value);
+      return (isInteger) ? LiteralNode.newInstance(token, finish, (int) value) : LiteralNode.newInstance(token, finish, value);
     }
   }
+
 }
