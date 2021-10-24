@@ -104,7 +104,7 @@ public final class TypeMap {
   String toString(String prefix) {
     var id = functionNodeId;
     var ret = returnType;
-    return prefix + '\t' + "function " + id + '\n' + prefix + "\t\tparamTypes=" + Arrays.toString(paramTypes) 
-     + '\n' + prefix + "\t\treturnType=" + (ret == null ? "N/A" : ret) + '\n';
+    return prefix + '\t' + "function " + id + '\n' + prefix + "\t\tparamTypes=" + Arrays.toString(paramTypes) + '\n' + prefix + "\t\treturnType=" + (ret == null ? "N/A" : ret) + '\n';
   }
+
 }
