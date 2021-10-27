@@ -1,8 +1,5 @@
 package es.runtime;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +9,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+
 import es.codegen.CompileUnit;
 import es.runtime.logging.DebugLogger;
 import es.runtime.logging.Loggable;
@@ -32,11 +34,9 @@ public final class Timing implements Loggable {
 
   /**
    * Instantiate singleton timer for ScriptEnvironment
-   * @param isEnabled true if enabled, otherwise we keep the instance around
-   *      for code brevity and "isEnabled" checks, but never instantiate anything
-   *      inside it
+   * @param isEnabled true if enabled, otherwise we keep the instance around for code brevity and "isEnabled" checks, but never instantiate anything inside it
    */
-  public Timing(final boolean isEnabled) {
+  public Timing(boolean isEnabled) {
     this.isEnabled = isEnabled;
     this.startTime = System.nanoTime();
   }
@@ -68,39 +68,30 @@ public final class Timing implements Loggable {
   }
 
   /**
-   * When timing, this can be called to register a new module for timing
-   * or add to its accumulated time
-   *
+   * When timing, this can be called to register a new module for timing or add to its accumulated time
    * @param module   module name
    * @param durationNano duration to add to accumulated time for module, in nanoseconds.
    */
-  public void accumulateTime(final String module, final long durationNano) {
+  public void accumulateTime(String module, long durationNano) {
     if (isEnabled()) {
       ensureInitialized(Context.getContextTrusted());
       timeSupplier.accumulateTime(module, durationNano);
     }
   }
 
-  private DebugLogger ensureInitialized(final Context context) {
-    //lazy init, as there is not necessarily a context available when
-    //a ScriptEnvironment gets initialize
+  DebugLogger ensureInitialized(Context context) {
+    // lazy init, as there is not necessarily a context available when a ScriptEnvironment gets initialize
     if (isEnabled() && log == null) {
       log = initLogger(context);
       if (log.isEnabled()) {
         this.timeSupplier = new TimeSupplier();
-        Runtime.getRuntime().addShutdownHook(
-                new Thread() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
           @Override
           public void run() {
-            //System.err.println because the context and the output streams may be gone
-            //when the shutdown hook executes
-            final StringBuilder sb = new StringBuilder();
-            for (final String str : timeSupplier.getStrings()) {
-              sb.append('[').
-                      append(Timing.getLoggerName()).
-                      append("] ").
-                      append(str).
-                      append('\n');
+            // System.err.println because the context and the output streams may be gone when the shutdown hook executes
+            var sb = new StringBuilder();
+            for (var str : timeSupplier.getStrings()) {
+              sb.append('[').append(Timing.getLoggerName()).append("] ").append(str).append('\n');
             }
             System.err.print(sb);
           }
@@ -115,7 +106,7 @@ public final class Timing implements Loggable {
   }
 
   @Override
-  public DebugLogger initLogger(final Context context) {
+  public DebugLogger initLogger(Context context) {
     return context.getLogger(this.getClass());
   }
 
@@ -129,11 +120,11 @@ public final class Timing implements Loggable {
    * @param durationNano duration in nanoseconds
    * @return the string representing the duration in milliseconds.
    */
-  public static String toMillisPrint(final long durationNano) {
+  public static String toMillisPrint(long durationNano) {
     return Long.toString(TimeUnit.NANOSECONDS.toMillis(durationNano));
   }
 
-  final class TimeSupplier implements Supplier<String> {
+  class TimeSupplier implements Supplier<String> {
 
     private final Map<String, LongAdder> timings = new ConcurrentHashMap<>();
     private final LinkedBlockingQueue<String> orderedTimingNames = new LinkedBlockingQueue<>();
@@ -143,14 +134,14 @@ public final class Timing implements Loggable {
     };
 
     String[] getStrings() {
-      final List<String> strs = new ArrayList<>();
-      final BufferedReader br = new BufferedReader(new StringReader(get()));
+      var strs = new ArrayList<String>();
+      var br = new BufferedReader(new StringReader(get()));
       String line;
       try {
         while ((line = br.readLine()) != null) {
           strs.add(line);
         }
-      } catch (final IOException e) {
+      } catch (IOException e) {
         throw new RuntimeException(e);
       }
       return strs.toArray(new String[0]);
@@ -158,63 +149,48 @@ public final class Timing implements Loggable {
 
     @Override
     public String get() {
-      final long t = System.nanoTime();
-
-      long knownTime = 0L;
-      int maxKeyLength = 0;
-      int maxValueLength = 0;
-
-      for (final Map.Entry<String, LongAdder> entry : timings.entrySet()) {
+      var t = System.nanoTime();
+      var knownTime = 0L;
+      var maxKeyLength = 0;
+      var maxValueLength = 0;
+      for (var entry : timings.entrySet()) {
         maxKeyLength = Math.max(maxKeyLength, entry.getKey().length());
         maxValueLength = Math.max(maxValueLength, toMillisPrint(entry.getValue().longValue()).length());
       }
       maxKeyLength++;
-
-      final StringBuilder sb = new StringBuilder();
+      var sb = new StringBuilder();
       sb.append("Accumulated compilation phase timings:\n\n");
-      for (final String timingName : orderedTimingNames) {
+      for (var timingName : orderedTimingNames) {
         int len;
-
         len = sb.length();
         sb.append(timingName);
         len = sb.length() - len;
-
         while (len++ < maxKeyLength) {
           sb.append(' ');
         }
-
-        final long duration = timings.get(timingName).longValue();
-        final String strDuration = toMillisPrint(duration);
+        var duration = timings.get(timingName).longValue();
+        var strDuration = toMillisPrint(duration);
         len = strDuration.length();
-        for (int i = 0; i < maxValueLength - len; i++) {
+        for (var i = 0; i < maxValueLength - len; i++) {
           sb.append(' ');
         }
-
-        sb.append(strDuration).
-                append(" ms\n");
-
+        sb.append(strDuration).append(" ms\n");
         knownTime += duration;
       }
-
-      final long total = t - startTime;
-      return sb.append("\nTotal runtime: ").
-              append(toMillisPrint(total)).
-              append(" ms (Non-runtime: ").
-              append(toMillisPrint(knownTime)).
-              append(" ms [").
-              append((int) (knownTime * 100.0 / total)).
-              append("%])").
-              append("\n\nEmitted compile units: ").
-              append(CompileUnit.getEmittedUnitCount()).
-              append("\nCompile units installed as named classes: ").
-              append(Context.getNamedInstalledScriptCount()).
-              append("\nCompile units installed as anonymous classes: ").
-              append(Context.getAnonymousInstalledScriptCount()).
-              toString();
+      var total = t - startTime;
+      return sb
+        .append("\nTotal runtime: ").append(toMillisPrint(total))
+        .append(" ms (Non-runtime: ").append(toMillisPrint(knownTime))
+        .append(" ms [").append((int) (knownTime * 100.0 / total)).append("%])")
+        .append("\n\nEmitted compile units: ").append(CompileUnit.getEmittedUnitCount())
+        .append("\nCompile units installed as named classes: ").append(Context.getNamedInstalledScriptCount())
+        .append("\nCompile units installed as anonymous classes: ").append(Context.getAnonymousInstalledScriptCount())
+        .toString();
     }
 
-    private void accumulateTime(final String module, final long duration) {
+    void accumulateTime(String module, long duration) {
       timings.computeIfAbsent(module, newTimingCreator).add(duration);
     }
   }
+
 }

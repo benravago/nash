@@ -1,6 +1,5 @@
 package es.runtime;
 
-import java.lang.invoke.MethodHandle;
 import java.util.AbstractList;
 import java.util.Deque;
 import java.util.Iterator;
@@ -9,27 +8,24 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.concurrent.Callable;
+
+import java.lang.invoke.MethodHandle;
+
 import nash.scripting.JSObject;
 import nash.scripting.ScriptObjectMirror;
+
 import es.objects.Global;
 import es.runtime.linker.Bootstrap;
 
 /**
- * An adapter that can wrap any ECMAScript Array-like object (that adheres to the array rules for the property
- * {@code length} and having conforming {@code push}, {@code pop}, {@code shift}, {@code unshift}, and {@code splice}
- * methods) and expose it as both a Java list and double-ended queue. While script arrays aren't necessarily efficient
- * as dequeues, it's still slightly more efficient to be able to translate dequeue operations into pushes, pops, shifts,
- * and unshifts, than to blindly translate all list's add/remove operations into splices. Also, it is conceivable that a
- * custom script object that implements an Array-like API can have a background data representation that is optimized
- * for dequeue-like access. Note that with ECMAScript arrays, {@code push} and {@code pop} operate at the end of the
- * array, while in Java {@code Deque} they operate on the front of the queue and as such the Java dequeue
- * {@link #push(Object)} and {@link #pop()} operations will translate to {@code unshift} and {@code shift} script
- * operations respectively, while {@link #addLast(Object)} and {@link #removeLast()} will translate to {@code push} and
- * {@code pop}.
+ * An adapter that can wrap any ECMAScript Array-like object (that adheres to the array rules for the property {@code length} and having conforming {@code push}, {@code pop}, {@code shift}, {@code unshift}, and {@code splice} methods) and expose it as both a Java list and double-ended queue.
+ * While script arrays aren't necessarily efficient as dequeues, it's still slightly more efficient to be able to translate dequeue operations into pushes, pops, shifts, and unshifts, than to blindly translate all list's add/remove operations into splices.
+ * Also, it is conceivable that a custom script object that implements an Array-like API can have a background data representation that is optimized for dequeue-like access.
+ * Note that with ECMAScript arrays, {@code push} and {@code pop} operate at the end of the array, while in Java {@code Deque} they operate on the front of the queue and as such the Java dequeue {@link #push(Object)} and {@link #pop()} operations will translate to {@code unshift} and {@code shift} script operations respectively, while {@link #addLast(Object)} and {@link #removeLast()} will translate to {@code push} and {@code pop}.
  */
 public class ListAdapter extends AbstractList<Object> implements RandomAccess, Deque<Object> {
-  // Invoker creator for methods that add to the start or end of the list: PUSH and UNSHIFT. Takes fn, this, and value, returns void.
 
+  // Invoker creator for methods that add to the start or end of the list: PUSH and UNSHIFT. Takes fn, this, and value, returns void.
   private static final Callable<MethodHandle> ADD_INVOKER_CREATOR = invokerCreator(void.class, Object.class, JSObject.class, Object.class);
 
   // PUSH adds to the start of the list
@@ -53,59 +49,57 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
   private static final Object SPLICE_REMOVE = new Object();
   private static final Callable<MethodHandle> SPLICE_REMOVE_INVOKER_CREATOR = invokerCreator(void.class, Object.class, JSObject.class, int.class, int.class);
 
-  /** wrapped object */
+  // wrapped object
   final JSObject obj;
   private final Global global;
 
   // allow subclasses only in this package
-  ListAdapter(final JSObject obj, final Global global) {
+  ListAdapter(JSObject obj, Global global) {
     if (global == null) {
       throw new IllegalStateException(ECMAErrors.getMessage("list.adapter.null.global"));
     }
-
     this.obj = obj;
     this.global = global;
   }
 
   /**
    * Factory to create a ListAdapter for a given script object.
-   *
    * @param obj script object to wrap as a ListAdapter
    * @return A ListAdapter wrapper object
    */
-  public static ListAdapter create(final Object obj) {
-    final Global global = Context.getGlobal();
+  public static ListAdapter create(Object obj) {
+    var global = Context.getGlobal();
     return new ListAdapter(getJSObject(obj, global), global);
   }
 
-  private static JSObject getJSObject(final Object obj, final Global global) {
+  static JSObject getJSObject(Object obj, Global global) {
     if (obj instanceof ScriptObject) {
       return (JSObject) ScriptObjectMirror.wrap(obj, global);
-    } else if (obj instanceof JSObject) {
-      return (JSObject) obj;
+    } else if (obj instanceof JSObject jso) {
+      return jso;
     }
     throw new IllegalArgumentException("ScriptObject or JSObject expected");
   }
 
   @Override
-  public final Object get(final int index) {
+  public final Object get(int index) {
     checkRange(index);
     return getAt(index);
   }
 
-  private Object getAt(final int index) {
+  Object getAt(int index) {
     return obj.getSlot(index);
   }
 
   @Override
-  public Object set(final int index, final Object element) {
+  public Object set(int index, Object element) {
     checkRange(index);
-    final Object prevValue = getAt(index);
+    var prevValue = getAt(index);
     obj.setSlot(index, element);
     return prevValue;
   }
 
-  private void checkRange(final int index) {
+  void checkRange(int index) {
     if (index < 0 || index >= size()) {
       throw invalidIndex(index);
     }
@@ -117,47 +111,47 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
   }
 
   @Override
-  public final void push(final Object e) {
+  public final void push(Object e) {
     addFirst(e);
   }
 
   @Override
-  public final boolean add(final Object e) {
+  public final boolean add(Object e) {
     addLast(e);
     return true;
   }
 
   @Override
-  public final void addFirst(final Object e) {
+  public final void addFirst(Object e) {
     try {
       getDynamicInvoker(UNSHIFT, ADD_INVOKER_CREATOR).invokeExact(getFunction("unshift"), obj, e);
     } catch (RuntimeException | Error ex) {
       throw ex;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
   @Override
-  public final void addLast(final Object e) {
+  public final void addLast(Object e) {
     try {
       getDynamicInvoker(PUSH, ADD_INVOKER_CREATOR).invokeExact(getFunction("push"), obj, e);
     } catch (RuntimeException | Error ex) {
       throw ex;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
   @Override
-  public final void add(final int index, final Object e) {
+  public final void add(int index, Object e) {
     try {
       if (index < 0) {
         throw invalidIndex(index);
       } else if (index == 0) {
         addFirst(e);
       } else {
-        final int size = size();
+        var size = size();
         if (index < size) {
           getDynamicInvoker(SPLICE_ADD, SPLICE_ADD_INVOKER_CREATOR).invokeExact(obj.getMember("splice"), obj, index, 0, e);
         } else if (index == size) {
@@ -166,38 +160,38 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
           throw invalidIndex(index);
         }
       }
-    } catch (final RuntimeException | Error ex) {
+    } catch (RuntimeException | Error ex) {
       throw ex;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
-  private Object getFunction(final String name) {
-    final Object fn = obj.getMember(name);
+  Object getFunction(String name) {
+    var fn = obj.getMember(name);
     if (!(Bootstrap.isCallable(fn))) {
       throw new UnsupportedOperationException("The script object doesn't have a function named " + name);
     }
     return fn;
   }
 
-  private static IndexOutOfBoundsException invalidIndex(final int index) {
+  static IndexOutOfBoundsException invalidIndex(int index) {
     return new IndexOutOfBoundsException(String.valueOf(index));
   }
 
   @Override
-  public final boolean offer(final Object e) {
+  public final boolean offer(Object e) {
     return offerLast(e);
   }
 
   @Override
-  public final boolean offerFirst(final Object e) {
+  public final boolean offerFirst(Object e) {
     addFirst(e);
     return true;
   }
 
   @Override
-  public final boolean offerLast(final Object e) {
+  public final boolean offerLast(Object e) {
     addLast(e);
     return true;
   }
@@ -231,15 +225,15 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
   }
 
   @Override
-  public final Object remove(final int index) {
+  public final Object remove(int index) {
     if (index < 0) {
       throw invalidIndex(index);
     } else if (index == 0) {
       return invokeShift();
     } else {
-      final int maxIndex = size() - 1;
+      var maxIndex = size() - 1;
       if (index < maxIndex) {
-        final Object prevValue = get(index);
+        var prevValue = get(index);
         invokeSpliceRemove(index, 1);
         return prevValue;
       } else if (index == maxIndex) {
@@ -250,37 +244,37 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
     }
   }
 
-  private Object invokeShift() {
+  Object invokeShift() {
     try {
       return getDynamicInvoker(SHIFT, REMOVE_INVOKER_CREATOR).invokeExact(getFunction("shift"), obj);
     } catch (RuntimeException | Error ex) {
       throw ex;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
-  private Object invokePop() {
+  Object invokePop() {
     try {
       return getDynamicInvoker(POP, REMOVE_INVOKER_CREATOR).invokeExact(getFunction("pop"), obj);
     } catch (RuntimeException | Error ex) {
       throw ex;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
   @Override
-  protected final void removeRange(final int fromIndex, final int toIndex) {
+  protected final void removeRange(int fromIndex, int toIndex) {
     invokeSpliceRemove(fromIndex, toIndex - fromIndex);
   }
 
-  private void invokeSpliceRemove(final int fromIndex, final int count) {
+  void invokeSpliceRemove(int fromIndex, int count) {
     try {
       getDynamicInvoker(SPLICE_REMOVE, SPLICE_REMOVE_INVOKER_CREATOR).invokeExact(getFunction("splice"), obj, fromIndex, count);
     } catch (RuntimeException | Error ex) {
       throw ex;
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -334,36 +328,25 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
 
   @Override
   public final Iterator<Object> descendingIterator() {
-    final ListIterator<Object> it = listIterator(size());
-    return new Iterator<Object>() {
-      @Override
-      public boolean hasNext() {
-        return it.hasPrevious();
-      }
-
-      @Override
-      public Object next() {
-        return it.previous();
-      }
-
-      @Override
-      public void remove() {
-        it.remove();
-      }
+    return new Iterator<>() {
+      final ListIterator<Object> it = listIterator(size());
+      @Override public boolean hasNext() { return it.hasPrevious(); }
+      @Override public Object next() { return it.previous(); }
+      @Override public void remove() { it.remove(); }
     };
   }
 
   @Override
-  public final boolean removeFirstOccurrence(final Object o) {
+  public final boolean removeFirstOccurrence(Object o) {
     return removeOccurrence(o, iterator());
   }
 
   @Override
-  public final boolean removeLastOccurrence(final Object o) {
+  public final boolean removeLastOccurrence(Object o) {
     return removeOccurrence(o, descendingIterator());
   }
 
-  private static boolean removeOccurrence(final Object o, final Iterator<Object> it) {
+  static boolean removeOccurrence(Object o, Iterator<Object> it) {
     while (it.hasNext()) {
       if (Objects.equals(o, it.next())) {
         it.remove();
@@ -373,16 +356,11 @@ public class ListAdapter extends AbstractList<Object> implements RandomAccess, D
     return false;
   }
 
-  private static Callable<MethodHandle> invokerCreator(final Class<?> rtype, final Class<?>... ptypes) {
-    return new Callable<MethodHandle>() {
-      @Override
-      public MethodHandle call() {
-        return Bootstrap.createDynamicCallInvoker(rtype, ptypes);
-      }
-    };
+  static Callable<MethodHandle> invokerCreator(Class<?> rtype, Class<?>... ptypes) {
+    return () -> Bootstrap.createDynamicCallInvoker(rtype, ptypes);
   }
 
-  private MethodHandle getDynamicInvoker(final Object key, final Callable<MethodHandle> creator) {
+  MethodHandle getDynamicInvoker(Object key, Callable<MethodHandle> creator) {
     return global.getDynamicInvoker(key, creator);
   }
 

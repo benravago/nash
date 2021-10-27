@@ -8,22 +8,20 @@ import java.util.ResourceBundle;
  */
 final class FunctionDocumentation {
 
-  private FunctionDocumentation() {
-  }
-
   private static final String DOCS_RESOURCE = "es.runtime.resources.Functions";
 
   private static final ResourceBundle FUNC_DOCS;
 
-  static {
+  static /*<init>*/ {
     FUNC_DOCS = ResourceBundle.getBundle(DOCS_RESOURCE, Locale.getDefault());
   }
 
-  static String getDoc(final String docKey) {
+  static String getDoc(String docKey) {
     try {
       return FUNC_DOCS.getString(docKey);
-    } catch (final RuntimeException ignored) {
+    } catch (RuntimeException ignored) {
       return null;
     }
   }
+
 }

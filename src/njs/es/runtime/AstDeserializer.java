@@ -1,11 +1,11 @@
 package es.runtime;
 
+import java.util.zip.InflaterInputStream;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
-import java.security.PrivilegedAction;
-import java.util.zip.InflaterInputStream;
 import es.ir.FunctionNode;
 
 /**
@@ -14,13 +14,13 @@ import es.ir.FunctionNode;
  */
 final class AstDeserializer {
 
-  static FunctionNode deserialize(final byte[] serializedAst) {
-        try {
-          return (FunctionNode) new ObjectInputStream(new InflaterInputStream(
-                  new ByteArrayInputStream(serializedAst))).readObject();
-        } catch (final ClassNotFoundException | IOException e) {
-          // This is internal, can't happen
-          throw new AssertionError("Unexpected exception deserializing function", e);
-        }
+  static FunctionNode deserialize(byte[] serializedAst) {
+    try {
+      return (FunctionNode) new ObjectInputStream(new InflaterInputStream(new ByteArrayInputStream(serializedAst))).readObject();
+    } catch (ClassNotFoundException | IOException e) {
+      // This is internal, can't happen
+      throw new AssertionError("Unexpected exception deserializing function", e);
+    }
   }
+
 }

@@ -1,15 +1,14 @@
 package es.runtime;
 
 /**
- * This is the base class for function scopes.  Subclasses of this class are
- * produced by the ObjectClassGenerator along with additional fields for storing
- * local vars.  The number of fields required is determined by ObjectCreator.
+ * This is the base class for function scopes.
  *
- * The scope is also responsible for handling the var arg 'arguments' object,
- * though most of the access is via generated code.
+ * Subclasses of this class are produced by the ObjectClassGenerator along with additional fields for storing local vars.
+ * The number of fields required is determined by ObjectCreator.
  *
- * The constructor of this class is responsible for any function prologue
- * involving the scope.
+ * The scope is also responsible for handling the var arg 'arguments' object, though most of the access is via generated code.
+ *
+ * The constructor of this class is responsible for any function prologue involving the scope.
  */
 public class FunctionScope extends Scope {
 
@@ -23,7 +22,7 @@ public class FunctionScope extends Scope {
    * @param callerScope caller scope
    * @param arguments   arguments
    */
-  public FunctionScope(final PropertyMap map, final ScriptObject callerScope, final ScriptObject arguments) {
+  public FunctionScope(PropertyMap map, ScriptObject callerScope, ScriptObject arguments) {
     super(callerScope, map);
     this.arguments = arguments;
   }
@@ -34,7 +33,7 @@ public class FunctionScope extends Scope {
    * @param map         property map
    * @param callerScope caller scope
    */
-  public FunctionScope(final PropertyMap map, final ScriptObject callerScope) {
+  public FunctionScope(PropertyMap map, ScriptObject callerScope) {
     super(callerScope, map);
     this.arguments = null;
   }
@@ -46,8 +45,9 @@ public class FunctionScope extends Scope {
    * @param primitiveSpill primitive spill pool
    * @param objectSpill    reference spill pool
    */
-  public FunctionScope(final PropertyMap map, final long[] primitiveSpill, final Object[] objectSpill) {
+  public FunctionScope(PropertyMap map, long[] primitiveSpill, Object[] objectSpill) {
     super(map, primitiveSpill, objectSpill);
     this.arguments = null;
   }
+
 }

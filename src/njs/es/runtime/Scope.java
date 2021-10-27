@@ -10,10 +10,10 @@ import es.codegen.CompilerConstants;
  */
 public class Scope extends ScriptObject {
 
-  /* This is used to store return state of split functions. */
+  // This is used to store return state of split functions.
   private int splitState = -1;
 
-  /** This is updated only in debug mode - counts number of {@code ScriptObject} instances created that are scope */
+  // This is updated only in debug mode - counts number of {@code ScriptObject} instances created that are scope
   private static final LongAdder count = Context.DEBUG ? new LongAdder() : null;
 
   /** Method handle that points to {@link Scope#getSplitState}. */
@@ -26,7 +26,7 @@ public class Scope extends ScriptObject {
    *
    * @param map initial property map
    */
-  public Scope(final PropertyMap map) {
+  public Scope(PropertyMap map) {
     super(map);
     incrementCount();
   }
@@ -37,7 +37,7 @@ public class Scope extends ScriptObject {
    * @param proto parent scope
    * @param map   initial property map
    */
-  public Scope(final ScriptObject proto, final PropertyMap map) {
+  public Scope(ScriptObject proto, PropertyMap map) {
     super(proto, map);
     incrementCount();
   }
@@ -49,7 +49,7 @@ public class Scope extends ScriptObject {
    * @param primitiveSpill primitive spill array
    * @param objectSpill    reference spill array
    */
-  public Scope(final PropertyMap map, final long[] primitiveSpill, final Object[] objectSpill) {
+  public Scope(PropertyMap map, long[] primitiveSpill, Object[] objectSpill) {
     super(map, primitiveSpill, objectSpill);
     incrementCount();
   }
@@ -71,7 +71,6 @@ public class Scope extends ScriptObject {
 
   /**
    * Get the scope's split method state.
-   *
    * @return current split state
    */
   public int getSplitState() {
@@ -80,26 +79,25 @@ public class Scope extends ScriptObject {
 
   /**
    * Set the scope's split method state.
-   *
    * @param state current split state
    */
-  public void setSplitState(final int state) {
+  public void setSplitState(int state) {
     splitState = state;
   }
 
   /**
-   * Get number of {@code Scope} instances created. If not running in debug
-   * mode this is always 0.
-   *
+   * Get number of {@code Scope} instances created.
+   * If not running in debug mode this is always 0.
    * @return number of scope ScriptObjects created
    */
   public static long getScopeCount() {
     return count != null ? count.sum() : 0;
   }
 
-  private static void incrementCount() {
+  static void incrementCount() {
     if (Context.DEBUG) {
       count.increment();
     }
   }
+
 }

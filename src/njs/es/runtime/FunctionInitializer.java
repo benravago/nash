@@ -1,19 +1,22 @@
 package es.runtime;
 
+import java.util.Map;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
 import java.lang.invoke.MethodType;
-import java.util.Map;
+
 import es.codegen.CompileUnit;
 import es.codegen.FunctionSignature;
 import es.codegen.types.Type;
 import es.ir.FunctionNode;
 
 /**
- * Class that contains information allowing us to look up a method handle implementing a JavaScript function
- * from a generated class. This is used both for code coming from codegen and for persistent serialized code.
+ * Class that contains information allowing us to look up a method handle implementing a JavaScript function from a generated class.
+ * This is used both for code coming from codegen and for persistent serialized code.
  */
 public final class FunctionInitializer implements Serializable {
 
@@ -30,7 +33,7 @@ public final class FunctionInitializer implements Serializable {
    *
    * @param functionNode the function node
    */
-  public FunctionInitializer(final FunctionNode functionNode) {
+  public FunctionInitializer(FunctionNode functionNode) {
     this(functionNode, null);
   }
 
@@ -40,23 +43,20 @@ public final class FunctionInitializer implements Serializable {
    * @param functionNode the function node
    * @param invalidatedProgramPoints invalidated program points
    */
-  public FunctionInitializer(final FunctionNode functionNode, final Map<Integer, Type> invalidatedProgramPoints) {
+  public FunctionInitializer(FunctionNode functionNode, Map<Integer, Type> invalidatedProgramPoints) {
     this.className = functionNode.getCompileUnit().getUnitClassName();
     this.methodType = new FunctionSignature(functionNode).getMethodType();
     this.flags = functionNode.getFlags();
     this.invalidatedProgramPoints = invalidatedProgramPoints;
-
-    final CompileUnit cu = functionNode.getCompileUnit();
+    var cu = functionNode.getCompileUnit();
     if (cu != null) {
       this.code = cu.getCode();
     }
-
     assert className != null;
   }
 
   /**
    * Returns the name of the class implementing the function.
-   *
    * @return the class name
    */
   public String getClassName() {
@@ -65,7 +65,6 @@ public final class FunctionInitializer implements Serializable {
 
   /**
    * Returns the type of the method implementing the function.
-   *
    * @return the method type
    */
   public MethodType getMethodType() {
@@ -74,7 +73,6 @@ public final class FunctionInitializer implements Serializable {
 
   /**
    * Returns the function flags.
-   *
    * @return function flags
    */
   public int getFlags() {
@@ -83,7 +81,6 @@ public final class FunctionInitializer implements Serializable {
 
   /**
    * Returns the class implementing the function.
-   *
    * @return the class
    */
   public Class<?> getCode() {
@@ -94,7 +91,7 @@ public final class FunctionInitializer implements Serializable {
    * Set the class implementing the function
    * @param code the class
    */
-  void setCode(final Class<?> code) {
+  void setCode(Class<?> code) {
     // Make sure code has not been set and has expected class name
     if (this.code != null) {
       throw new IllegalStateException("code already set");
@@ -105,20 +102,20 @@ public final class FunctionInitializer implements Serializable {
 
   /**
    * Returns the map of invalidated program points.
-   *
    * @return invalidated program points
    */
   public Map<Integer, Type> getInvalidatedProgramPoints() {
     return invalidatedProgramPoints;
   }
 
-  private void writeObject(final ObjectOutputStream out) throws IOException {
+  void writeObject(ObjectOutputStream out) throws IOException {
     out.defaultWriteObject();
     Type.writeTypeMap(invalidatedProgramPoints, out);
   }
 
-  private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+  void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     invalidatedProgramPoints = Type.readTypeMap(in);
   }
+
 }

@@ -16,7 +16,7 @@ public final class Symbol implements Serializable {
    * Symbol constructor
    * @param name symbol name
    */
-  public Symbol(final String name) {
+  public Symbol(String name) {
     this.name = name;
   }
 
@@ -33,29 +33,28 @@ public final class Symbol implements Serializable {
     return name;
   }
 
-  private Object writeReplace() {
-    // If this symbol is a globally registered one, replace it with a
-    // GlobalSymbol in serialized stream.
+  Object writeReplace() {
+    // If this symbol is a globally registered one, replace it with a GlobalSymbol in serialized stream.
     return NativeSymbol.keyFor(null, this) == name ? new GlobalSymbol(name) : this;
   }
 
   /**
-   * Represents a globally registered (with NativeSymbol._for) symbol in the
-   * serialized stream. Upon deserialization, it resolves to the globally
-   * registered symbol.
+   * Represents a globally registered (with NativeSymbol._for) symbol in the serialized stream.
+   * Upon deserialization, it resolves to the globally registered symbol.
    */
-  private static class GlobalSymbol implements Serializable {
+  static class GlobalSymbol implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final String name;
 
-    GlobalSymbol(final String name) {
+    GlobalSymbol(String name) {
       this.name = name;
     }
 
-    private Object readResolve() {
+    Object readResolve() {
       return NativeSymbol.from(null, name);
     }
   }
+
 }

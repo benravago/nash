@@ -1,15 +1,15 @@
 package es.runtime;
 
-import static es.codegen.Compiler.SCRIPTS_PACKAGE;
-import static es.codegen.Compiler.binaryName;
-import static es.codegen.CompilerConstants.JS_OBJECT_DUAL_FIELD_PREFIX;
-import static es.codegen.CompilerConstants.JS_OBJECT_SINGLE_FIELD_PREFIX;
+import java.util.Set;
+
+import java.security.ProtectionDomain;
 
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleDescriptor.Modifier;
-import java.security.ProtectionDomain;
-import java.util.Set;
+
 import es.codegen.ObjectClassGenerator;
+import static es.codegen.Compiler.*;
+import static es.codegen.CompilerConstants.*;
 
 /**
  * Responsible for on the fly construction of structure classes.
@@ -24,28 +24,23 @@ final class StructureLoader extends NashornLoader {
   /**
    * Constructor.
    */
-  StructureLoader(final ClassLoader parent) {
+  StructureLoader(ClassLoader parent) {
     super(parent);
-
     // new structures module, it's exports, read edges
     structuresModule = createModule("jdk.scripting.nashorn.structures");
-
     // specific exports from nashorn to the structures module
     NASHORN_MODULE.addExports(SCRIPTS_PKG, structuresModule);
     NASHORN_MODULE.addExports(RUNTIME_PKG, structuresModule);
-
     // nashorn has to read fields from classes of the new module
     NASHORN_MODULE.addReads(structuresModule);
   }
 
-  private Module createModule(final String moduleName) {
-    final ModuleDescriptor descriptor
-            = ModuleDescriptor.newModule(moduleName, Set.of(Modifier.SYNTHETIC))
-                    .requires(NASHORN_MODULE.getName())
-                    .packages(Set.of(SCRIPTS_PKG))
-                    .build();
-
-    final Module mod = Context.createModuleTrusted(descriptor, this);
+  Module createModule(String moduleName) {
+    var descriptor = ModuleDescriptor.newModule(moduleName, Set.of(Modifier.SYNTHETIC))
+      .requires(NASHORN_MODULE.getName())
+      .packages(Set.of(SCRIPTS_PKG))
+      .build();
+    var mod = Context.createModuleTrusted(descriptor, this);
     loadModuleManipulator();
     return mod;
   }
@@ -55,7 +50,7 @@ final class StructureLoader extends NashornLoader {
    * @param name a class name
    * @return true if a dual field structure class
    */
-  private static boolean isDualFieldStructure(final String name) {
+  static boolean isDualFieldStructure(String name) {
     return name.startsWith(DUAL_FIELD_PREFIX);
   }
 
@@ -64,7 +59,7 @@ final class StructureLoader extends NashornLoader {
    * @param name a class name
    * @return true if a single field structure class
    */
-  static boolean isSingleFieldStructure(final String name) {
+  static boolean isSingleFieldStructure(String name) {
     return name.startsWith(SINGLE_FIELD_PREFIX);
   }
 
@@ -73,7 +68,7 @@ final class StructureLoader extends NashornLoader {
    * @param name a class name
    * @return true if a structure class
    */
-  static boolean isStructureClass(final String name) {
+  static boolean isStructureClass(String name) {
     return isDualFieldStructure(name) || isSingleFieldStructure(name);
   }
 
@@ -82,13 +77,10 @@ final class StructureLoader extends NashornLoader {
   }
 
   @Override
-  protected Class<?> findClass(final String name) throws ClassNotFoundException {
-    if (isDualFieldStructure(name)) {
-      return generateClass(name, name.substring(DUAL_FIELD_PREFIX.length()), true);
-    } else if (isSingleFieldStructure(name)) {
-      return generateClass(name, name.substring(SINGLE_FIELD_PREFIX.length()), false);
-    }
-    return super.findClass(name);
+  protected Class<?> findClass(String name) throws ClassNotFoundException {
+    return isDualFieldStructure(name) ? generateClass(name, name.substring(DUAL_FIELD_PREFIX.length()), true)
+         : isSingleFieldStructure(name) ? generateClass(name, name.substring(SINGLE_FIELD_PREFIX.length()), false)
+         : super.findClass(name);
   }
 
   /**
@@ -97,10 +89,10 @@ final class StructureLoader extends NashornLoader {
    * @param descriptor Layout descriptor.
    * @return Generated class.
    */
-  private Class<?> generateClass(final String name, final String descriptor, final boolean dualFields) {
-    final Context context = Context.getContextTrusted();
-
-    final byte[] code = new ObjectClassGenerator(context, dualFields).generate(descriptor);
+  Class<?> generateClass(String name, String descriptor, boolean dualFields) {
+    var context = Context.getContextTrusted();
+    var code = new ObjectClassGenerator(context, dualFields).generate(descriptor);
     return defineClass(name, code, 0, code.length, new ProtectionDomain(null, getPermissions(null)));
   }
+
 }

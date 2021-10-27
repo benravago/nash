@@ -75,7 +75,7 @@ public final class ObjectClassGenerator implements Loggable {
    */
   public ObjectClassGenerator(Context context, boolean dualFields) {
     this.context = context;
-    this.dualFields = dualFields; // TODO: deprecated; remove this
+    this.dualFields = dualFields; // TODO: required; remove this check
     assert context != null;
     this.log = initLogger(context);
     if (!initialized) {

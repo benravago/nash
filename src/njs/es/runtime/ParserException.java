@@ -1,6 +1,7 @@
 package es.runtime;
 
 import nash.scripting.NashornException;
+
 import es.objects.Global;
 import es.parser.Token;
 
@@ -9,8 +10,8 @@ import es.parser.Token;
  */
 @SuppressWarnings("serial")
 public final class ParserException extends NashornException {
-  // Source from which this ParserException originated
 
+  // Source from which this ParserException originated
   private final Source source;
   // token responsible for this exception
   private final long token;
@@ -22,7 +23,7 @@ public final class ParserException extends NashornException {
    *
    * @param msg exception message for this parser error.
    */
-  public ParserException(final String msg) {
+  public ParserException(String msg) {
     this(JSErrorType.SYNTAX_ERROR, msg, null, -1, -1, -1);
   }
 
@@ -37,7 +38,7 @@ public final class ParserException extends NashornException {
    * @param token     token from which this exception originates
    *
    */
-  public ParserException(final JSErrorType errorType, final String msg, final Source source, final int line, final int column, final long token) {
+  public ParserException(JSErrorType errorType, String msg, Source source, int line, int column, long token) {
     super(msg, source != null ? source.getName() : null, line, column);
     this.source = source;
     this.token = token;
@@ -87,7 +88,8 @@ public final class ParserException extends NashornException {
    * Throw this {@code ParserException} as one of the 7 native JavaScript errors
    * @param global global scope object
    */
-  public void throwAsEcmaException(final Global global) {
+  public void throwAsEcmaException(Global global) {
     throw ECMAErrors.asEcmaException(global, this);
   }
+
 }

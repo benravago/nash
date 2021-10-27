@@ -1,5 +1,11 @@
 package es.runtime;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Objects;
+import java.util.WeakHashMap;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.lang.ref.WeakReference;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,14 +26,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Objects;
-import java.util.WeakHashMap;
+
+import java.lang.ref.WeakReference;
+
 import nash.scripting.URLReader;
+
 import es.parser.Token;
 import es.runtime.logging.DebugLogger;
 import es.runtime.logging.Loggable;
@@ -45,56 +51,51 @@ public final class Source implements Loggable {
   // Message digest to file name encoder
   private final static Base64.Encoder BASE64 = Base64.getUrlEncoder().withoutPadding();
 
-  /**
-   * Descriptive name of the source as supplied by the user. Used for error
-   * reporting to the user. For example, SyntaxError will use this to print message.
-   * Used to implement __FILE__. Also used for SourceFile in .class for debugger usage.
-   */
+  // Descriptive name of the source as supplied by the user.
+  // Used for error reporting to the user.
+  // For example, SyntaxError will use this to print message.
+  // Used to implement __FILE__. Also used for SourceFile in .class for debugger usage.
   private final String name;
 
-  /**
-   * Base path or URL of this source. Used to implement __DIR__, which can be
-   * used to load scripts relative to the location of the current script.
-   * This will be null when it can't be computed.
-   */
+  // Base path or URL of this source.
+  // Used to implement __DIR__, which can be used to load scripts relative to the location of the current script.
+  // This will be null when it can't be computed.
   private final String base;
 
-  /** Source content */
+  // Source content
   private final Data data;
 
-  /** Cached hash code */
+  // Cached hash code
   private int hash;
 
-  /** Base64-encoded SHA1 digest of this source object */
+  // Base64-encoded SHA1 digest of this source object
   private volatile byte[] digest;
 
-  /** source URL set via //@ sourceURL or //# sourceURL directive */
+  // source URL set via //@ sourceURL or //# sourceURL directive
   private String explicitURL;
 
   // Do *not* make this public, ever! Trusts the URL and content.
-  private Source(final String name, final String base, final Data data) {
+  Source(String name, String base, Data data) {
     this.name = name;
     this.base = base;
     this.data = data;
   }
 
-  private static synchronized Source sourceFor(final String name, final String base, final URLData data) throws IOException {
+  static synchronized Source sourceFor(String name, String base, URLData data) throws IOException {
     try {
-      final Source newSource = new Source(name, base, data);
-      final Source existingSource = CACHE.get(newSource);
+      var newSource = new Source(name, base, data);
+      var existingSource = CACHE.get(newSource);
       if (existingSource != null) {
         // Force any access errors
         data.checkPermissionAndClose();
         return existingSource;
       }
-
       // All sources in cache must be fully loaded
       data.load();
       CACHE.put(newSource, newSource);
-
       return newSource;
-    } catch (final RuntimeException e) {
-      final Throwable cause = e.getCause();
+    } catch (RuntimeException e) {
+      var cause = e.getCause();
       if (cause instanceof IOException) {
         throw (IOException) cause;
       }
@@ -102,56 +103,51 @@ public final class Source implements Loggable {
     }
   }
 
-  private static class Cache extends WeakHashMap<Source, WeakReference<Source>> {
+  static class Cache extends WeakHashMap<Source, WeakReference<Source>> {
 
-    public Source get(final Source key) {
-      final WeakReference<Source> ref = super.get(key);
+    public Source get(Source key) {
+      var ref = super.get(key);
       return ref == null ? null : ref.get();
     }
 
-    public void put(final Source key, final Source value) {
+    public void put(Source key, Source value) {
       assert !(value.data instanceof RawData);
       put(key, new WeakReference<>(value));
     }
   }
 
   // Wrapper to manage lazy loading
-  private static interface Data {
-
+  static interface Data {
     URL url();
-
     int length();
-
     long lastModified();
-
     char[] array();
-
     boolean isEvalCode();
   }
 
-  private static class RawData implements Data {
+  static class RawData implements Data {
 
     private final char[] array;
     private final boolean evalCode;
     private int hash;
 
-    private RawData(final char[] array, final boolean evalCode) {
+    RawData(char[] array, boolean evalCode) {
       this.array = Objects.requireNonNull(array);
       this.evalCode = evalCode;
     }
 
-    private RawData(final String source, final boolean evalCode) {
+    RawData(String source, boolean evalCode) {
       this.array = Objects.requireNonNull(source).toCharArray();
       this.evalCode = evalCode;
     }
 
-    private RawData(final Reader reader) throws IOException {
+    RawData(Reader reader) throws IOException {
       this(readFully(reader), false);
     }
 
     @Override
     public int hashCode() {
-      int h = hash;
+      var h = hash;
       if (h == 0) {
         h = hash = Arrays.hashCode(array) ^ (evalCode ? 1 : 0);
       }
@@ -159,12 +155,11 @@ public final class Source implements Loggable {
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
       if (this == obj) {
         return true;
       }
-      if (obj instanceof RawData) {
-        final RawData other = (RawData) obj;
+      if (obj instanceof RawData other) {
         return Arrays.equals(array, other.array) && evalCode == other.evalCode;
       }
       return false;
@@ -201,7 +196,7 @@ public final class Source implements Loggable {
     }
   }
 
-  private static class URLData implements Data {
+  static class URLData implements Data {
 
     private final URL url;
     protected final Charset cs;
@@ -210,14 +205,14 @@ public final class Source implements Loggable {
     protected int length;
     protected long lastModified;
 
-    private URLData(final URL url, final Charset cs) {
+    URLData(URL url, Charset cs) {
       this.url = Objects.requireNonNull(url);
       this.cs = cs;
     }
 
     @Override
     public int hashCode() {
-      int h = hash;
+      var h = hash;
       if (h == 0) {
         h = hash = url.hashCode();
       }
@@ -225,32 +220,27 @@ public final class Source implements Loggable {
     }
 
     @Override
-    public boolean equals(final Object other) {
+    public boolean equals(Object other) {
       if (this == other) {
         return true;
       }
-      if (!(other instanceof URLData)) {
-        return false;
-      }
-
-      final URLData otherData = (URLData) other;
-
-      if (url.equals(otherData.url)) {
-        // Make sure both have meta data loaded
-        try {
-          if (isDeferred()) {
-            // Data in cache is always loaded, and we only compare to cached data.
-            assert !otherData.isDeferred();
-            loadMeta();
-          } else if (otherData.isDeferred()) {
-            otherData.loadMeta();
+      if (other instanceof URLData otherData) {
+        if (url.equals(otherData.url)) {
+          // Make sure both have meta data loaded
+          try {
+            if (isDeferred()) {
+              // Data in cache is always loaded, and we only compare to cached data.
+              assert !otherData.isDeferred();
+              loadMeta();
+            } else if (otherData.isDeferred()) {
+              otherData.loadMeta();
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
-        } catch (final IOException e) {
-          throw new RuntimeException(e);
+          // Compare meta data
+          return this.length == otherData.length && this.lastModified == otherData.lastModified;
         }
-
-        // Compare meta data
-        return this.length == otherData.length && this.lastModified == otherData.lastModified;
       }
       return false;
     }
@@ -292,7 +282,7 @@ public final class Source implements Loggable {
 
     @SuppressWarnings("try")
     protected void checkPermissionAndClose() throws IOException {
-      try ( InputStream in = url.openStream()) {
+      try (var in = url.openStream()) {
         // empty
       }
       debug("permission checked for ", url);
@@ -300,8 +290,8 @@ public final class Source implements Loggable {
 
     protected void load() throws IOException {
       if (array == null) {
-        final URLConnection c = url.openConnection();
-        try ( InputStream in = c.getInputStream()) {
+        var c = url.openConnection();
+        try (var in = c.getInputStream()) {
           array = cs == null ? readFully(in) : readFully(in, cs);
           length = array.length;
           lastModified = c.getLastModified();
@@ -313,8 +303,8 @@ public final class Source implements Loggable {
     @SuppressWarnings("try")
     protected void loadMeta() throws IOException {
       if (length == 0 && lastModified == 0) {
-        final URLConnection c = url.openConnection();
-        try ( InputStream in = c.getInputStream()) {
+        var c = url.openConnection();
+        try (var in = c.getInputStream()) {
           length = c.getContentLength();
           lastModified = c.getLastModified();
           debug("loaded metadata for ", url);
@@ -323,14 +313,13 @@ public final class Source implements Loggable {
     }
   }
 
-  private static class FileData extends URLData {
+  static class FileData extends URLData {
 
     private final File file;
 
-    private FileData(final File file, final Charset cs) {
+    FileData(File file, Charset cs) {
       super(getURLFromFile(file), cs);
       this.file = file;
-
     }
 
     @Override
@@ -361,181 +350,148 @@ public final class Source implements Loggable {
     }
   }
 
-  private static void debug(final Object... msg) {
-    final DebugLogger logger = getLoggerStatic();
+  static void debug(Object... msg) {
+    var logger = getLoggerStatic();
     if (logger != null) {
       logger.info(msg);
     }
   }
 
-  private char[] data() {
+  char[] data() {
     return data.array();
   }
 
   /**
    * Returns a Source instance
-   *
    * @param name    source name
    * @param content contents as char array
    * @param isEval does this represent code from 'eval' call?
    * @return source instance
    */
-  public static Source sourceFor(final String name, final char[] content, final boolean isEval) {
+  public static Source sourceFor(String name, char[] content, boolean isEval) {
     return new Source(name, baseName(name), new RawData(content, isEval));
   }
 
   /**
    * Returns a Source instance
-   *
    * @param name    source name
    * @param content contents as char array
-   *
    * @return source instance
    */
-  public static Source sourceFor(final String name, final char[] content) {
+  public static Source sourceFor(String name, char[] content) {
     return sourceFor(name, content, false);
   }
 
   /**
    * Returns a Source instance
-   *
    * @param name    source name
    * @param content contents as string
    * @param isEval does this represent code from 'eval' call?
    * @return source instance
    */
-  public static Source sourceFor(final String name, final String content, final boolean isEval) {
+  public static Source sourceFor(String name, String content, boolean isEval) {
     return new Source(name, baseName(name), new RawData(content, isEval));
   }
 
   /**
    * Returns a Source instance
-   *
    * @param name    source name
    * @param content contents as string
    * @return source instance
    */
-  public static Source sourceFor(final String name, final String content) {
+  public static Source sourceFor(String name, String content) {
     return sourceFor(name, content, false);
   }
 
   /**
    * Constructor
-   *
    * @param name  source name
    * @param url   url from which source can be loaded
-   *
    * @return source instance
-   *
    * @throws IOException if source cannot be loaded
    */
-  public static Source sourceFor(final String name, final URL url) throws IOException {
+  public static Source sourceFor(String name, URL url) throws IOException {
     return sourceFor(name, url, null);
   }
 
   /**
    * Constructor
-   *
    * @param name  source name
    * @param url   url from which source can be loaded
    * @param cs    Charset used to convert bytes to chars
-   *
    * @return source instance
-   *
    * @throws IOException if source cannot be loaded
    */
-  public static Source sourceFor(final String name, final URL url, final Charset cs) throws IOException {
+  public static Source sourceFor(String name, URL url, Charset cs) throws IOException {
     return sourceFor(name, baseURL(url), new URLData(url, cs));
   }
 
   /**
    * Constructor
-   *
    * @param name  source name
    * @param file  file from which source can be loaded
-   *
    * @return source instance
-   *
    * @throws IOException if source cannot be loaded
    */
-  public static Source sourceFor(final String name, final File file) throws IOException {
+  public static Source sourceFor(String name, File file) throws IOException {
     return sourceFor(name, file, null);
   }
 
   /**
    * Constructor
-   *
    * @param name  source name
    * @param path  path from which source can be loaded
-   *
    * @return source instance
-   *
    * @throws IOException if source cannot be loaded
    */
-  public static Source sourceFor(final String name, final Path path) throws IOException {
+  public static Source sourceFor(String name, Path path) throws IOException {
     File file = null;
     try {
       file = path.toFile();
-    } catch (final UnsupportedOperationException uoe) {
-    }
-
-    if (file != null) {
-      return sourceFor(name, file);
-    } else {
-      return sourceFor(name, Files.newBufferedReader(path));
-    }
+    } catch (UnsupportedOperationException uoe) {} // TODO: review; questionable use of path.toFile()
+    return (file != null) ? sourceFor(name, file) : sourceFor(name, Files.newBufferedReader(path));
   }
 
   /**
    * Constructor
-   *
    * @param name  source name
    * @param file  file from which source can be loaded
    * @param cs    Charset used to convert bytes to chars
-   *
    * @return source instance
-   *
    * @throws IOException if source cannot be loaded
    */
-  public static Source sourceFor(final String name, final File file, final Charset cs) throws IOException {
-    final File absFile = file.getAbsoluteFile();
+  public static Source sourceFor(String name, File file, Charset cs) throws IOException {
+    var absFile = file.getAbsoluteFile();
     return sourceFor(name, dirName(absFile, null), new FileData(file, cs));
   }
 
   /**
    * Returns an instance
-   *
    * @param name source name
    * @param reader reader from which source can be loaded
-   *
    * @return source instance
-   *
    * @throws IOException if source cannot be loaded
    */
-  public static Source sourceFor(final String name, final Reader reader) throws IOException {
+  public static Source sourceFor(String name, Reader reader) throws IOException {
     // Extract URL from URLReader to defer loading and reuse cached data if available.
-    if (reader instanceof URLReader) {
-      final URLReader urlReader = (URLReader) reader;
-      return sourceFor(name, urlReader.getURL(), urlReader.getCharset());
-    }
-    return new Source(name, baseName(name), new RawData(reader));
+    return (reader instanceof URLReader urlReader) ? sourceFor(name, urlReader.getURL(), urlReader.getCharset()) : new Source(name, baseName(name), new RawData(reader));
   }
 
   @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
     if (!(obj instanceof Source)) {
       return false;
     }
-    final Source other = (Source) obj;
+    var other = (Source) obj;
     return Objects.equals(name, other.name) && data.equals(other.data);
   }
 
   @Override
   public int hashCode() {
-    int h = hash;
+    var h = hash;
     if (h == 0) {
       h = hash = data.hashCode() ^ Objects.hashCode(name);
     }
@@ -580,7 +536,7 @@ public final class Source implements Loggable {
    * @param len length of portion
    * @return Source content portion.
    */
-  public String getString(final int start, final int len) {
+  public String getString(int start, int len) {
     return new String(data(), start, len);
   }
 
@@ -589,16 +545,15 @@ public final class Source implements Loggable {
    * @param token Token descriptor.
    * @return Source content portion.
    */
-  public String getString(final long token) {
-    final int start = Token.descPosition(token);
-    final int len = Token.descLength(token);
+  public String getString(long token) {
+    var start = Token.descPosition(token);
+    var len = Token.descLength(token);
     return new String(data(), start, len);
   }
 
   /**
-   * Returns the source URL of this script Source. Can be null if Source
-   * was created from a String or a char[].
-   *
+   * Returns the source URL of this script Source.
+   * Can be null if Source was created from a String or a char[].
    * @return URL source or null
    */
   public URL getURL() {
@@ -617,13 +572,12 @@ public final class Source implements Loggable {
    * Set explicit source URL.
    * @param explicitURL URL set via sourceURL directive
    */
-  public void setExplicitURL(final String explicitURL) {
+  public void setExplicitURL(String explicitURL) {
     this.explicitURL = explicitURL;
   }
 
   /**
    * Returns whether this source was submitted via 'eval' call or not.
-   *
    * @return true if this source represents code submitted via 'eval'
    */
   public boolean isEvalCode() {
@@ -635,16 +589,14 @@ public final class Source implements Loggable {
    * @param position Index to offending token.
    * @return Index of first character of line.
    */
-  private int findBOLN(final int position) {
-    final char[] d = data();
-    for (int i = position - 1; i > 0; i--) {
-      final char ch = d[i];
-
+  int findBOLN(int position) {
+    var d = data();
+    for (var i = position - 1; i > 0; i--) {
+      var ch = d[i];
       if (ch == '\n' || ch == '\r') {
         return i + 1;
       }
     }
-
     return 0;
   }
 
@@ -653,42 +605,35 @@ public final class Source implements Loggable {
    * @param position Index to offending token.
    * @return Index of last character of line.
    */
-  private int findEOLN(final int position) {
-    final char[] d = data();
-    final int length = d.length;
-    for (int i = position; i < length; i++) {
-      final char ch = d[i];
-
+  int findEOLN(int position) {
+    var d = data();
+    var length = d.length;
+    for (var i = position; i < length; i++) {
+      var ch = d[i];
       if (ch == '\n' || ch == '\r') {
         return i - 1;
       }
     }
-
     return length - 1;
   }
 
   /**
    * Return line number of character position.
-   *
-   * <p>This method can be expensive for large sources as it iterates through
-   * all characters up to {@code position}.</p>
-   *
+   * This method can be expensive for large sources as it iterates through all characters up to {@code position}.</p>
    * @param position Position of character in source content.
    * @return Line number.
    */
-  public int getLine(final int position) {
-    final char[] d = data();
+  public int getLine(int position) {
+    var d = data();
     // Line count starts at 1.
-    int line = 1;
-
-    for (int i = 0; i < position; i++) {
-      final char ch = d[i];
+    var line = 1;
+    for (var i = 0; i < position; i++) {
+      var ch = d[i];
       // Works for both \n and \r\n.
       if (ch == '\n') {
         line++;
       }
     }
-
     return line;
   }
 
@@ -697,7 +642,7 @@ public final class Source implements Loggable {
    * @param position Position of character in source content.
    * @return Column number.
    */
-  public int getColumn(final int position) {
+  public int getColumn(int position) {
     // TODO - column needs to account for tabs.
     return position - findBOLN(position);
   }
@@ -707,22 +652,19 @@ public final class Source implements Loggable {
    * @param position Position of character in source content.
    * @return Line text.
    */
-  public String getSourceLine(final int position) {
+  public String getSourceLine(int position) {
     // Find end of previous line.
-    final int first = findBOLN(position);
+    var first = findBOLN(position);
     // Find end of this line.
-    final int last = findEOLN(position);
-
+    var last = findEOLN(position);
     return new String(data(), first, last - first + 1);
   }
 
   /**
-   * Get the content of this source as a char array. Note that the underlying array is returned instead of a
-   * clone; modifying the char array will cause modification to the source; this should not be done. While
-   * there is an apparent danger that we allow unfettered access to an underlying mutable array, the
-   * {@code Source} class is in a restricted {@code es.*} package and as such it is
-   * inaccessible by external actors in an environment with a security manager. Returning a clone would be
-   * detrimental to performance.
+   * Get the content of this source as a char array.
+   * Note that the underlying array is returned instead of a clone; modifying the char array will cause modification to the source; this should not be done.
+   * While there is an apparent danger that we allow unfettered access to an underlying mutable array, the {@code Source} class is in a restricted {@code es.*} package and as such it is inaccessible by external actors in an environment with a security manager.
+   * Returning a clone would be detrimental to performance.
    * @return content the content of this source as a char array
    */
   public char[] getContent() {
@@ -739,15 +681,13 @@ public final class Source implements Loggable {
 
   /**
    * Read all of the source until end of file. Return it as char array
-   *
    * @param reader reader opened to source stream
    * @return source as content
    * @throws IOException if source could not be read
    */
-  public static char[] readFully(final Reader reader) throws IOException {
-    final char[] arr = new char[BUF_SIZE];
-    final StringBuilder sb = new StringBuilder();
-
+  public static char[] readFully(Reader reader) throws IOException {
+    var arr = new char[BUF_SIZE];
+    var sb = new StringBuilder();
     try {
       int numChars;
       while ((numChars = reader.read(arr, 0, arr.length)) > 0) {
@@ -756,18 +696,17 @@ public final class Source implements Loggable {
     } finally {
       reader.close();
     }
-
     return sb.toString().toCharArray();
   }
 
   /**
-   * Read all of the source until end of file. Return it as char array
-   *
+   * Read all of the source until end of file.
+   * Return it as char array
    * @param file source file
    * @return source as content
    * @throws IOException if source could not be read
    */
-  public static char[] readFully(final File file) throws IOException {
+  public static char[] readFully(File file) throws IOException {
     if (!file.isFile()) {
       throw new IOException(file + " is not a file"); //TODO localize?
     }
@@ -775,65 +714,59 @@ public final class Source implements Loggable {
   }
 
   /**
-   * Read all of the source until end of file. Return it as char array
-   *
+   * Read all of the source until end of file.
+   * Return it as char array
    * @param file source file
    * @param cs Charset used to convert bytes to chars
    * @return source as content
    * @throws IOException if source could not be read
    */
-  public static char[] readFully(final File file, final Charset cs) throws IOException {
+  public static char[] readFully(File file, Charset cs) throws IOException {
     if (!file.isFile()) {
       throw new IOException(file + " is not a file"); //TODO localize?
     }
-
-    final byte[] buf = Files.readAllBytes(file.toPath());
+    var buf = Files.readAllBytes(file.toPath());
     return (cs != null) ? new String(buf, cs).toCharArray() : byteToCharArray(buf);
   }
 
   /**
    * Read all of the source until end of stream from the given URL. Return it as char array
-   *
    * @param url URL to read content from
    * @return source as content
    * @throws IOException if source could not be read
    */
-  public static char[] readFully(final URL url) throws IOException {
+  public static char[] readFully(URL url) throws IOException {
     return readFully(url.openStream());
   }
 
   /**
    * Read all of the source until end of file. Return it as char array
-   *
    * @param url URL to read content from
    * @param cs Charset used to convert bytes to chars
    * @return source as content
    * @throws IOException if source could not be read
    */
-  public static char[] readFully(final URL url, final Charset cs) throws IOException {
+  public static char[] readFully(URL url, Charset cs) throws IOException {
     return readFully(url.openStream(), cs);
   }
 
   /**
    * Get a Base64-encoded SHA1 digest for this source.
-   *
    * @return a Base64-encoded SHA1 digest for this source
    */
   public String getDigest() {
     return new String(getDigestBytes(), StandardCharsets.US_ASCII);
   }
 
-  private byte[] getDigestBytes() {
-    byte[] ldigest = digest;
+  byte[] getDigestBytes() {
+    var ldigest = digest;
     if (ldigest == null) {
-      final char[] content = data();
-      final byte[] bytes = new byte[content.length * 2];
-
-      for (int i = 0; i < content.length; i++) {
+      var content = data();
+      var bytes = new byte[content.length * 2];
+      for (var i = 0; i < content.length; i++) {
         bytes[i * 2] = (byte) (content[i] & 0x00ff);
         bytes[i * 2 + 1] = (byte) ((content[i] & 0xff00) >> 8);
       }
-
       try {
         final MessageDigest md = MessageDigest.getInstance("SHA-1");
         if (name != null) {
@@ -846,7 +779,7 @@ public final class Source implements Loggable {
           md.update(getURL().toString().getBytes(StandardCharsets.UTF_8));
         }
         digest = ldigest = BASE64.encode(md.digest(bytes));
-      } catch (final NoSuchAlgorithmException e) {
+      } catch (NoSuchAlgorithmException e) {
         throw new RuntimeException(e);
       }
     }
@@ -858,50 +791,48 @@ public final class Source implements Loggable {
    * @param url a URL
    * @return base path or URL, or null if argument is not a hierarchical URL
    */
-  public static String baseURL(final URL url) {
+  public static String baseURL(URL url) {
     try {
-      final URI uri = url.toURI();
-
+      var uri = url.toURI();
       if (uri.getScheme().equals("file")) {
-        final Path path = Paths.get(uri);
-        final Path parent = path.getParent();
+        var path = Paths.get(uri);
+        var parent = path.getParent();
         return (parent != null) ? (parent + File.separator) : null;
       }
       if (uri.isOpaque() || uri.getPath() == null || uri.getPath().isEmpty()) {
         return null;
       }
       return uri.resolve("").toString();
-
-    } catch (final SecurityException | URISyntaxException | IOError e) {
+    } catch (SecurityException | URISyntaxException | IOError e) {
       return null;
     }
   }
 
-  private static String dirName(final File file, final String DEFAULT_BASE_NAME) {
-    final String res = file.getParent();
+  static String dirName(File file, String DEFAULT_BASE_NAME) {
+    var res = file.getParent();
     return (res != null) ? (res + File.separator) : DEFAULT_BASE_NAME;
   }
 
   // fake directory like name
-  private static String baseName(final String name) {
-    int idx = name.lastIndexOf('/');
+  static String baseName(String name) {
+    var idx = name.lastIndexOf('/');
     if (idx == -1) {
       idx = name.lastIndexOf('\\');
     }
     return (idx != -1) ? name.substring(0, idx + 1) : null;
   }
 
-  private static char[] readFully(final InputStream is, final Charset cs) throws IOException {
+  static char[] readFully(InputStream is, Charset cs) throws IOException {
     return (cs != null) ? new String(readBytes(is), cs).toCharArray() : readFully(is);
   }
 
-  public static char[] readFully(final InputStream is) throws IOException {
+  public static char[] readFully(InputStream is) throws IOException {
     return byteToCharArray(readBytes(is));
   }
 
-  private static char[] byteToCharArray(final byte[] bytes) {
-    Charset cs = StandardCharsets.UTF_8;
-    int start = 0;
+  static char[] byteToCharArray(byte[] bytes) {
+    var cs = StandardCharsets.UTF_8;
+    var start = 0;
     // BOM detection.
     if (bytes.length > 1 && bytes[0] == (byte) 0xFE && bytes[1] == (byte) 0xFF) {
       start = 2;
@@ -921,14 +852,13 @@ public final class Source implements Loggable {
       start = 4;
       cs = Charset.forName("UTF-32BE");
     }
-
     return new String(bytes, start, bytes.length - start, cs).toCharArray();
   }
 
-  static byte[] readBytes(final InputStream is) throws IOException {
-    final byte[] arr = new byte[BUF_SIZE];
+  static byte[] readBytes(InputStream is) throws IOException {
+    var arr = new byte[BUF_SIZE];
     try {
-      try ( ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
+      try (var buf = new ByteArrayOutputStream()) {
         int numBytes;
         while ((numBytes = is.read(arr, 0, arr.length)) > 0) {
           buf.write(arr, 0, numBytes);
@@ -945,21 +875,21 @@ public final class Source implements Loggable {
     return getName();
   }
 
-  private static URL getURLFromFile(final File file) {
+  static URL getURLFromFile(File file) {
     try {
       return file.toURI().toURL();
-    } catch (final SecurityException | MalformedURLException ignored) {
+    } catch (SecurityException | MalformedURLException ignored) {
       return null;
     }
   }
 
-  private static DebugLogger getLoggerStatic() {
+  static DebugLogger getLoggerStatic() {
     final Context context = Context.getContextTrustedOrNull();
     return context == null ? null : context.getLogger(Source.class);
   }
 
   @Override
-  public DebugLogger initLogger(final Context context) {
+  public DebugLogger initLogger(Context context) {
     return context.getLogger(this.getClass());
   }
 
@@ -968,9 +898,9 @@ public final class Source implements Loggable {
     return initLogger(Context.getContextTrusted());
   }
 
-  private File dumpFile(final File dirFile) {
-    final URL u = getURL();
-    final StringBuilder buf = new StringBuilder();
+  File dumpFile(File dirFile) {
+    var u = getURL();
+    var buf = new StringBuilder();
     // make it unique by prefixing current date & time
     buf.append(LocalDateTime.now().toString());
     buf.append('_');
@@ -982,30 +912,23 @@ public final class Source implements Loggable {
     } else {
       buf.append(getName());
     }
-
     return new File(dirFile, buf.toString());
   }
 
-  void dump(final String dir) {
-    final File dirFile = new File(dir);
-    final File file = dumpFile(dirFile);
+  void dump(String dir) {
+    var dirFile = new File(dir);
+    var file = dumpFile(dirFile);
     if (!dirFile.exists() && !dirFile.mkdirs()) {
       debug("Skipping source dump for " + name);
       return;
     }
-
-    try (final FileOutputStream fos = new FileOutputStream(file)) {
-      final PrintWriter pw = new PrintWriter(fos);
+    try (var fos = new FileOutputStream(file)) {
+      var pw = new PrintWriter(fos);
       pw.print(data.toString());
       pw.flush();
-    } catch (final IOException ioExp) {
-      debug("Skipping source dump for "
-              + name
-              + ": "
-              + ECMAErrors.getMessage(
-                      "io.error.cant.write",
-                      dir
-                      + " : " + ioExp.toString()));
+    } catch (IOException ioExp) {
+      debug("Skipping source dump for " + name + ": " + ECMAErrors.getMessage("io.error.cant.write", dir + " : " + ioExp.toString()));
     }
   }
+
 }

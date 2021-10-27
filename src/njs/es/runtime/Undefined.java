@@ -16,9 +16,6 @@ import es.runtime.linker.NashornCallSiteDescriptor;
  */
 public final class Undefined extends DefaultPropertyAccess {
 
-  private Undefined() {
-  }
-
   private static final Undefined UNDEFINED = new Undefined();
   private static final Undefined EMPTY = new Undefined();
 
@@ -26,9 +23,8 @@ public final class Undefined extends DefaultPropertyAccess {
   private static final MethodHandle UNDEFINED_GUARD = Guards.getIdentityGuard(UNDEFINED);
 
   /**
-   * Get the value of {@code undefined}, this is represented as a global singleton
-   * instance of this class. It can always be reference compared
-   *
+   * Get the value of {@code undefined}, this is represented as a global singleton instance of this class.
+   * It can always be reference compared
    * @return the undefined object
    */
   public static Undefined getUndefined() {
@@ -36,11 +32,10 @@ public final class Undefined extends DefaultPropertyAccess {
   }
 
   /**
-   * Get the value of {@code empty}. This is represented as a global singleton
-   * instanceof this class. It can always be reference compared.
-   * <p>
-   * We need empty to differentiate behavior in things like array iterators
-   * <p>
+   * Get the value of {@code empty}.
+   * This is represented as a global singleton instanceof this class.
+   * It can always be reference compared.
+   * Note: We need empty to differentiate behavior in things like array iterators
    * @return the empty object
    */
   public static Undefined getEmpty() {
@@ -66,39 +61,24 @@ public final class Undefined extends DefaultPropertyAccess {
    * @param desc The invoke dynamic callsite descriptor.
    * @return GuardedInvocation to be invoked at call site.
    */
-  public static GuardedInvocation lookup(final CallSiteDescriptor desc) {
-    switch (NashornCallSiteDescriptor.getStandardOperation(desc)) {
-      case CALL:
-      case NEW:
-        final String name = NashornCallSiteDescriptor.getOperand(desc);
-        final String msg = name != null ? "not.a.function" : "cant.call.undefined";
+  public static GuardedInvocation lookup(CallSiteDescriptor desc) {
+    return switch (NashornCallSiteDescriptor.getStandardOperation(desc)) {
+      case CALL, NEW -> {
+        var name = NashornCallSiteDescriptor.getOperand(desc);
+        var msg = name != null ? "not.a.function" : "cant.call.undefined";
         throw typeError(msg, name);
-      case GET:
-        // NOTE: we support GET:ELEMENT and SET:ELEMENT as JavaScript doesn't distinguish items from properties. Nashorn itself
-        // emits "GET:PROPERTY|ELEMENT|METHOD:identifier" for "<expr>.<identifier>" and "GET:ELEMENT|PROPERTY|METHOD" for "<expr>[<expr>]", but we are
-        // more flexible here and dispatch not on operation name (getProp vs. getElem), but rather on whether the
-        // operation has an associated name or not.
-        if (!(desc.getOperation() instanceof NamedOperation)) {
-          return findGetIndexMethod(desc);
-        }
-        return findGetMethod(desc);
-      case SET:
-        if (!(desc.getOperation() instanceof NamedOperation)) {
-          return findSetIndexMethod(desc);
-        }
-        return findSetMethod(desc);
-      case REMOVE:
-        if (!(desc.getOperation() instanceof NamedOperation)) {
-          return findDeleteIndexMethod(desc);
-        }
-        return findDeleteMethod(desc);
-      default:
-    }
-    return null;
+      }
+      // NOTE: we support GET:ELEMENT and SET:ELEMENT as JavaScript doesn't distinguish items from properties.
+      // Nashorn itself emits "GET:PROPERTY|ELEMENT|METHOD:identifier" for "<expr>.<identifier>" and "GET:ELEMENT|PROPERTY|METHOD" for "<expr>[<expr>]", but we are more flexible here and dispatch not on operation name (getProp vs. getElem), but rather on whether the operation has an associated name or not.
+      case GET -> desc.getOperation() instanceof NamedOperation ? findGetMethod(desc) : findGetIndexMethod(desc);
+      case SET -> desc.getOperation() instanceof NamedOperation ? findSetMethod(desc) : findSetIndexMethod(desc);
+      case REMOVE -> desc.getOperation() instanceof NamedOperation ? findDeleteMethod(desc) : findDeleteIndexMethod(desc);
+      default -> null;
+    };
   }
 
-  private static ECMAException lookupTypeError(final String msg, final CallSiteDescriptor desc) {
-    final String name = NashornCallSiteDescriptor.getOperand(desc);
+  static ECMAException lookupTypeError(String msg, CallSiteDescriptor desc) {
+    var name = NashornCallSiteDescriptor.getOperand(desc);
     return typeError(msg, name != null && !name.isEmpty() ? name : null);
   }
 
@@ -106,56 +86,57 @@ public final class Undefined extends DefaultPropertyAccess {
   private static final MethodHandle SET_METHOD = MH.insertArguments(findOwnMH("set", void.class, Object.class, Object.class, int.class), 3, 0);
   private static final MethodHandle DELETE_METHOD = findOwnMH("delete", boolean.class, Object.class);
 
-  private static GuardedInvocation findGetMethod(final CallSiteDescriptor desc) {
+  static GuardedInvocation findGetMethod(CallSiteDescriptor desc) {
     return new GuardedInvocation(MH.insertArguments(GET_METHOD, 1, NashornCallSiteDescriptor.getOperand(desc)), UNDEFINED_GUARD).asType(desc);
   }
 
-  private static GuardedInvocation findGetIndexMethod(final CallSiteDescriptor desc) {
+  static GuardedInvocation findGetIndexMethod(CallSiteDescriptor desc) {
     return new GuardedInvocation(GET_METHOD, UNDEFINED_GUARD).asType(desc);
   }
 
-  private static GuardedInvocation findSetMethod(final CallSiteDescriptor desc) {
+  static GuardedInvocation findSetMethod(CallSiteDescriptor desc) {
     return new GuardedInvocation(MH.insertArguments(SET_METHOD, 1, NashornCallSiteDescriptor.getOperand(desc)), UNDEFINED_GUARD).asType(desc);
   }
 
-  private static GuardedInvocation findSetIndexMethod(final CallSiteDescriptor desc) {
+  static GuardedInvocation findSetIndexMethod(CallSiteDescriptor desc) {
     return new GuardedInvocation(SET_METHOD, UNDEFINED_GUARD).asType(desc);
   }
 
-  private static GuardedInvocation findDeleteMethod(final CallSiteDescriptor desc) {
+  static GuardedInvocation findDeleteMethod(CallSiteDescriptor desc) {
     return new GuardedInvocation(MH.insertArguments(DELETE_METHOD, 1, NashornCallSiteDescriptor.getOperand(desc)), UNDEFINED_GUARD).asType(desc);
   }
 
-  private static GuardedInvocation findDeleteIndexMethod(final CallSiteDescriptor desc) {
+  static GuardedInvocation findDeleteIndexMethod(CallSiteDescriptor desc) {
     return new GuardedInvocation(DELETE_METHOD, UNDEFINED_GUARD).asType(desc);
   }
 
   @Override
-  public Object get(final Object key) {
+  public Object get(Object key) {
     throw typeError("cant.read.property.of.undefined", ScriptRuntime.safeToString(key));
   }
 
   @Override
-  public void set(final Object key, final Object value, final int flags) {
+  public void set(Object key, Object value, int flags) {
     throw typeError("cant.set.property.of.undefined", ScriptRuntime.safeToString(key));
   }
 
   @Override
-  public boolean delete(final Object key) {
+  public boolean delete(Object key) {
     throw typeError("cant.delete.property.of.undefined", ScriptRuntime.safeToString(key));
   }
 
   @Override
-  public boolean has(final Object key) {
+  public boolean has(Object key) {
     return false;
   }
 
   @Override
-  public boolean hasOwnProperty(final Object key) {
+  public boolean hasOwnProperty(Object key) {
     return false;
   }
 
-  private static MethodHandle findOwnMH(final String name, final Class<?> rtype, final Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findVirtual(MethodHandles.lookup(), Undefined.class, name, MH.type(rtype, types));
   }
+
 }

@@ -1,27 +1,28 @@
 package es.runtime;
 
-import static es.runtime.ECMAErrors.typeError;
-import static es.runtime.UnwarrantedOptimismException.isValid;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+
 import jdk.dynalink.CallSiteDescriptor;
 import jdk.dynalink.beans.BeansLinker;
 import jdk.dynalink.beans.StaticClass;
 import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
 import jdk.dynalink.linker.support.Guards;
+
 import es.lookup.MethodHandleFactory;
 import es.lookup.MethodHandleFunctionality;
 import es.objects.annotations.Attribute;
 import es.objects.annotations.Function;
 import es.runtime.linker.NashornCallSiteDescriptor;
+import static es.runtime.ECMAErrors.typeError;
+import static es.runtime.UnwarrantedOptimismException.isValid;
 
 /**
- * An object that exposes Java packages and classes as its properties. Packages are exposed as objects that have further
- * sub-packages and classes as their properties. Normally, three instances of this class are exposed as built-in objects
- * in Nashorn: {@code "Packages"}, {@code "java"}, and {@code "javax"}. Typical usages are:
+ * An object that exposes Java packages and classes as its properties.
+ * Packages are exposed as objects that have further sub-packages and classes as their properties.
+ * Normally, three instances of this class are exposed as built-in objects in Nashorn: {@code "Packages"}, {@code "java"}, and {@code "javax"}. Typical usages are:
  * <pre>
  * var list = new java.util.ArrayList()
  * var sprocket = new Packages.com.acme.Sprocket()
@@ -31,17 +32,16 @@ import es.runtime.linker.NashornCallSiteDescriptor;
  * var ArrayList = java.util.ArrayList
  * var list = new ArrayList
  * </pre>
- * You can also use {@link es.objects.NativeJava#type(Object, Object)} to access Java classes. These two statements are mostly
- * equivalent:
+ * You can also use {@link es.objects.NativeJava#type(Object, Object)} to access Java classes.
+ * These two statements are mostly equivalent:
  * <pre>
  * var listType1 = java.util.ArrayList
  * var listType2 = Java.type("java.util.ArrayList")
  * </pre>
- * The difference is that {@code Java.type()} will throw an error if the class does not exist, while the first
- * expression will return an empty object, as it must treat all non-existent classes as potentially being further
- * subpackages. As such, {@code Java.type()} has the potential to catch typos earlier. A further difference is that
- * {@code Java.type()} doesn't recognize {@code .} (dot) as the separator between outer class name and inner class name,
- * it only recognizes the dollar sign. These are equivalent:
+ * The difference is that {@code Java.type()} will throw an error if the class does not exist, while the first expression will return an empty object, as it must treat all non-existent classes as potentially being further subpackages.
+ * As such, {@code Java.type()} has the potential to catch typos earlier.
+ * A further difference is that {@code Java.type()} doesn't recognize {@code .} (dot) as the separator between outer class name and inner class name, it only recognizes the dollar sign.
+ * These are equivalent:
  * <pre>
  * var ftype1 = java.awt.geom.Arc2D$Float
  * var ftype2 = java.awt.geom.Arc2D.Float
@@ -55,7 +55,7 @@ public final class NativeJavaPackage extends ScriptObject {
   private static final MethodHandle CLASS_NOT_FOUND = findOwnMH("classNotFound", Void.TYPE, NativeJavaPackage.class);
   private static final MethodHandle TYPE_GUARD = Guards.getClassGuard(NativeJavaPackage.class);
 
-  /** Full name of package (includes path.) */
+  // Full name of package (includes path.)
   private final String name;
 
   /**
@@ -63,7 +63,7 @@ public final class NativeJavaPackage extends ScriptObject {
    * @param name  package name
    * @param proto proto
    */
-  public NativeJavaPackage(final String name, final ScriptObject proto) {
+  public NativeJavaPackage(String name, ScriptObject proto) {
     super(proto, null);
     this.name = name;
   }
@@ -74,11 +74,8 @@ public final class NativeJavaPackage extends ScriptObject {
   }
 
   @Override
-  public boolean equals(final Object other) {
-    if (other instanceof NativeJavaPackage) {
-      return name.equals(((NativeJavaPackage) other).name);
-    }
-    return false;
+  public boolean equals(Object other) {
+    return (other instanceof NativeJavaPackage njp) && name.equals(njp.name);
   }
 
   @Override
@@ -105,65 +102,54 @@ public final class NativeJavaPackage extends ScriptObject {
   }
 
   @Override
-  public Object getDefaultValue(final Class<?> hint) {
-    if (hint == String.class) {
-      return toString();
-    }
-
-    return super.getDefaultValue(hint);
+  public Object getDefaultValue(Class<?> hint) {
+    return (hint == String.class) ? toString() : super.getDefaultValue(hint);
   }
 
   @Override
-  protected GuardedInvocation findNewMethod(final CallSiteDescriptor desc, final LinkRequest request) {
+  protected GuardedInvocation findNewMethod(CallSiteDescriptor desc, LinkRequest request) {
     return createClassNotFoundInvocation(desc);
   }
 
   @Override
-  protected GuardedInvocation findCallMethod(final CallSiteDescriptor desc, final LinkRequest request) {
+  protected GuardedInvocation findCallMethod(CallSiteDescriptor desc, LinkRequest request) {
     return createClassNotFoundInvocation(desc);
   }
 
-  private static GuardedInvocation createClassNotFoundInvocation(final CallSiteDescriptor desc) {
-    // If NativeJavaPackage is invoked either as a constructor or as a function, throw a ClassNotFoundException as
-    // we can assume the user attempted to instantiate a non-existent class.
-    final MethodType type = desc.getMethodType();
-    return new GuardedInvocation(
-            MH.dropArguments(CLASS_NOT_FOUND, 1, type.parameterList().subList(1, type.parameterCount())),
-            type.parameterType(0) == NativeJavaPackage.class ? null : TYPE_GUARD);
+  static GuardedInvocation createClassNotFoundInvocation(CallSiteDescriptor desc) {
+    // If NativeJavaPackage is invoked either as a constructor or as a function, throw a ClassNotFoundException as we can assume the user attempted to instantiate a non-existent class.
+    var type = desc.getMethodType();
+    return new GuardedInvocation(MH.dropArguments(CLASS_NOT_FOUND, 1, type.parameterList().subList(1, type.parameterCount())), type.parameterType(0) == NativeJavaPackage.class ? null : TYPE_GUARD);
   }
 
   @SuppressWarnings("unused")
-  private static void classNotFound(final NativeJavaPackage pkg) throws ClassNotFoundException {
+  static void classNotFound(NativeJavaPackage pkg) throws ClassNotFoundException {
     throw new ClassNotFoundException(pkg.name);
   }
 
   /**
    * "No such property" call placeholder.
-   *
-   * This can never be called as we override {@link ScriptObject#noSuchProperty}. We do declare it here as it's a signal
-   * to {@link WithObject} that it's worth trying doing a {@code noSuchProperty} on this object.
-   *
+   * This can never be called as we override {@link ScriptObject#noSuchProperty}.
+   * We do declare it here as it's a signal to {@link WithObject} that it's worth trying doing a {@code noSuchProperty} on this object.
    * @param self self reference
    * @param name property name
    * @return never returns
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static Object __noSuchProperty__(final Object self, final Object name) {
+  public static Object __noSuchProperty__(Object self, Object name) {
     throw new AssertionError("__noSuchProperty__ placeholder called");
   }
 
   /**
    * "No such method call" placeholder
-   *
-   * This can never be called as we override {@link ScriptObject#noSuchMethod}. We do declare it here as it's a signal
-   * to {@link WithObject} that it's worth trying doing a noSuchProperty on this object.
-   *
+   * This can never be called as we override {@link ScriptObject#noSuchMethod}.
+   * We do declare it here as it's a signal to {@link WithObject} that it's worth trying doing a noSuchProperty on this object.
    * @param self self reference
    * @param args arguments to method
    * @return never returns
    */
   @Function(attributes = Attribute.NOT_ENUMERABLE)
-  public static Object __noSuchMethod__(final Object self, final Object... args) {
+  public static Object __noSuchMethod__(Object self, Object... args) {
     throw new AssertionError("__noSuchMethod__ placeholder called");
   }
 
@@ -174,18 +160,18 @@ public final class NativeJavaPackage extends ScriptObject {
    * @return Link to be invoked at call site.
    */
   @Override
-  public GuardedInvocation noSuchProperty(final CallSiteDescriptor desc, final LinkRequest request) {
-    final String propertyName = NashornCallSiteDescriptor.getOperand(desc);
+  public GuardedInvocation noSuchProperty(CallSiteDescriptor desc, LinkRequest request) {
+    var propertyName = NashornCallSiteDescriptor.getOperand(desc);
     createProperty(propertyName);
     return super.lookup(desc, request);
   }
 
   @Override
-  protected Object invokeNoSuchProperty(final Object key, final boolean isScope, final int programPoint) {
+  protected Object invokeNoSuchProperty(Object key, boolean isScope, int programPoint) {
     if (!(key instanceof String)) {
       return super.invokeNoSuchProperty(key, isScope, programPoint);
     }
-    final Object retval = createProperty((String) key);
+    var retval = createProperty((String) key);
     if (isValid(programPoint)) {
       throw new UnwarrantedOptimismException(retval, programPoint);
     }
@@ -193,46 +179,41 @@ public final class NativeJavaPackage extends ScriptObject {
   }
 
   @Override
-  public GuardedInvocation noSuchMethod(final CallSiteDescriptor desc, final LinkRequest request) {
+  public GuardedInvocation noSuchMethod(CallSiteDescriptor desc, LinkRequest request) {
     return noSuchProperty(desc, request);
   }
 
-  private static MethodHandle findOwnMH(final String name, final Class<?> rtype, final Class<?>... types) {
+  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NativeJavaPackage.class, name, MH.type(rtype, types));
   }
 
-  private Object createProperty(final String propertyName) {
-    final String fullName = name.isEmpty() ? propertyName : name + "." + propertyName;
-    final Context context = Context.getContextTrusted();
-
+  Object createProperty(String propertyName) {
+    var fullName = name.isEmpty() ? propertyName : name + "." + propertyName;
+    var context = Context.getContextTrusted();
     Class<?> javaClass = null;
     try {
       javaClass = context.findClass(fullName);
-    } catch (final NoClassDefFoundError | ClassNotFoundException e) {
-      //ignored
+    } catch (NoClassDefFoundError | ClassNotFoundException e) {
+      // ignored
     }
-
     // Check for explicit constructor signature use
     // Example: new (java.awt["Color(int, int,int)"])(2, 3, 4);
-    final int openBrace = propertyName.indexOf('(');
-    final int closeBrace = propertyName.lastIndexOf(')');
+    var openBrace = propertyName.indexOf('(');
+    var closeBrace = propertyName.lastIndexOf(')');
     if (openBrace != -1 || closeBrace != -1) {
-      final int lastChar = propertyName.length() - 1;
+      var lastChar = propertyName.length() - 1;
       if (openBrace == -1 || closeBrace != lastChar) {
         throw typeError("improper.constructor.signature", propertyName);
       }
-
       // get the class name and try to load it
-      final String className = name + "." + propertyName.substring(0, openBrace);
+      var className = name + "." + propertyName.substring(0, openBrace);
       try {
         javaClass = context.findClass(className);
-      } catch (final NoClassDefFoundError | ClassNotFoundException e) {
+      } catch (NoClassDefFoundError | ClassNotFoundException e) {
         throw typeError(e, "no.such.java.class", className);
       }
-
       // try to find a matching constructor
-      final Object constructor = BeansLinker.getConstructorMethod(
-              javaClass, propertyName.substring(openBrace + 1, lastChar));
+      var constructor = BeansLinker.getConstructorMethod(javaClass, propertyName.substring(openBrace + 1, lastChar));
       if (constructor != null) {
         set(propertyName, constructor, 0);
         return constructor;
@@ -240,15 +221,9 @@ public final class NativeJavaPackage extends ScriptObject {
       // we didn't find a matching constructor!
       throw typeError("no.such.java.constructor", propertyName);
     }
-
-    final Object propertyValue;
-    if (javaClass == null) {
-      propertyValue = new NativeJavaPackage(fullName, getProto());
-    } else {
-      propertyValue = StaticClass.forClass(javaClass);
-    }
-
+    var propertyValue = (javaClass == null) ? new NativeJavaPackage(fullName, getProto()) : StaticClass.forClass(javaClass);
     set(propertyName, propertyValue, 0);
     return propertyValue;
   }
+
 }

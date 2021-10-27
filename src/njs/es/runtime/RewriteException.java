@@ -1,27 +1,25 @@
 package es.runtime;
 
-import static es.codegen.CompilerConstants.staticCall;
-import static es.codegen.CompilerConstants.staticCallNoLookup;
-import static es.codegen.CompilerConstants.virtualCallNoLookup;
+import java.util.Arrays;
 
 import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
-import java.util.Arrays;
+
 import es.codegen.CompilerConstants;
 import es.codegen.CompilerConstants.Call;
 import es.codegen.types.Type;
 import es.lookup.MethodHandleFactory;
 import es.lookup.MethodHandleFunctionality;
 import es.objects.Global;
-import es.runtime.linker.NashornCallSiteDescriptor;
+import static es.codegen.CompilerConstants.*;
 
 /**
  * Used to signal to the linker to relink the callee
@@ -63,11 +61,7 @@ public final class RewriteException extends Exception {
   /** Call for asserting the length of an array. */
   public static final Call ASSERT_ARRAY_LENGTH = staticCallNoLookup(RewriteException.class, "assertArrayLength", void.class, Object[].class, int.class);
 
-  private RewriteException(
-          final UnwarrantedOptimismException e,
-          final Object[] byteCodeSlots,
-          final String[] byteCodeSymbolNames,
-          final int[] previousContinuationEntryPoints) {
+  RewriteException(UnwarrantedOptimismException e, Object[] byteCodeSlots, String[] byteCodeSymbolNames, int[] previousContinuationEntryPoints) {
     super("", e, false, Context.DEBUG);
     this.byteCodeSlots = byteCodeSlots;
     this.runtimeScope = mergeSlotsWithScope(byteCodeSlots, byteCodeSymbolNames);
@@ -77,17 +71,10 @@ public final class RewriteException extends Exception {
   /**
    * Constructor for a rewrite exception thrown from an optimistic function.
    * @param e the {@link UnwarrantedOptimismException} that triggered this exception.
-   * @param byteCodeSlots contents of local variable slots at the time of rewrite at the program point
-   * @param byteCodeSymbolNames the names of the variables in the {@code byteCodeSlots} parameter. The array might
-   * have less elements, and some elements might be unnamed (the name can be null). The information is provided in an
-   * effort to assist evaluation of expressions for their types by the compiler doing the deoptimizing recompilation,
-   * and can thus be incomplete - the more complete it is, the more expressions can be evaluated by the compiler, and
-   * the more unnecessary deoptimizing compilations can be avoided.
+   * @param byteCodeSlots contents of local variable slots at the time of rewrite at the program point @param byteCodeSymbolNames the names of the variables in the {@code byteCodeSlots} parameter. The array might have less elements, and some elements might be unnamed (the name can be null). The information is provided in an effort to assist evaluation of expressions for their types by the compiler doing the deoptimizing recompilation, and can thus be incomplete - the more complete it is, the more expressions can be evaluated by the compiler, and the more unnecessary deoptimizing compilations can be avoided.
    * @return a new rewrite exception
    */
-  public static RewriteException create(final UnwarrantedOptimismException e,
-          final Object[] byteCodeSlots,
-          final String[] byteCodeSymbolNames) {
+  public static RewriteException create(UnwarrantedOptimismException e, Object[] byteCodeSlots, String[] byteCodeSymbolNames) {
     return create(e, byteCodeSlots, byteCodeSymbolNames, null);
   }
 
@@ -95,19 +82,11 @@ public final class RewriteException extends Exception {
    * Constructor for a rewrite exception thrown from a rest-of method.
    * @param e the {@link UnwarrantedOptimismException} that triggered this exception.
    * @param byteCodeSlots contents of local variable slots at the time of rewrite at the program point
-   * @param byteCodeSymbolNames the names of the variables in the {@code byteCodeSlots} parameter. The array might
-   * have less elements, and some elements might be unnamed (the name can be null). The information is provided in an
-   * effort to assist evaluation of expressions for their types by the compiler doing the deoptimizing recompilation,
-   * and can thus be incomplete - the more complete it is, the more expressions can be evaluated by the compiler, and
-   * the more unnecessary deoptimizing compilations can be avoided.
-   * @param previousContinuationEntryPoints an array of continuation entry points that were already executed during
-   * one logical invocation of the function (a rest-of triggering a rest-of triggering a...)
+   * @param byteCodeSymbolNames the names of the variables in the {@code byteCodeSlots} parameter. The array might have less elements, and some elements might be unnamed (the name can be null). The information is provided in an effort to assist evaluation of expressions for their types by the compiler doing the deoptimizing recompilation, and can thus be incomplete - the more complete it is, the more expressions can be evaluated by the compiler, and the more unnecessary deoptimizing compilations can be avoided.
+   * @param previousContinuationEntryPoints an array of continuation entry points that were already executed during one logical invocation of the function (a rest-of triggering a rest-of triggering a...)
    * @return a new rewrite exception
    */
-  public static RewriteException create(final UnwarrantedOptimismException e,
-          final Object[] byteCodeSlots,
-          final String[] byteCodeSymbolNames,
-          final int[] previousContinuationEntryPoints) {
+  public static RewriteException create(UnwarrantedOptimismException e, Object[] byteCodeSlots, String[] byteCodeSymbolNames, int[] previousContinuationEntryPoints) {
     return new RewriteException(e, byteCodeSlots, byteCodeSymbolNames, previousContinuationEntryPoints);
   }
 
@@ -119,22 +98,22 @@ public final class RewriteException extends Exception {
    * @param startIndex start index to start writing to
    * @return callsite to array populator (constant)
    */
-  public static CallSite populateArrayBootstrap(final MethodHandles.Lookup lookup, final String name, final MethodType type, final int startIndex) {
-    MethodHandle mh = POPULATE_ARRAY.methodHandle();
+  public static CallSite populateArrayBootstrap(MethodHandles.Lookup lookup, String name, MethodType type, int startIndex) {
+    var mh = POPULATE_ARRAY.methodHandle();
     mh = MH.insertArguments(mh, 1, startIndex);
     mh = MH.asCollector(mh, Object[].class, type.parameterCount() - 1);
     mh = MH.asType(mh, type);
     return new ConstantCallSite(mh);
   }
 
-  private static ScriptObject mergeSlotsWithScope(final Object[] byteCodeSlots, final String[] byteCodeSymbolNames) {
-    final ScriptObject locals = Global.newEmptyInstance();
-    final int l = Math.min(byteCodeSlots.length, byteCodeSymbolNames.length);
+  static ScriptObject mergeSlotsWithScope(Object[] byteCodeSlots, String[] byteCodeSymbolNames) {
+    var locals = Global.newEmptyInstance();
+    var l = Math.min(byteCodeSlots.length, byteCodeSymbolNames.length);
     ScriptObject runtimeScope = null;
-    final String scopeName = CompilerConstants.SCOPE.symbolName();
-    for (int i = 0; i < l; ++i) {
-      final String name = byteCodeSymbolNames[i];
-      final Object value = byteCodeSlots[i];
+    var scopeName = CompilerConstants.SCOPE.symbolName();
+    for (var i = 0; i < l; ++i) {
+      var name = byteCodeSymbolNames[i];
+      var value = byteCodeSlots[i];
       if (scopeName.equals(name)) {
         assert runtimeScope == null;
         runtimeScope = (ScriptObject) value;
@@ -147,119 +126,106 @@ public final class RewriteException extends Exception {
   }
 
   /**
-   * Array populator used for saving the local variable state into the array contained in the
-   * RewriteException
+   * Array populator used for saving the local variable state into the array contained in the RewriteException
    * @param arrayToBePopluated array to be populated
    * @param startIndex start index to write to
    * @param items items with which to populate the array
    * @return the populated array - same array object
    */
-  public static Object[] populateArray(final Object[] arrayToBePopluated, final int startIndex, final Object[] items) {
+  public static Object[] populateArray(Object[] arrayToBePopluated, int startIndex, Object[] items) {
     System.arraycopy(items, 0, arrayToBePopluated, startIndex, items.length);
     return arrayToBePopluated;
   }
 
   /**
-   * Continuation handler calls this method when a local variable carried over into the continuation is expected to be
-   * a long array in the continued method. Normally, it will also be a long array in the original (interrupted by
-   * deoptimization) method, but it can actually be an int array that underwent widening in the new code version.
+   * Continuation handler calls this method when a local variable carried over into the continuation is expected to be a long array in the continued method.
+   * Normally, it will also be a long array in the original (interrupted by deoptimization) method, but it can actually be an int array that underwent widening in the new code version.
    * @param obj the object that has to be converted into a long array
    * @param e the exception being processed
    * @return a long array
    */
-  public static long[] toLongArray(final Object obj, final RewriteException e) {
-    if (obj instanceof long[]) {
-      return (long[]) obj;
+  public static long[] toLongArray(Object obj, RewriteException e) {
+    if (obj instanceof long[] l) {
+      return l;
     }
-
     assert obj instanceof int[];
-
-    final int[] in = (int[]) obj;
-    final long[] out = new long[in.length];
-    for (int i = 0; i < in.length; ++i) {
+    var in = (int[]) obj;
+    var out = new long[in.length];
+    for (var i = 0; i < in.length; ++i) {
       out[i] = in[i];
     }
     return e.replaceByteCodeValue(in, out);
   }
 
   /**
-   * Continuation handler calls this method when a local variable carried over into the continuation is expected to be
-   * a double array in the continued method. Normally, it will also be a double array in the original (interrupted by
-   * deoptimization) method, but it can actually be an int or long array that underwent widening in the new code version.
+   * Continuation handler calls this method when a local variable carried over into the continuation is expected to be a double array in the continued method.
+   * Normally, it will also be a double array in the original (interrupted by deoptimization) method, but it can actually be an int or long array that underwent widening in the new code version.
    * @param obj the object that has to be converted into a double array
    * @param e the exception being processed
    * @return a double array
    */
-  public static double[] toDoubleArray(final Object obj, final RewriteException e) {
-    if (obj instanceof double[]) {
-      return (double[]) obj;
+  public static double[] toDoubleArray(Object obj, RewriteException e) {
+    if (obj instanceof double[] d) {
+      return d;
     }
-
     assert obj instanceof int[] || obj instanceof long[];
-
-    final int l = Array.getLength(obj);
-    final double[] out = new double[l];
-    for (int i = 0; i < l; ++i) {
+    var l = Array.getLength(obj);
+    var out = new double[l];
+    for (var i = 0; i < l; ++i) {
       out[i] = Array.getDouble(obj, i);
     }
     return e.replaceByteCodeValue(obj, out);
   }
 
   /**
-   * Continuation handler calls this method when a local variable carried over into the continuation is expected to be
-   * an Object array in the continued method. Normally, it will also be an Object array in the original (interrupted by
-   * deoptimization) method, but it can actually be an int, long, or double array that underwent widening in the new
-   * code version.
+   * Continuation handler calls this method when a local variable carried over into the continuation is expected to be an Object array in the continued method.
+   * Normally, it will also be an Object array in the original (interrupted by deoptimization) method, but it can actually be an int, long, or double array that underwent widening in the new code version.
    * @param obj the object that has to be converted into an Object array
    * @param e the exception being processed
    * @return an Object array
    */
-  public static Object[] toObjectArray(final Object obj, final RewriteException e) {
-    if (obj instanceof Object[]) {
-      return (Object[]) obj;
+  public static Object[] toObjectArray(Object obj, RewriteException e) {
+    if (obj instanceof Object[] o) {
+      return o;
     }
-
     assert obj instanceof int[] || obj instanceof long[] || obj instanceof double[] : obj + " is " + obj.getClass().getName();
-
-    final int l = Array.getLength(obj);
-    final Object[] out = new Object[l];
-    for (int i = 0; i < l; ++i) {
+    var l = Array.getLength(obj);
+    var out = new Object[l];
+    for (var i = 0; i < l; ++i) {
       out[i] = Array.get(obj, i);
     }
     return e.replaceByteCodeValue(obj, out);
   }
 
   /**
-   * Continuation handler calls this method when a local variable carried over into the continuation is expected to
-   * have a certain type, but the value can have a different type coming from the deoptimized method as it was a dead
-   * store. If we had precise liveness analysis, we wouldn't need this.
+   * Continuation handler calls this method when a local variable carried over into the continuation is expected to have a certain type, but the value can have a different type coming from the deoptimized method as it was a dead store.
+   * If we had precise liveness analysis, we wouldn't need this.
    * @param obj the object inspected for being of a particular type
-   * @param clazz the type the object must belong to
+   * @param type the type the object must belong to
    * @return the object if it belongs to the type, or null otherwise
    */
-  public static Object instanceOrNull(final Object obj, final Class<?> clazz) {
-    return clazz.isInstance(obj) ? obj : null;
+  public static Object instanceOrNull(Object obj, Class<?> type) {
+    return type.isInstance(obj) ? obj : null;
   }
 
   /**
-   * Asserts the length of an array. Invoked from continuation handler only when running with assertions enabled.
-   * The array can, in fact, have more elements than asserted, but they must all have Undefined as their value. The
-   * method does not test for the array having less elements than asserted, as those would already have caused an
-   * {@code ArrayIndexOutOfBoundsException} to be thrown as the continuation handler attempts to access the missing
-   * elements.
+   * Asserts the length of an array.
+   * Invoked from continuation handler only when running with assertions enabled.
+   * The array can, in fact, have more elements than asserted, but they must all have Undefined as their value.
+   * The method does not test for the array having less elements than asserted, as those would already have caused an {@code ArrayIndexOutOfBoundsException} to be thrown as the continuation handler attempts to access the missing elements.
    * @param arr the array
    * @param length the asserted length
    */
-  public static void assertArrayLength(final Object[] arr, final int length) {
-    for (int i = arr.length; i-- > length;) {
+  public static void assertArrayLength(Object[] arr, int length) {
+    for (var i = arr.length; i-- > length;) {
       if (arr[i] != ScriptRuntime.UNDEFINED) {
         throw new AssertionError(String.format("Expected array length %d, but it is %d", length, i + 1));
       }
     }
   }
 
-  private <T> T replaceByteCodeValue(final Object in, final T out) {
-    for (int i = 0; i < byteCodeSlots.length; ++i) {
+  <T> T replaceByteCodeValue(Object in, T out) {
+    for (var i = 0; i < byteCodeSlots.length; ++i) {
       if (byteCodeSlots[i] == in) {
         byteCodeSlots[i] = out;
       }
@@ -267,15 +233,14 @@ public final class RewriteException extends Exception {
     return out;
   }
 
-  private UnwarrantedOptimismException getUOE() {
+  UnwarrantedOptimismException getUOE() {
     return (UnwarrantedOptimismException) getCause();
   }
 
   /**
-   * Get return value. This method is destructive, after it is invoked subsequent invocation of either
-   * {@link #getByteCodeSlots()} or this method will return null. This method is invoked from the generated
-   * continuation code as the last step before continuing the execution, and we need to make sure we don't hang on to
-   * either the entry bytecode slot values or the return value and prevent them from being garbage collected.
+   * Get return value.
+   * This method is destructive, after it is invoked subsequent invocation of either {@link #getByteCodeSlots()} or this method will return null.
+   * This method is invoked from the generated continuation code as the last step before continuing the execution, and we need to make sure we don't hang on to either the entry bytecode slot values or the return value and prevent them from being garbage collected.
    * @return return value
    */
   public Object getReturnValueDestructive() {
@@ -329,11 +294,11 @@ public final class RewriteException extends Exception {
     return runtimeScope;
   }
 
-  private static String stringify(final Object returnValue) {
+  private static String stringify(Object returnValue) {
     if (returnValue == null) {
       return "null";
     }
-    String str = returnValue.toString();
+    var str = returnValue.toString();
     if (returnValue instanceof String) {
       str = '\'' + str + '\'';
     } else if (returnValue instanceof Double) {
@@ -357,42 +322,30 @@ public final class RewriteException extends Exception {
     return getMessage(true);
   }
 
-  private String getMessage(final boolean isShort) {
-    final StringBuilder sb = new StringBuilder();
-
-    //program point
-    sb.append("[pp=").
-            append(getProgramPoint()).
-            append(", ");
-
+  private String getMessage(boolean isShort) {
+    var sb = new StringBuilder();
+    // program point
+    sb.append("[pp=").append(getProgramPoint()).append(", ");
     //slot contents
     if (!isShort) {
-      final Object[] slots = byteCodeSlots;
+      var slots = byteCodeSlots;
       if (slots != null) {
-        sb.append("slots=").
-                append(Arrays.asList(slots)).
-                append(", ");
+        sb.append("slots=").append(Arrays.asList(slots)).append(", ");
       }
     }
-
     //return type
-    sb.append("type=").
-            append(getReturnType()).
-            append(", ");
-
+    sb.append("type=").append(getReturnType()).append(", ");
     //return value
-    sb.append("value=").
-            append(stringify(getReturnValueNonDestructive())).
-            append(")]");
-
+    sb.append("value=").append(stringify(getReturnValueNonDestructive())).append(")]");
     return sb.toString();
   }
 
-  private void writeObject(final ObjectOutputStream out) throws NotSerializableException {
+  void writeObject(ObjectOutputStream out) throws NotSerializableException {
     throw new NotSerializableException(getClass().getName());
   }
 
-  private void readObject(final ObjectInputStream in) throws NotSerializableException {
+  void readObject(ObjectInputStream in) throws NotSerializableException {
     throw new NotSerializableException(getClass().getName());
   }
+
 }
