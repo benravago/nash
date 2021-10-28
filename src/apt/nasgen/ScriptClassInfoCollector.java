@@ -1,27 +1,22 @@
 package nasgen;
 
-import static nasgen.ScriptClassInfo.SCRIPT_CLASS_ANNO_DESC;
-import static nasgen.ScriptClassInfo.WHERE_ENUM_DESC;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+
 import nasgen.MemberInfo.Kind;
+import static nasgen.ScriptClassInfo.*;
 
 /**
- * This class collects all @ScriptClass and other annotation information from a
- * compiled .class file. Enforces that @Function/@Getter/@Setter/@Constructor
- * methods are declared to be 'static'.
+ * This class collects all @ScriptClass and other annotation information from a compiled .class file.
+ * Enforces that @Function/@Getter/@Setter/@Constructor methods are declared to be 'static'.
  */
 public class ScriptClassInfoCollector extends ClassVisitor {
 
@@ -29,7 +24,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   private List<MemberInfo> scriptMembers;
   private String javaClassName;
 
-  ScriptClassInfoCollector(final ClassVisitor visitor) {
+  ScriptClassInfoCollector(ClassVisitor visitor) {
     super(Main.ASM_VERSION, visitor);
   }
 
@@ -37,7 +32,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
     this(new NullVisitor());
   }
 
-  private void addScriptMember(final MemberInfo memInfo) {
+  void addScriptMember(MemberInfo memInfo) {
     if (scriptMembers == null) {
       scriptMembers = new ArrayList<>();
     }
@@ -45,19 +40,18 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   }
 
   @Override
-  public void visit(final int version, final int access, final String name, final String signature,
-          final String superName, final String[] interfaces) {
+  public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
     super.visit(version, access, name, signature, superName, interfaces);
     javaClassName = name;
   }
 
   @Override
-  public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-    final AnnotationVisitor delegateAV = super.visitAnnotation(desc, visible);
+  public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+    var delegateAV = super.visitAnnotation(desc, visible);
     if (SCRIPT_CLASS_ANNO_DESC.equals(desc)) {
       return new AnnotationVisitor(Main.ASM_VERSION, delegateAV) {
         @Override
-        public void visit(final String name, final Object value) {
+        public void visit(String name, Object value) {
           if ("value".equals(name)) {
             scriptClassName = (String) value;
           }
@@ -65,61 +59,47 @@ public class ScriptClassInfoCollector extends ClassVisitor {
         }
       };
     }
-
     return delegateAV;
   }
 
   @Override
-  public FieldVisitor visitField(final int fieldAccess, final String fieldName, final String fieldDesc, final String signature, final Object value) {
-    final FieldVisitor delegateFV = super.visitField(fieldAccess, fieldName, fieldDesc, signature, value);
-
+  public FieldVisitor visitField(int fieldAccess, String fieldName, String fieldDesc, String signature, Object value) {
+    var delegateFV = super.visitField(fieldAccess, fieldName, fieldDesc, signature, value);
     return new FieldVisitor(Main.ASM_VERSION, delegateFV) {
       @Override
-      public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
-        final AnnotationVisitor delegateAV = super.visitAnnotation(descriptor, visible);
-
+      public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+        var delegateAV = super.visitAnnotation(descriptor, visible);
         if (ScriptClassInfo.PROPERTY_ANNO_DESC.equals(descriptor)) {
-          final MemberInfo memInfo = new MemberInfo();
-
+          var memInfo = new MemberInfo();
           memInfo.setKind(Kind.PROPERTY);
           memInfo.setJavaName(fieldName);
           memInfo.setJavaDesc(fieldDesc);
           memInfo.setJavaAccess(fieldAccess);
-
           if ((fieldAccess & Opcodes.ACC_STATIC) != 0) {
             memInfo.setValue(value);
           }
-
           addScriptMember(memInfo);
-
           return new AnnotationVisitor(Main.ASM_VERSION, delegateAV) {
-            // These could be "null" if values are not supplied,
-            // in which case we have to use the default values.
+
+            // These could be "null" if values are not supplied, in which case we have to use the default values.
             private String name;
             private Integer attributes;
-            private String clazz = "";
+            private String type = "";
             private Where where;
 
             @Override
-            public void visit(final String annotationName, final Object annotationValue) {
+            public void visit(String annotationName, Object annotationValue) {
               switch (annotationName) {
-                case "name":
-                  this.name = (String) annotationValue;
-                  break;
-                case "attributes":
-                  this.attributes = (Integer) annotationValue;
-                  break;
-                case "clazz":
-                  this.clazz = (annotationValue == null) ? "" : annotationValue.toString();
-                  break;
-                default:
-                  break;
+                case "name" -> this.name = (String) annotationValue;
+                case "attributes" -> this.attributes = (Integer) annotationValue;
+                case "type" -> this.type = (annotationValue == null) ? "" : annotationValue.toString();
+                // default: pass
               }
               super.visit(annotationName, annotationValue);
             }
 
             @Override
-            public void visitEnum(final String enumName, final String desc, final String enumValue) {
+            public void visitEnum(String enumName, String desc, String enumValue) {
               if ("where".equals(enumName) && WHERE_ENUM_DESC.equals(desc)) {
                 this.where = Where.valueOf(enumValue);
               }
@@ -130,56 +110,44 @@ public class ScriptClassInfoCollector extends ClassVisitor {
             public void visitEnd() {
               super.visitEnd();
               memInfo.setName(name == null ? fieldName : name);
-              memInfo.setAttributes(attributes == null
-                      ? MemberInfo.DEFAULT_ATTRIBUTES : attributes);
-              clazz = clazz.replace('.', '/');
-              memInfo.setInitClass(clazz);
+              memInfo.setAttributes(attributes == null ? MemberInfo.DEFAULT_ATTRIBUTES : attributes);
+              type = type.replace('.', '/');
+              memInfo.setInitClass(type);
               memInfo.setWhere(where == null ? Where.INSTANCE : where);
             }
           };
         }
-
         return delegateAV;
       }
     };
   }
 
-  private void error(final String javaName, final String javaDesc, final String msg) {
+  private void error(String javaName, String javaDesc, String msg) {
     throw new RuntimeException(scriptClassName + "." + javaName + javaDesc + " : " + msg);
   }
 
   @Override
-  public MethodVisitor visitMethod(final int methodAccess, final String methodName,
-          final String methodDesc, final String signature, final String[] exceptions) {
-
-    final MethodVisitor delegateMV = super.visitMethod(methodAccess, methodName, methodDesc,
-            signature, exceptions);
-
+  public MethodVisitor visitMethod(int methodAccess, String methodName, String methodDesc, String signature, String[] exceptions) {
+    var delegateMV = super.visitMethod(methodAccess, methodName, methodDesc, signature, exceptions);
     return new MethodVisitor(Main.ASM_VERSION, delegateMV) {
 
       @Override
-      public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
-        final AnnotationVisitor delegateAV = super.visitAnnotation(descriptor, visible);
-        final Kind annoKind = ScriptClassInfo.annotations.get(descriptor);
-
+      public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+        var delegateAV = super.visitAnnotation(descriptor, visible);
+        var annoKind = ScriptClassInfo.annotations.get(descriptor);
         if (annoKind != null) {
           if ((methodAccess & Opcodes.ACC_STATIC) == 0) {
             error(methodName, methodDesc, "nasgen method annotations cannot be on instance methods");
           }
-
-          final MemberInfo memInfo = new MemberInfo();
-
+          var memInfo = new MemberInfo();
           // annoKind == GETTER or SPECIALIZED_FUNCTION
           memInfo.setKind(annoKind);
           memInfo.setJavaName(methodName);
           memInfo.setJavaDesc(methodDesc);
           memInfo.setJavaAccess(methodAccess);
-
           addScriptMember(memInfo);
-
           return new AnnotationVisitor(Main.ASM_VERSION, delegateAV) {
-            // These could be "null" if values are not supplied,
-            // in which case we have to use the default values.
+            // These could be "null" if values are not supplied, in which case we have to use the default values.
             private String name;
             private Integer attributes;
             private Integer arity;
@@ -190,52 +158,43 @@ public class ScriptClassInfoCollector extends ClassVisitor {
             private Type linkLogicClass = MethodGenerator.EMPTY_LINK_LOGIC_TYPE;
 
             @Override
-            public void visit(final String annotationName, final Object annotationValue) {
+            public void visit(String annotationName, Object annotationValue) {
               switch (annotationName) {
-                case "name":
+                case "name" -> {
                   this.name = (String) annotationValue;
                   if (name.isEmpty()) {
                     name = null;
                   }
-                  break;
-                case "attributes":
-                  this.attributes = (Integer) annotationValue;
-                  break;
-                case "arity":
-                  this.arity = (Integer) annotationValue;
-                  break;
-                case "isConstructor":
+                }
+                case "attributes" -> this.attributes = (Integer) annotationValue;
+                case "arity" -> this.arity = (Integer) annotationValue;
+                case "isConstructor" -> {
                   assert annoKind == Kind.SPECIALIZED_FUNCTION;
                   this.isSpecializedConstructor = (Boolean) annotationValue;
-                  break;
-                case "isOptimistic":
+                }
+                case "isOptimistic" -> {
                   assert annoKind == Kind.SPECIALIZED_FUNCTION;
                   this.isOptimistic = (Boolean) annotationValue;
-                  break;
-                case "linkLogic":
-                  this.linkLogicClass = (Type) annotationValue;
-                  break;
-                case "convertsNumericArgs":
+                }
+                case "linkLogic" -> this.linkLogicClass = (Type) annotationValue;
+                case "convertsNumericArgs" -> {
                   assert annoKind == Kind.SPECIALIZED_FUNCTION;
                   this.convertsNumericArgs = (Boolean) annotationValue;
-                  break;
-                default:
-                  break;
+                }
+                // default: pass
               }
-
               super.visit(annotationName, annotationValue);
             }
 
             @Override
-            public void visitEnum(final String enumName, final String desc, final String enumValue) {
+            public void visitEnum(String enumName, String desc, String enumValue) {
               switch (enumName) {
-                case "where":
+                case "where" -> {
                   if (WHERE_ENUM_DESC.equals(desc)) {
                     this.where = Where.valueOf(enumValue);
                   }
-                  break;
-                default:
-                  break;
+                }
+                // default: pass
               }
               super.visitEnum(enumName, desc, enumValue);
             }
@@ -244,35 +203,21 @@ public class ScriptClassInfoCollector extends ClassVisitor {
             @Override
             public void visitEnd() {
               super.visitEnd();
-
               if (memInfo.getKind() == Kind.CONSTRUCTOR) {
                 memInfo.setName(name == null ? scriptClassName : name);
               } else {
                 memInfo.setName(name == null ? methodName : name);
               }
-
               memInfo.setAttributes(attributes == null ? MemberInfo.DEFAULT_ATTRIBUTES : attributes);
-
               memInfo.setArity((arity == null) ? MemberInfo.DEFAULT_ARITY : arity);
               if (where == null) {
-                // by default @Getter/@Setter belongs to INSTANCE
-                // @Function belong to PROTOTYPE.
+                // by default @Getter/@Setter belongs to INSTANCE @Function belong to PROTOTYPE.
                 switch (memInfo.getKind()) {
-                  case GETTER:
-                  case SETTER:
-                    where = Where.INSTANCE;
-                    break;
-                  case CONSTRUCTOR:
-                    where = Where.CONSTRUCTOR;
-                    break;
-                  case FUNCTION:
-                    where = Where.PROTOTYPE;
-                    break;
-                  case SPECIALIZED_FUNCTION:
-                    where = isSpecializedConstructor ? Where.CONSTRUCTOR : Where.PROTOTYPE;
-                  //fallthru
-                  default:
-                    break;
+                  case GETTER, SETTER -> where = Where.INSTANCE;
+                  case CONSTRUCTOR -> where = Where.CONSTRUCTOR;
+                  case FUNCTION -> where = Where.PROTOTYPE;
+                  case SPECIALIZED_FUNCTION -> where = isSpecializedConstructor ? Where.CONSTRUCTOR : Where.PROTOTYPE;
+                  // default: pass
                 }
               }
               memInfo.setWhere(where);
@@ -283,7 +228,6 @@ public class ScriptClassInfoCollector extends ClassVisitor {
             }
           };
         }
-
         return delegateAV;
       }
     };
@@ -303,39 +247,4 @@ public class ScriptClassInfoCollector extends ClassVisitor {
     return sci;
   }
 
-  /**
-   * External entry point for ScriptClassInfoCollector if invoked from the command line
-   * @param args argument vector, args contains a class for which to collect info
-   * @throws IOException if there were problems parsing args or class
-   */
-  public static void main(final String[] args) throws IOException {
-    if (args.length != 1) {
-      System.err.println("Usage: " + ScriptClassInfoCollector.class.getName() + " <class>");
-      System.exit(1);
-    }
-
-    args[0] = args[0].replace('.', '/');
-    final ScriptClassInfoCollector scic = new ScriptClassInfoCollector();
-    try (final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(args[0] + ".class"))) {
-      final ClassReader reader = new ClassReader(bis);
-      reader.accept(scic, 0);
-    }
-    final ScriptClassInfo sci = scic.getScriptClassInfo();
-    final PrintStream out = System.out;
-    if (sci != null) {
-      out.println("script class: " + sci.getName());
-      out.println("===================================");
-      for (final MemberInfo memInfo : sci.getMembers()) {
-        out.println("kind : " + memInfo.getKind());
-        out.println("name : " + memInfo.getName());
-        out.println("attributes: " + memInfo.getAttributes());
-        out.println("javaName: " + memInfo.getJavaName());
-        out.println("javaDesc: " + memInfo.getJavaDesc());
-        out.println("where: " + memInfo.getWhere());
-        out.println("=====================================");
-      }
-    } else {
-      out.println(args[0] + " is not a @ScriptClass");
-    }
-  }
 }

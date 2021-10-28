@@ -1,70 +1,16 @@
 package nasgen;
 
-import static org.objectweb.asm.Opcodes.AALOAD;
-import static org.objectweb.asm.Opcodes.AASTORE;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.ACONST_NULL;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ANEWARRAY;
-import static org.objectweb.asm.Opcodes.ARETURN;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.BALOAD;
-import static org.objectweb.asm.Opcodes.BASTORE;
-import static org.objectweb.asm.Opcodes.BIPUSH;
-import static org.objectweb.asm.Opcodes.CALOAD;
-import static org.objectweb.asm.Opcodes.CASTORE;
-import static org.objectweb.asm.Opcodes.CHECKCAST;
-import static org.objectweb.asm.Opcodes.DALOAD;
-import static org.objectweb.asm.Opcodes.DASTORE;
-import static org.objectweb.asm.Opcodes.DCONST_0;
-import static org.objectweb.asm.Opcodes.DRETURN;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.DUP2;
-import static org.objectweb.asm.Opcodes.FALOAD;
-import static org.objectweb.asm.Opcodes.FASTORE;
-import static org.objectweb.asm.Opcodes.FCONST_0;
-import static org.objectweb.asm.Opcodes.FRETURN;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.objectweb.asm.Opcodes.H_INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.IALOAD;
-import static org.objectweb.asm.Opcodes.IASTORE;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_1;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.IRETURN;
-import static org.objectweb.asm.Opcodes.ISTORE;
-import static org.objectweb.asm.Opcodes.LALOAD;
-import static org.objectweb.asm.Opcodes.LASTORE;
-import static org.objectweb.asm.Opcodes.LCONST_0;
-import static org.objectweb.asm.Opcodes.LRETURN;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.POP;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.PUTSTATIC;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.SALOAD;
-import static org.objectweb.asm.Opcodes.SASTORE;
-import static org.objectweb.asm.Opcodes.SIPUSH;
-import static org.objectweb.asm.Opcodes.SWAP;
-import static nasgen.StringConstants.INIT;
-import static nasgen.StringConstants.OBJ_ANNO_PKG;
-import static nasgen.StringConstants.SPECIALIZATION_INIT2;
-import static nasgen.StringConstants.SPECIALIZATION_INIT3;
-import static nasgen.StringConstants.SPECIALIZATION_TYPE;
-import static nasgen.StringConstants.TYPE_SPECIALIZATION;
 import java.util.List;
+
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+import static org.objectweb.asm.Opcodes.*;
+
+import static nasgen.StringConstants.*;
 
 /**
  * Base class for all method generating classes.
- *
  */
 public class MethodGenerator extends MethodVisitor {
 
@@ -76,7 +22,7 @@ public class MethodGenerator extends MethodVisitor {
 
   static final Type EMPTY_LINK_LOGIC_TYPE = Type.getType("L" + OBJ_ANNO_PKG + "SpecializedFunction$LinkLogic$Empty;");
 
-  MethodGenerator(final MethodVisitor mv, final int access, final String name, final String descriptor) {
+  MethodGenerator(MethodVisitor mv, int access, String name, String descriptor) {
     super(Main.ASM_VERSION, mv);
     this.access = access;
     this.name = name;
@@ -121,11 +67,11 @@ public class MethodGenerator extends MethodVisitor {
     return "<init>".equals(name);
   }
 
-  void newObject(final String type) {
+  void newObject(String type) {
     super.visitTypeInsn(NEW, type);
   }
 
-  void newObjectArray(final String type) {
+  void newObjectArray(String type) {
     super.visitTypeInsn(ANEWARRAY, type);
   }
 
@@ -145,7 +91,7 @@ public class MethodGenerator extends MethodVisitor {
   }
 
   // load, store
-  void arrayLoad(final Type type) {
+  void arrayLoad(Type type) {
     super.visitInsn(type.getOpcode(IALOAD));
   }
 
@@ -153,7 +99,7 @@ public class MethodGenerator extends MethodVisitor {
     super.visitInsn(AALOAD);
   }
 
-  void arrayStore(final Type type) {
+  void arrayStore(Type type) {
     super.visitInsn(type.getOpcode(IASTORE));
   }
 
@@ -161,31 +107,31 @@ public class MethodGenerator extends MethodVisitor {
     super.visitInsn(AASTORE);
   }
 
-  void loadLiteral(final Object value) {
+  void loadLiteral(Object value) {
     super.visitLdcInsn(value);
   }
 
-  void classLiteral(final String className) {
+  void classLiteral(String className) {
     super.visitLdcInsn(className);
   }
 
-  void loadLocal(final Type type, final int index) {
+  void loadLocal(Type type, int index) {
     super.visitVarInsn(type.getOpcode(ILOAD), index);
   }
 
-  void loadLocal(final int index) {
+  void loadLocal(int index) {
     super.visitVarInsn(ALOAD, index);
   }
 
-  void storeLocal(final Type type, final int index) {
+  void storeLocal(Type type, int index) {
     super.visitVarInsn(type.getOpcode(ISTORE), index);
   }
 
-  void storeLocal(final int index) {
+  void storeLocal(int index) {
     super.visitVarInsn(ASTORE, index);
   }
 
-  void checkcast(final String type) {
+  void checkcast(String type) {
     super.visitTypeInsn(CHECKCAST, type);
   }
 
@@ -194,7 +140,7 @@ public class MethodGenerator extends MethodVisitor {
     super.visitInsn(ACONST_NULL);
   }
 
-  void push(final int value) {
+  void push(int value) {
     if (value >= -1 && value <= 5) {
       super.visitInsn(ICONST_0 + value);
     } else if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {
@@ -206,7 +152,7 @@ public class MethodGenerator extends MethodVisitor {
     }
   }
 
-  void loadClass(final String className) {
+  void loadClass(String className) {
     super.visitLdcInsn(Type.getObjectType(className));
   }
 
@@ -227,163 +173,100 @@ public class MethodGenerator extends MethodVisitor {
     super.visitInsn(SWAP);
   }
 
-  void dupArrayValue(final int arrayOpcode) {
+  void dupArrayValue(int arrayOpcode) {
     switch (arrayOpcode) {
-      case IALOAD:
-      case FALOAD:
-      case AALOAD:
-      case BALOAD:
-      case CALOAD:
-      case SALOAD:
-      case IASTORE:
-      case FASTORE:
-      case AASTORE:
-      case BASTORE:
-      case CASTORE:
-      case SASTORE:
-        dup();
-        break;
-
-      case LALOAD:
-      case DALOAD:
-      case LASTORE:
-      case DASTORE:
-        dup2();
-        break;
-      default:
-        throw new AssertionError("invalid dup");
+      case IALOAD, FALOAD, AALOAD, BALOAD, CALOAD, SALOAD, IASTORE, FASTORE, AASTORE, BASTORE, CASTORE, SASTORE -> dup();
+      case LALOAD, DALOAD, LASTORE, DASTORE -> dup2();
+      default -> throw new AssertionError("invalid dup");
     }
   }
 
-  void dupReturnValue(final int returnOpcode) {
+  void dupReturnValue(int returnOpcode) {
     switch (returnOpcode) {
-      case IRETURN:
-      case FRETURN:
-      case ARETURN:
-        super.visitInsn(DUP);
-        return;
-      case LRETURN:
-      case DRETURN:
-        super.visitInsn(DUP2);
-        return;
-      case RETURN:
-        return;
-      default:
-        throw new IllegalArgumentException("not return");
+      case IRETURN, FRETURN, ARETURN -> super.visitInsn(DUP);
+      case LRETURN, DRETURN -> super.visitInsn(DUP2);
+      case RETURN -> { return; }
+      default -> throw new IllegalArgumentException("not return");
     }
   }
 
-  void dupValue(final Type type) {
+  void dupValue(Type type) {
     switch (type.getSize()) {
-      case 1:
-        dup();
-        break;
-      case 2:
-        dup2();
-        break;
-      default:
-        throw new AssertionError("invalid dup");
+      case 1 -> dup();
+      case 2 -> dup2();
+      default -> throw new AssertionError("invalid dup");
     }
   }
 
-  void dupValue(final String desc) {
-    final int typeCode = desc.charAt(0);
+  void dupValue(String desc) {
+    var typeCode = desc.charAt(0);
     switch (typeCode) {
-      case '[':
-      case 'L':
-      case 'Z':
-      case 'C':
-      case 'B':
-      case 'S':
-      case 'I':
-        super.visitInsn(DUP);
-        break;
-      case 'J':
-      case 'D':
-        super.visitInsn(DUP2);
-        break;
-      default:
-        throw new RuntimeException("invalid signature");
+      case '[', 'L', 'Z', 'C', 'B', 'S', 'I' -> super.visitInsn(DUP);
+      case 'J', 'D' -> super.visitInsn(DUP2);
+      default -> throw new RuntimeException("invalid signature");
     }
   }
 
   // push default value of given type desc
-  void defaultValue(final String desc) {
-    final int typeCode = desc.charAt(0);
+  void defaultValue(String desc) {
+    var typeCode = desc.charAt(0);
     switch (typeCode) {
-      case '[':
-      case 'L':
-        super.visitInsn(ACONST_NULL);
-        break;
-      case 'Z':
-      case 'C':
-      case 'B':
-      case 'S':
-      case 'I':
-        super.visitInsn(ICONST_0);
-        break;
-      case 'J':
-        super.visitInsn(LCONST_0);
-        break;
-      case 'F':
-        super.visitInsn(FCONST_0);
-        break;
-      case 'D':
-        super.visitInsn(DCONST_0);
-        break;
-      default:
-        throw new AssertionError("invalid desc " + desc);
+      case '[', 'L' -> super.visitInsn(ACONST_NULL);
+      case 'Z', 'C', 'B', 'S', 'I' -> super.visitInsn(ICONST_0);
+      case 'J' -> super.visitInsn(LCONST_0);
+      case 'F' -> super.visitInsn(FCONST_0);
+      case 'D' -> super.visitInsn(DCONST_0);
+      default -> throw new AssertionError("invalid desc " + desc);
     }
   }
 
   // invokes, field get/sets
-  void invokeInterface(final String owner, final String method, final String desc) {
+  void invokeInterface(String owner, String method, String desc) {
     super.visitMethodInsn(INVOKEINTERFACE, owner, method, desc, true);
   }
 
-  void invokeVirtual(final String owner, final String method, final String desc) {
+  void invokeVirtual(String owner, String method, String desc) {
     super.visitMethodInsn(INVOKEVIRTUAL, owner, method, desc, false);
   }
 
-  void invokeSpecial(final String owner, final String method, final String desc) {
+  void invokeSpecial(String owner, String method, String desc) {
     super.visitMethodInsn(INVOKESPECIAL, owner, method, desc, false);
   }
 
-  void invokeStatic(final String owner, final String method, final String desc) {
+  void invokeStatic(String owner, String method, String desc) {
     super.visitMethodInsn(INVOKESTATIC, owner, method, desc, false);
   }
 
-  void putStatic(final String owner, final String field, final String desc) {
+  void putStatic(String owner, String field, String desc) {
     super.visitFieldInsn(PUTSTATIC, owner, field, desc);
   }
 
-  void getStatic(final String owner, final String field, final String desc) {
+  void getStatic(String owner, String field, String desc) {
     super.visitFieldInsn(GETSTATIC, owner, field, desc);
   }
 
-  void putField(final String owner, final String field, final String desc) {
+  void putField(String owner, String field, String desc) {
     super.visitFieldInsn(PUTFIELD, owner, field, desc);
   }
 
-  void getField(final String owner, final String field, final String desc) {
+  void getField(String owner, String field, String desc) {
     super.visitFieldInsn(GETFIELD, owner, field, desc);
   }
 
-  private static boolean linkLogicIsEmpty(final Type type) {
+  private static boolean linkLogicIsEmpty(Type type) {
     assert EMPTY_LINK_LOGIC_TYPE != null; //type is ok for null if we are a @SpecializedFunction without any attribs
     return EMPTY_LINK_LOGIC_TYPE.equals(type);
   }
 
-  void memberInfoArray(final String className, final List<MemberInfo> mis) {
+  void memberInfoArray(String className, List<MemberInfo> mis) {
     if (mis.isEmpty()) {
       pushNull();
       return;
     }
-
-    int pos = 0;
+    var pos = 0;
     push(mis.size());
     newObjectArray(SPECIALIZATION_TYPE);
-    for (final MemberInfo mi : mis) {
+    for (var mi : mis) {
       dup();
       push(pos++);
       visitTypeInsn(NEW, SPECIALIZATION_TYPE);
@@ -403,36 +286,22 @@ public class MethodGenerator extends MethodVisitor {
   }
 
   void computeMaxs() {
-    // These values are ignored as we create class writer
-    // with ClassWriter.COMPUTE_MAXS flag.
+    // These values are ignored as we create class writer with ClassWriter.COMPUTE_MAXS flag.
     super.visitMaxs(Short.MAX_VALUE, Short.MAX_VALUE);
   }
 
   // debugging support - print calls
-  void println(final String msg) {
-    super.visitFieldInsn(GETSTATIC,
-            "java/lang/System",
-            "out",
-            "Ljava/io/PrintStream;");
+  void println(String msg) {
+    super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
     super.visitLdcInsn(msg);
-    super.visitMethodInsn(INVOKEVIRTUAL,
-            "java/io/PrintStream",
-            "println",
-            "(Ljava/lang/String;)V",
-            false);
+    super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
   }
 
   // print the object on the top of the stack
   void printObject() {
-    super.visitFieldInsn(GETSTATIC,
-            "java/lang/System",
-            "out",
-            "Ljava/io/PrintStream;");
+    super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
     super.visitInsn(SWAP);
-    super.visitMethodInsn(INVOKEVIRTUAL,
-            "java/io/PrintStream",
-            "println",
-            "(Ljava/lang/Object;)V",
-            false);
+    super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/Object;)V", false);
   }
+
 }

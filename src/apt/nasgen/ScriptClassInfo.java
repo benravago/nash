@@ -5,19 +5,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.objectweb.asm.Type;
+
 import nasgen.MemberInfo.Kind;
 import static nasgen.StringConstants.OBJ_ANNO_PKG;
-import static nasgen.StringConstants.RUNTIME_PKG;
 
 /**
- * All annotation information from a class that is annotated with
- * the annotation com.sun.oracle.objects.annotations.ScriptClass.
- *
+ * All annotation information from a class that is annotated with the annotation com.sun.oracle.objects.annotations.ScriptClass.
  */
 public final class ScriptClassInfo {
 
-  private static String getTypeDescriptor(final String pkg, final String name) {
+  static String getTypeDescriptor(String pkg, String name) {
     return "L" + pkg + name + ";";
   }
 
@@ -34,7 +31,7 @@ public final class ScriptClassInfo {
 
   static final Map<String, Kind> annotations = new HashMap<>();
 
-  static {
+  static /*<init>*/ {
     annotations.put(SCRIPT_CLASS_ANNO_DESC, Kind.SCRIPT_CLASS);
     annotations.put(FUNCTION_ANNO_DESC, Kind.FUNCTION);
     annotations.put(CONSTRUCTOR_ANNO_DESC, Kind.CONSTRUCTOR);
@@ -61,7 +58,7 @@ public final class ScriptClassInfo {
   /**
    * @param name the name to set
    */
-  public void setName(final String name) {
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -75,12 +72,12 @@ public final class ScriptClassInfo {
   /**
    * @param members the members to set
    */
-  public void setMembers(final List<MemberInfo> members) {
+  public void setMembers(List<MemberInfo> members) {
     this.members = members;
   }
 
   MemberInfo getConstructor() {
-    for (final MemberInfo memInfo : members) {
+    for (var memInfo : members) {
       if (memInfo.getKind() == Kind.CONSTRUCTOR) {
         return memInfo;
       }
@@ -89,8 +86,8 @@ public final class ScriptClassInfo {
   }
 
   List<MemberInfo> getSpecializedConstructors() {
-    final List<MemberInfo> res = new LinkedList<>();
-    for (final MemberInfo memInfo : members) {
+    var res = new LinkedList<MemberInfo>();
+    for (var memInfo : members) {
       if (memInfo.isSpecializedConstructor()) {
         assert memInfo.getKind() == Kind.SPECIALIZED_FUNCTION;
         res.add(memInfo);
@@ -100,12 +97,9 @@ public final class ScriptClassInfo {
   }
 
   boolean isConstructorNeeded() {
-    // Constructor class generation is needed if we one or
-    // more constructor properties are defined or @Constructor
-    // is defined in the class.
-    for (final MemberInfo memInfo : members) {
-      if (memInfo.getKind() == Kind.CONSTRUCTOR
-              || memInfo.getWhere() == Where.CONSTRUCTOR) {
+    // Constructor class generation is needed if we one or more constructor properties are defined or @Constructor is defined in the class.
+    for (var memInfo : members) {
+      if (memInfo.getKind() == Kind.CONSTRUCTOR || memInfo.getWhere() == Where.CONSTRUCTOR) {
         return true;
       }
     }
@@ -113,9 +107,8 @@ public final class ScriptClassInfo {
   }
 
   boolean isPrototypeNeeded() {
-    // Prototype class generation is needed if we have at least one
-    // prototype property or @Constructor defined in the class.
-    for (final MemberInfo memInfo : members) {
+    // Prototype class generation is needed if we have at least one prototype property or @Constructor defined in the class.
+    for (var memInfo : members) {
       if (memInfo.getWhere() == Where.PROTOTYPE || memInfo.isConstructor()) {
         return true;
       }
@@ -124,16 +117,15 @@ public final class ScriptClassInfo {
   }
 
   int getPrototypeMemberCount() {
-    int count = 0;
-    for (final MemberInfo memInfo : members) {
+    var count = 0;
+    for (var memInfo : members) {
       switch (memInfo.getKind()) {
-        case SETTER:
-        case SPECIALIZED_FUNCTION:
+        case SETTER, SPECIALIZED_FUNCTION -> {
           // SETTER was counted when GETTER was encountered.
           // SPECIALIZED_FUNCTION was counted as FUNCTION already.
           continue;
+        }
       }
-
       if (memInfo.getWhere() == Where.PROTOTYPE) {
         count++;
       }
@@ -142,18 +134,15 @@ public final class ScriptClassInfo {
   }
 
   int getConstructorMemberCount() {
-    int count = 0;
-    for (final MemberInfo memInfo : members) {
+    var count = 0;
+    for (var memInfo : members) {
       switch (memInfo.getKind()) {
-        case CONSTRUCTOR:
-        case SETTER:
-        case SPECIALIZED_FUNCTION:
+        case CONSTRUCTOR, SETTER, SPECIALIZED_FUNCTION -> {
           // SETTER was counted when GETTER was encountered.
-          // Constructor and constructor SpecializedFunctions
-          // are not added as members and so not counted.
+          // Constructor and constructor SpecializedFunctions are not added as members and so not counted.
           continue;
+        }
       }
-
       if (memInfo.getWhere() == Where.CONSTRUCTOR) {
         count++;
       }
@@ -162,16 +151,15 @@ public final class ScriptClassInfo {
   }
 
   int getInstancePropertyCount() {
-    int count = 0;
-    for (final MemberInfo memInfo : members) {
+    var count = 0;
+    for (var memInfo : members) {
       switch (memInfo.getKind()) {
-        case SETTER:
-        case SPECIALIZED_FUNCTION:
+        case SETTER, SPECIALIZED_FUNCTION -> {
           // SETTER was counted when GETTER was encountered.
           // SPECIALIZED_FUNCTION was counted as FUNCTION already.
           continue;
+        }
       }
-
       if (memInfo.getWhere() == Where.INSTANCE) {
         count++;
       }
@@ -179,36 +167,31 @@ public final class ScriptClassInfo {
     return count;
   }
 
-  MemberInfo find(final String findJavaName, final String findJavaDesc, final int findAccess) {
-    for (final MemberInfo memInfo : members) {
-      if (memInfo.getJavaName().equals(findJavaName)
-              && memInfo.getJavaDesc().equals(findJavaDesc)
-              && memInfo.getJavaAccess() == findAccess) {
+  MemberInfo find(String findJavaName, String findJavaDesc, int findAccess) {
+    for (var memInfo : members) {
+      if (memInfo.getJavaName().equals(findJavaName) && memInfo.getJavaDesc().equals(findJavaDesc) && memInfo.getJavaAccess() == findAccess) {
         return memInfo;
       }
     }
     return null;
   }
 
-  List<MemberInfo> findSpecializations(final String methodName) {
-    final List<MemberInfo> res = new LinkedList<>();
-    for (final MemberInfo memInfo : members) {
-      if (memInfo.getName().equals(methodName)
-              && memInfo.getKind() == Kind.SPECIALIZED_FUNCTION) {
+  List<MemberInfo> findSpecializations(String methodName) {
+    var res = new LinkedList<MemberInfo>();
+    for (var memInfo : members) {
+      if (memInfo.getName().equals(methodName) && memInfo.getKind() == Kind.SPECIALIZED_FUNCTION) {
         res.add(memInfo);
       }
     }
     return Collections.unmodifiableList(res);
   }
 
-  MemberInfo findSetter(final MemberInfo getter) {
+  MemberInfo findSetter(MemberInfo getter) {
     assert getter.getKind() == Kind.GETTER : "getter expected";
-    final String getterName = getter.getName();
-    final Where getterWhere = getter.getWhere();
-    for (final MemberInfo memInfo : members) {
-      if (memInfo.getKind() == Kind.SETTER
-              && getterName.equals(memInfo.getName())
-              && getterWhere == memInfo.getWhere()) {
+    var getterName = getter.getName();
+    var getterWhere = getter.getWhere();
+    for (var memInfo : members) {
+      if (memInfo.getKind() == Kind.SETTER && getterName.equals(memInfo.getName()) && getterWhere == memInfo.getWhere()) {
         return memInfo;
       }
     }
@@ -225,7 +208,7 @@ public final class ScriptClassInfo {
   /**
    * @param javaName the javaName to set
    */
-  void setJavaName(final String javaName) {
+  void setJavaName(String javaName) {
     this.javaName = javaName;
   }
 
@@ -238,8 +221,8 @@ public final class ScriptClassInfo {
   }
 
   void verify() {
-    boolean constructorSeen = false;
-    for (final MemberInfo memInfo : getMembers()) {
+    var constructorSeen = false;
+    for (var memInfo : getMembers()) {
       if (memInfo.isConstructor()) {
         if (constructorSeen) {
           error("more than @Constructor method");
@@ -248,14 +231,15 @@ public final class ScriptClassInfo {
       }
       try {
         memInfo.verify();
-      } catch (final Exception e) {
+      } catch (Exception e) {
         e.printStackTrace();
         error(e.getMessage());
       }
     }
   }
 
-  private void error(final String msg) throws RuntimeException {
+  void error(String msg) throws RuntimeException {
     throw new RuntimeException(javaName + " : " + msg);
   }
+
 }

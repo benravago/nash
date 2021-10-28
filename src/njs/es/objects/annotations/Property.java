@@ -21,7 +21,7 @@ public @interface Property {
   public int attributes() default DEFAULT_ATTRIBUTES;
 
   /** @return class; initialize this property with the object of given class. */
-  public String clazz() default "";
+  public String type() default "";
 
   /** @return location of property */
   public Where where() default Where.INSTANCE;

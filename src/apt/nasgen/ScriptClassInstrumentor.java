@@ -1,40 +1,21 @@
 package nasgen;
 
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static nasgen.StringConstants.$CLINIT$;
-import static nasgen.StringConstants.CLINIT;
-import static nasgen.StringConstants.DEFAULT_INIT_DESC;
-import static nasgen.StringConstants.INIT;
-import static nasgen.StringConstants.OBJECT_DESC;
-import static nasgen.StringConstants.SCRIPTOBJECT_TYPE;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
-// import org.objectweb.asm.util.CheckClassAdapter;
+import static org.objectweb.asm.Opcodes.*;
+
 import nasgen.MemberInfo.Kind;
+import static nasgen.StringConstants.*;
 
 /**
  * This class instruments the java class annotated with @ScriptClass.
  *
  * Changes done are:
- *
  * 1) remove all jdk.nashorn.internal.objects.annotations.* annotations.
- * 2) static final @Property fields stay here. Other @Property fields moved to
- *    respective classes depending on 'where' value of annotation.
+ * 2) static final @Property fields stay here. Other @Property fields moved to respective classes depending on 'where' value of annotation.
  * 2) add "Map" type static field named "$map".
  * 3) add static initializer block to initialize map.
  */
@@ -44,7 +25,7 @@ public class ScriptClassInstrumentor extends ClassVisitor {
   private final int memberCount;
   private boolean staticInitFound;
 
-  ScriptClassInstrumentor(final ClassVisitor visitor, final ScriptClassInfo sci) {
+  ScriptClassInstrumentor(ClassVisitor visitor, ScriptClassInfo sci) {
     super(Main.ASM_VERSION, visitor);
     if (sci == null) {
       throw new IllegalArgumentException("Null ScriptClassInfo, is the class annotated?");
@@ -54,43 +35,35 @@ public class ScriptClassInstrumentor extends ClassVisitor {
   }
 
   @Override
-  public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
+  public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
     if (ScriptClassInfo.annotations.containsKey(desc)) {
       // ignore @ScriptClass
       return null;
     }
-
     return super.visitAnnotation(desc, visible);
   }
 
   @Override
-  public FieldVisitor visitField(final int fieldAccess, final String fieldName,
-          final String fieldDesc, final String signature, final Object value) {
-    final MemberInfo memInfo = scriptClassInfo.find(fieldName, fieldDesc, fieldAccess);
-    if (memInfo != null && memInfo.getKind() == Kind.PROPERTY
-            && memInfo.getWhere() != Where.INSTANCE && !memInfo.isStaticFinal()) {
+  public FieldVisitor visitField(int fieldAccess, String fieldName, String fieldDesc, String signature, Object value) {
+    var memInfo = scriptClassInfo.find(fieldName, fieldDesc, fieldAccess);
+    if (memInfo != null && memInfo.getKind() == Kind.PROPERTY && memInfo.getWhere() != Where.INSTANCE && !memInfo.isStaticFinal()) {
       // non-instance @Property fields - these have to go elsewhere unless 'static final'
       return null;
     }
-
-    final FieldVisitor delegateFV = super.visitField(fieldAccess, fieldName, fieldDesc,
-            signature, value);
+    var delegateFV = super.visitField(fieldAccess, fieldName, fieldDesc, signature, value);
     return new FieldVisitor(Main.ASM_VERSION, delegateFV) {
       @Override
-      public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
+      public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         if (ScriptClassInfo.annotations.containsKey(desc)) {
           // ignore script field annotations
           return null;
         }
-
         return fv.visitAnnotation(desc, visible);
       }
-
       @Override
-      public void visitAttribute(final Attribute attr) {
+      public void visitAttribute(Attribute attr) {
         fv.visitAttribute(attr);
       }
-
       @Override
       public void visitEnd() {
         fv.visitEnd();
@@ -99,55 +72,41 @@ public class ScriptClassInstrumentor extends ClassVisitor {
   }
 
   @Override
-  public MethodVisitor visitMethod(final int methodAccess, final String methodName,
-          final String methodDesc, final String signature, final String[] exceptions) {
-
-    final boolean isConstructor = INIT.equals(methodName);
-    final boolean isStaticInit = CLINIT.equals(methodName);
-
+  public MethodVisitor visitMethod(int methodAccess, String methodName, final String methodDesc, String signature, String[] exceptions) {
+    var isConstructor = INIT.equals(methodName);
+    var isStaticInit = CLINIT.equals(methodName);
     if (isStaticInit) {
       staticInitFound = true;
     }
-
-    final MethodGenerator delegateMV = new MethodGenerator(super.visitMethod(methodAccess, methodName, methodDesc,
-            signature, exceptions), methodAccess, methodName, methodDesc);
-
+    var delegateMV = new MethodGenerator(super.visitMethod(methodAccess, methodName, methodDesc, signature, exceptions), methodAccess, methodName, methodDesc);
     return new MethodVisitor(Main.ASM_VERSION, delegateMV) {
       @Override
-      public void visitInsn(final int opcode) {
+      public void visitInsn(int opcode) {
         // call $clinit$ just before return from <clinit>
         if (isStaticInit && opcode == RETURN) {
-          super.visitMethodInsn(INVOKESTATIC, scriptClassInfo.getJavaName(),
-                  $CLINIT$, DEFAULT_INIT_DESC, false);
+          super.visitMethodInsn(INVOKESTATIC, scriptClassInfo.getJavaName(), $CLINIT$, DEFAULT_INIT_DESC, false);
         }
         super.visitInsn(opcode);
       }
-
       @Override
-      public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc, final boolean itf) {
-        if (isConstructor && opcode == INVOKESPECIAL
-                && INIT.equals(name) && SCRIPTOBJECT_TYPE.equals(owner)) {
+      public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+        if (isConstructor && opcode == INVOKESPECIAL && INIT.equals(name) && SCRIPTOBJECT_TYPE.equals(owner)) {
           super.visitMethodInsn(opcode, owner, name, desc, false);
-
           if (memberCount > 0) {
             // initialize @Property fields if needed
-            for (final MemberInfo memInfo : scriptClassInfo.getMembers()) {
+            for (var memInfo : scriptClassInfo.getMembers()) {
               if (memInfo.isInstanceProperty() && !memInfo.getInitClass().isEmpty()) {
-                final String clazz = memInfo.getInitClass();
+                var initClass = memInfo.getInitClass();
                 super.visitVarInsn(ALOAD, 0);
-                super.visitTypeInsn(NEW, clazz);
+                super.visitTypeInsn(NEW, initClass);
                 super.visitInsn(DUP);
-                super.visitMethodInsn(INVOKESPECIAL, clazz,
-                        INIT, DEFAULT_INIT_DESC, false);
-                super.visitFieldInsn(PUTFIELD, scriptClassInfo.getJavaName(),
-                        memInfo.getJavaName(), memInfo.getJavaDesc());
+                super.visitMethodInsn(INVOKESPECIAL, initClass, INIT, DEFAULT_INIT_DESC, false);
+                super.visitFieldInsn(PUTFIELD, scriptClassInfo.getJavaName(), memInfo.getJavaName(), memInfo.getJavaDesc());
               }
-
               if (memInfo.isInstanceFunction()) {
                 super.visitVarInsn(ALOAD, 0);
                 ClassGenerator.newFunction(delegateMV, scriptClassInfo.getName(), scriptClassInfo.getJavaName(), memInfo, scriptClassInfo.findSpecializations(memInfo.getJavaName()));
-                super.visitFieldInsn(PUTFIELD, scriptClassInfo.getJavaName(),
-                        memInfo.getJavaName(), OBJECT_DESC);
+                super.visitFieldInsn(PUTFIELD, scriptClassInfo.getJavaName(), memInfo.getJavaName(), OBJECT_DESC);
               }
             }
           }
@@ -155,9 +114,8 @@ public class ScriptClassInstrumentor extends ClassVisitor {
           super.visitMethodInsn(opcode, owner, name, desc, itf);
         }
       }
-
       @Override
-      public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
+      public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         if (ScriptClassInfo.annotations.containsKey(desc)) {
           // ignore script method annotations
           return null;
@@ -175,11 +133,10 @@ public class ScriptClassInstrumentor extends ClassVisitor {
     super.visitEnd();
   }
 
-  private void emitFields() {
-    // introduce "Function" type instance fields for each
-    // instance @Function in script class info
-    final String className = scriptClassInfo.getJavaName();
-    for (MemberInfo memInfo : scriptClassInfo.getMembers()) {
+  void emitFields() {
+    // introduce "Function" type instance fields for each instance @Function in script class info
+    var className = scriptClassInfo.getJavaName();
+    for (var memInfo : scriptClassInfo.getMembers()) {
       if (memInfo.isInstanceFunction()) {
         ClassGenerator.addFunctionField(cv, memInfo.getJavaName());
         memInfo = (MemberInfo) memInfo.clone();
@@ -193,8 +150,8 @@ public class ScriptClassInstrumentor extends ClassVisitor {
 
   void emitGettersSetters() {
     if (memberCount > 0) {
-      for (final MemberInfo memInfo : scriptClassInfo.getMembers()) {
-        final String className = scriptClassInfo.getJavaName();
+      for (var memInfo : scriptClassInfo.getMembers()) {
+        var className = scriptClassInfo.getJavaName();
         if (memInfo.isInstanceProperty()) {
           ClassGenerator.addGetter(cv, className, memInfo);
           if (!memInfo.isFinal()) {
@@ -205,21 +162,21 @@ public class ScriptClassInstrumentor extends ClassVisitor {
     }
   }
 
-  private void emitStaticInitializer() {
-    final String className = scriptClassInfo.getJavaName();
+  void emitStaticInitializer() {
+    var className = scriptClassInfo.getJavaName();
     if (!staticInitFound) {
       // no user written <clinit> and so create one
-      final MethodVisitor mv = ClassGenerator.makeStaticInitializer(this);
+      var mv = ClassGenerator.makeStaticInitializer(this);
       mv.visitCode();
       mv.visitInsn(RETURN);
       mv.visitMaxs(Short.MAX_VALUE, 0);
       mv.visitEnd();
     }
     // Now generate $clinit$
-    final MethodGenerator mi = ClassGenerator.makeStaticInitializer(this, $CLINIT$);
+    var mi = ClassGenerator.makeStaticInitializer(this, $CLINIT$);
     ClassGenerator.emitStaticInitPrefix(mi, className, memberCount);
     if (memberCount > 0) {
-      for (final MemberInfo memInfo : scriptClassInfo.getMembers()) {
+      for (var memInfo : scriptClassInfo.getMembers()) {
         if (memInfo.isInstanceProperty() || memInfo.isInstanceFunction()) {
           ClassGenerator.linkerAddGetterSetter(mi, className, memInfo);
         } else if (memInfo.isInstanceGetter()) {
@@ -231,44 +188,4 @@ public class ScriptClassInstrumentor extends ClassVisitor {
     ClassGenerator.emitStaticInitSuffix(mi, className);
   }
 
-  /**
-   * External entry point for ScriptClassInfoCollector if run from the command line
-   *
-   * @param args arguments - one argument is needed, the name of the class to collect info from
-   *
-   * @throws IOException if there are problems reading class
-   */
-  public static void main(final String[] args) throws IOException {
-    if (args.length != 1) {
-      System.err.println("Usage: " + ScriptClassInstrumentor.class.getName() + " <class>");
-      System.exit(1);
-    }
-
-    final String fileName = args[0].replace('.', '/') + ".class";
-    final ScriptClassInfo sci = ClassGenerator.getScriptClassInfo(fileName);
-    if (sci == null) {
-      System.err.println("No @ScriptClass in " + fileName);
-      System.exit(2);
-      throw new AssertionError(); //guard against warning that sci is null below
-    }
-
-    try {
-      sci.verify();
-    } catch (final Exception e) {
-      System.err.println(e.getMessage());
-      System.exit(3);
-    }
-
-    final ClassWriter writer = ClassGenerator.makeClassWriter();
-//  try (final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
-//    final ClassReader reader = new ClassReader(bis);
-//    final CheckClassAdapter checker = new CheckClassAdapter(writer);
-//    final ScriptClassInstrumentor instr = new ScriptClassInstrumentor(checker, sci);
-//    reader.accept(instr, 0);
-//  }
-
-    try ( FileOutputStream fos = new FileOutputStream(fileName)) {
-      fos.write(writer.toByteArray());
-    }
-  }
 }

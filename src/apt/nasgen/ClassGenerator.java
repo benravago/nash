@@ -1,73 +1,29 @@
 package nasgen;
 
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.H_INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.H_INVOKEVIRTUAL;
-import static nasgen.StringConstants.ACCESSORPROPERTY_CREATE;
-import static nasgen.StringConstants.ACCESSORPROPERTY_CREATE_DESC;
-import static nasgen.StringConstants.ACCESSORPROPERTY_TYPE;
-import static nasgen.StringConstants.ARRAYLIST_INIT_DESC;
-import static nasgen.StringConstants.ARRAYLIST_TYPE;
-import static nasgen.StringConstants.CLINIT;
-import static nasgen.StringConstants.COLLECTIONS_EMPTY_LIST;
-import static nasgen.StringConstants.COLLECTIONS_TYPE;
-import static nasgen.StringConstants.COLLECTION_ADD;
-import static nasgen.StringConstants.COLLECTION_ADD_DESC;
-import static nasgen.StringConstants.COLLECTION_TYPE;
-import static nasgen.StringConstants.DEFAULT_INIT_DESC;
-import static nasgen.StringConstants.GETTER_PREFIX;
-import static nasgen.StringConstants.GET_CLASS_NAME;
-import static nasgen.StringConstants.GET_CLASS_NAME_DESC;
-import static nasgen.StringConstants.INIT;
-import static nasgen.StringConstants.LIST_DESC;
-import static nasgen.StringConstants.NATIVESYMBOL_TYPE;
-import static nasgen.StringConstants.OBJECT_DESC;
-import static nasgen.StringConstants.PROPERTYMAP_DESC;
-import static nasgen.StringConstants.PROPERTYMAP_FIELD_NAME;
-import static nasgen.StringConstants.PROPERTYMAP_NEWMAP;
-import static nasgen.StringConstants.PROPERTYMAP_NEWMAP_DESC;
-import static nasgen.StringConstants.PROPERTYMAP_TYPE;
-import static nasgen.StringConstants.SCRIPTFUNCTION_CREATEBUILTIN;
-import static nasgen.StringConstants.SCRIPTFUNCTION_CREATEBUILTIN_DESC;
-import static nasgen.StringConstants.SCRIPTFUNCTION_CREATEBUILTIN_SPECS_DESC;
-import static nasgen.StringConstants.SCRIPTFUNCTION_SETARITY;
-import static nasgen.StringConstants.SCRIPTFUNCTION_SETARITY_DESC;
-import static nasgen.StringConstants.SCRIPTFUNCTION_SETDOCUMENTATIONKEY;
-import static nasgen.StringConstants.SCRIPTFUNCTION_SETDOCUMENTATIONKEY_DESC;
-import static nasgen.StringConstants.SCRIPTFUNCTION_TYPE;
-import static nasgen.StringConstants.SETTER_PREFIX;
-import static nasgen.StringConstants.SYMBOL_DESC;
-import static nasgen.StringConstants.SYMBOL_PREFIX;
-import static nasgen.StringConstants.TYPE_OBJECT;
+import java.util.List;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+import static org.objectweb.asm.Opcodes.*;
+
 import nasgen.MemberInfo.Kind;
+import static nasgen.StringConstants.*;
 
 /**
  * Base class for class generator classes.
- *
  */
 public class ClassGenerator {
 
   /** ASM class writer used to output bytecode for this class */
   protected final ClassWriter cw;
 
-  /**
-   * Constructor
-   */
   protected ClassGenerator() {
     this.cw = makeClassWriter();
   }
@@ -80,7 +36,7 @@ public class ClassGenerator {
     return makeConstructor(cw);
   }
 
-  MethodGenerator makeMethod(final int access, final String name, final String desc) {
+  MethodGenerator makeMethod(int access, String name, String desc) {
     return makeMethod(cw, access, name, desc);
   }
 
@@ -88,24 +44,24 @@ public class ClassGenerator {
     addMapField(cw);
   }
 
-  void addField(final String name, final String desc) {
+  void addField(String name, String desc) {
     addField(cw, name, desc);
   }
 
-  void addFunctionField(final String name) {
+  void addFunctionField(String name) {
     addFunctionField(cw, name);
   }
 
-  void addGetter(final String owner, final MemberInfo memInfo) {
+  void addGetter(String owner, MemberInfo memInfo) {
     addGetter(cw, owner, memInfo);
   }
 
-  void addSetter(final String owner, final MemberInfo memInfo) {
+  void addSetter(String owner, MemberInfo memInfo) {
     addSetter(cw, owner, memInfo);
   }
 
-  void emitGetClassName(final String name) {
-    final MethodGenerator mi = makeMethod(ACC_PUBLIC, GET_CLASS_NAME, GET_CLASS_NAME_DESC);
+  void emitGetClassName(String name) {
+    var mi = makeMethod(ACC_PUBLIC, GET_CLASS_NAME, GET_CLASS_NAME_DESC);
     mi.loadLiteral(name);
     mi.returnValue();
     mi.computeMaxs();
@@ -115,10 +71,10 @@ public class ClassGenerator {
   static ClassWriter makeClassWriter() {
     return new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
       @Override
-      protected String getCommonSuperClass(final String type1, final String type2) {
+      protected String getCommonSuperClass(String type1, String type2) {
         try {
           return super.getCommonSuperClass(type1, type2);
-        } catch (final RuntimeException | LinkageError e) {
+        } catch (RuntimeException | LinkageError e) {
           if (MemberInfo.isScriptObject(type1) && MemberInfo.isScriptObject(type2)) {
             return StringConstants.SCRIPTOBJECT_TYPE;
           }
@@ -128,31 +84,31 @@ public class ClassGenerator {
     };
   }
 
-  static MethodGenerator makeStaticInitializer(final ClassVisitor cv) {
+  static MethodGenerator makeStaticInitializer(ClassVisitor cv) {
     return makeStaticInitializer(cv, CLINIT);
   }
 
-  static MethodGenerator makeStaticInitializer(final ClassVisitor cv, final String name) {
-    final int access = ACC_PUBLIC | ACC_STATIC;
-    final String desc = DEFAULT_INIT_DESC;
-    final MethodVisitor mv = cv.visitMethod(access, name, desc, null, null);
+  static MethodGenerator makeStaticInitializer(ClassVisitor cv, String name) {
+    var access = ACC_PUBLIC | ACC_STATIC;
+    var desc = DEFAULT_INIT_DESC;
+    var mv = cv.visitMethod(access, name, desc, null, null);
     return new MethodGenerator(mv, access, name, desc);
   }
 
-  static MethodGenerator makeConstructor(final ClassVisitor cv) {
-    final int access = 0;
-    final String name = INIT;
-    final String desc = DEFAULT_INIT_DESC;
-    final MethodVisitor mv = cv.visitMethod(access, name, desc, null, null);
+  static MethodGenerator makeConstructor(ClassVisitor cv) {
+    var access = 0;
+    var name = INIT;
+    var desc = DEFAULT_INIT_DESC;
+    var mv = cv.visitMethod(access, name, desc, null, null);
     return new MethodGenerator(mv, access, name, desc);
   }
 
-  static MethodGenerator makeMethod(final ClassVisitor cv, final int access, final String name, final String desc) {
-    final MethodVisitor mv = cv.visitMethod(access, name, desc, null, null);
+  static MethodGenerator makeMethod(ClassVisitor cv, int access, String name, String desc) {
+    var mv = cv.visitMethod(access, name, desc, null, null);
     return new MethodGenerator(mv, access, name, desc);
   }
 
-  static void emitStaticInitPrefix(final MethodGenerator mi, final String className, final int memberCount) {
+  static void emitStaticInitPrefix(MethodGenerator mi, String className, int memberCount) {
     mi.visitCode();
     if (memberCount > 0) {
       // new ArrayList(int)
@@ -168,7 +124,7 @@ public class ClassGenerator {
     }
   }
 
-  static void emitStaticInitSuffix(final MethodGenerator mi, final String className) {
+  static void emitStaticInitSuffix(MethodGenerator mi, String className) {
     // stack: Collection
     // pmap = PropertyMap.newMap(Collection<Property>);
     mi.invokeStatic(PROPERTYMAP_TYPE, PROPERTYMAP_NEWMAP, PROPERTYMAP_NEWMAP_DESC);
@@ -179,36 +135,33 @@ public class ClassGenerator {
     mi.visitEnd();
   }
 
-  @SuppressWarnings("fallthrough")
-  private static Type memInfoType(final MemberInfo memInfo) {
-    switch (memInfo.getJavaDesc().charAt(0)) {
-      case 'I':
-        return Type.INT_TYPE;
-      case 'J':
-        return Type.LONG_TYPE;
-      case 'D':
-        return Type.DOUBLE_TYPE;
-      default:
+  static Type memInfoType(MemberInfo memInfo) {
+    return switch (memInfo.getJavaDesc().charAt(0)) {
+      case 'I' -> Type.INT_TYPE;
+      case 'J' -> Type.LONG_TYPE;
+      case 'D' -> Type.DOUBLE_TYPE;
+      case 'L' -> TYPE_OBJECT;
+      default -> {
         assert false : memInfo.getJavaDesc();
-      case 'L':
-        return TYPE_OBJECT;
-    }
+        yield TYPE_OBJECT;
+      }
+    };
   }
 
-  private static String getterDesc(final MemberInfo memInfo) {
+  static String getterDesc(MemberInfo memInfo) {
     return Type.getMethodDescriptor(memInfoType(memInfo));
   }
 
-  private static String setterDesc(final MemberInfo memInfo) {
+  static String setterDesc(MemberInfo memInfo) {
     return Type.getMethodDescriptor(Type.VOID_TYPE, memInfoType(memInfo));
   }
 
-  static void addGetter(final ClassVisitor cv, final String owner, final MemberInfo memInfo) {
-    final int access = ACC_PUBLIC;
-    final String name = GETTER_PREFIX + memInfo.getJavaName();
-    final String desc = getterDesc(memInfo);
-    final MethodVisitor mv = cv.visitMethod(access, name, desc, null, null);
-    final MethodGenerator mi = new MethodGenerator(mv, access, name, desc);
+  static void addGetter(ClassVisitor cv, String owner, MemberInfo memInfo) {
+    var access = ACC_PUBLIC;
+    var name = GETTER_PREFIX + memInfo.getJavaName();
+    var desc = getterDesc(memInfo);
+    var mv = cv.visitMethod(access, name, desc, null, null);
+    var mi = new MethodGenerator(mv, access, name, desc);
     mi.visitCode();
     if (memInfo.isStatic() && memInfo.getKind() == Kind.PROPERTY) {
       mi.getStatic(owner, memInfo.getJavaName(), memInfo.getJavaDesc());
@@ -221,12 +174,12 @@ public class ClassGenerator {
     mi.visitEnd();
   }
 
-  static void addSetter(final ClassVisitor cv, final String owner, final MemberInfo memInfo) {
-    final int access = ACC_PUBLIC;
-    final String name = SETTER_PREFIX + memInfo.getJavaName();
-    final String desc = setterDesc(memInfo);
-    final MethodVisitor mv = cv.visitMethod(access, name, desc, null, null);
-    final MethodGenerator mi = new MethodGenerator(mv, access, name, desc);
+  static void addSetter(ClassVisitor cv, String owner, MemberInfo memInfo) {
+    var access = ACC_PUBLIC;
+    var name = SETTER_PREFIX + memInfo.getJavaName();
+    var desc = setterDesc(memInfo);
+    var mv = cv.visitMethod(access, name, desc, null, null);
+    var mi = new MethodGenerator(mv, access, name, desc);
     mi.visitCode();
     if (memInfo.isStatic() && memInfo.getKind() == Kind.PROPERTY) {
       mi.loadLocal(1);
@@ -241,63 +194,57 @@ public class ClassGenerator {
     mi.visitEnd();
   }
 
-  static void addMapField(final ClassVisitor cv) {
+  static void addMapField(ClassVisitor cv) {
     // add a PropertyMap static field
-    final FieldVisitor fv = cv.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL,
-            PROPERTYMAP_FIELD_NAME, PROPERTYMAP_DESC, null, null);
+    var fv = cv.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, PROPERTYMAP_FIELD_NAME, PROPERTYMAP_DESC, null, null);
     if (fv != null) {
       fv.visitEnd();
     }
   }
 
-  static void addField(final ClassVisitor cv, final String name, final String desc) {
-    final FieldVisitor fv = cv.visitField(ACC_PRIVATE, name, desc, null, null);
+  static void addField(ClassVisitor cv, String name, String desc) {
+    var fv = cv.visitField(ACC_PRIVATE, name, desc, null, null);
     if (fv != null) {
       fv.visitEnd();
     }
   }
 
-  static void addFunctionField(final ClassVisitor cv, final String name) {
+  static void addFunctionField(ClassVisitor cv, String name) {
     addField(cv, name, OBJECT_DESC);
   }
 
-  static void newFunction(final MethodGenerator mi, final String objName, final String className, final MemberInfo memInfo, final List<MemberInfo> specs) {
-    final boolean arityFound = (memInfo.getArity() != MemberInfo.DEFAULT_ARITY);
-
+  static void newFunction(MethodGenerator mi, String objName, String className, MemberInfo memInfo, List<MemberInfo> specs) {
+    var arityFound = (memInfo.getArity() != MemberInfo.DEFAULT_ARITY);
     loadFunctionName(mi, memInfo.getName());
     mi.visitLdcInsn(new Handle(H_INVOKESTATIC, className, memInfo.getJavaName(), memInfo.getJavaDesc(), false));
-
     assert specs != null;
-    if (!specs.isEmpty()) {
+    if (specs.isEmpty()) {
+      mi.invokeStatic(SCRIPTFUNCTION_TYPE, SCRIPTFUNCTION_CREATEBUILTIN, SCRIPTFUNCTION_CREATEBUILTIN_DESC);
+    } else {
       mi.memberInfoArray(className, specs);
       mi.invokeStatic(SCRIPTFUNCTION_TYPE, SCRIPTFUNCTION_CREATEBUILTIN, SCRIPTFUNCTION_CREATEBUILTIN_SPECS_DESC);
-    } else {
-      mi.invokeStatic(SCRIPTFUNCTION_TYPE, SCRIPTFUNCTION_CREATEBUILTIN, SCRIPTFUNCTION_CREATEBUILTIN_DESC);
     }
-
     if (arityFound) {
       mi.dup();
       mi.push(memInfo.getArity());
       mi.invokeVirtual(SCRIPTFUNCTION_TYPE, SCRIPTFUNCTION_SETARITY, SCRIPTFUNCTION_SETARITY_DESC);
     }
-
     mi.dup();
     mi.loadLiteral(memInfo.getDocumentationKey(objName));
     mi.invokeVirtual(SCRIPTFUNCTION_TYPE, SCRIPTFUNCTION_SETDOCUMENTATIONKEY, SCRIPTFUNCTION_SETDOCUMENTATIONKEY_DESC);
   }
 
-  static void linkerAddGetterSetter(final MethodGenerator mi, final String className, final MemberInfo memInfo) {
-    final String propertyName = memInfo.getName();
+  static void linkerAddGetterSetter(MethodGenerator mi, String className, MemberInfo memInfo) {
+    var propertyName = memInfo.getName();
     // stack: Collection
     // dup of Collection instance
     mi.dup();
-
     // Load property name, converting to Symbol if it begins with "@@"
     loadPropertyKey(mi, propertyName);
     // setup flags
     mi.push(memInfo.getAttributes());
     // setup getter method handle
-    String javaName = GETTER_PREFIX + memInfo.getJavaName();
+    var javaName = GETTER_PREFIX + memInfo.getJavaName();
     mi.visitLdcInsn(new Handle(H_INVOKEVIRTUAL, className, javaName, getterDesc(memInfo), false));
     // setup setter method handle
     if (memInfo.isFinal()) {
@@ -315,25 +262,22 @@ public class ClassGenerator {
     // stack: Collection
   }
 
-  static void linkerAddGetterSetter(final MethodGenerator mi, final String className, final MemberInfo getter, final MemberInfo setter) {
-    final String propertyName = getter.getName();
+  static void linkerAddGetterSetter(MethodGenerator mi, String className, MemberInfo getter, MemberInfo setter) {
+    var propertyName = getter.getName();
     // stack: Collection
     // dup of Collection instance
     mi.dup();
-
     // Load property name, converting to Symbol if it begins with "@@"
     loadPropertyKey(mi, propertyName);
     // setup flags
     mi.push(getter.getAttributes());
     // setup getter method handle
-    mi.visitLdcInsn(new Handle(H_INVOKESTATIC, className,
-            getter.getJavaName(), getter.getJavaDesc(), false));
+    mi.visitLdcInsn(new Handle(H_INVOKESTATIC, className, getter.getJavaName(), getter.getJavaDesc(), false));
     // setup setter method handle
     if (setter == null) {
       mi.pushNull();
     } else {
-      mi.visitLdcInsn(new Handle(H_INVOKESTATIC, className,
-              setter.getJavaName(), setter.getJavaDesc(), false));
+      mi.visitLdcInsn(new Handle(H_INVOKESTATIC, className, setter.getJavaName(), setter.getJavaDesc(), false));
     }
     // property = AccessorProperty.create(key, flags, getter, setter);
     mi.invokeStatic(ACCESSORPROPERTY_TYPE, ACCESSORPROPERTY_CREATE, ACCESSORPROPERTY_CREATE_DESC);
@@ -344,17 +288,17 @@ public class ClassGenerator {
     // stack: Collection
   }
 
-  static ScriptClassInfo getScriptClassInfo(final String fileName) throws IOException {
-    try ( BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
+  static ScriptClassInfo getScriptClassInfo(String fileName) throws IOException {
+    try (var bis = new BufferedInputStream(new FileInputStream(fileName))) {
       return getScriptClassInfo(new ClassReader(bis));
     }
   }
 
-  static ScriptClassInfo getScriptClassInfo(final byte[] classBuf) {
+  static ScriptClassInfo getScriptClassInfo(byte[] classBuf) {
     return getScriptClassInfo(new ClassReader(classBuf));
   }
 
-  private static void loadFunctionName(final MethodGenerator mi, final String propertyName) {
+  static void loadFunctionName(MethodGenerator mi, String propertyName) {
     if (propertyName.startsWith(SYMBOL_PREFIX)) {
       mi.loadLiteral("Symbol[" + propertyName.substring(2) + "]");
     } else {
@@ -362,7 +306,7 @@ public class ClassGenerator {
     }
   }
 
-  private static void loadPropertyKey(final MethodGenerator mi, final String propertyName) {
+  static void loadPropertyKey(MethodGenerator mi, String propertyName) {
     if (propertyName.startsWith(SYMBOL_PREFIX)) {
       mi.getStatic(NATIVESYMBOL_TYPE, propertyName.substring(2), SYMBOL_DESC);
     } else {
@@ -370,9 +314,10 @@ public class ClassGenerator {
     }
   }
 
-  private static ScriptClassInfo getScriptClassInfo(final ClassReader reader) {
-    final ScriptClassInfoCollector scic = new ScriptClassInfoCollector();
+  static ScriptClassInfo getScriptClassInfo(ClassReader reader) {
+    var scic = new ScriptClassInfoCollector();
     reader.accept(scic, 0);
     return scic.getScriptClassInfo();
   }
+
 }

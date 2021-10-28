@@ -1,24 +1,10 @@
 package nasgen;
 
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_SUPER;
-import static org.objectweb.asm.Opcodes.V1_7;
-import static nasgen.StringConstants.DEFAULT_INIT_DESC;
-import static nasgen.StringConstants.INIT;
-import static nasgen.StringConstants.OBJECT_DESC;
-import static nasgen.StringConstants.PROPERTYMAP_DESC;
-import static nasgen.StringConstants.PROPERTYMAP_FIELD_NAME;
-import static nasgen.StringConstants.PROTOTYPEOBJECT_TYPE;
-import static nasgen.StringConstants.PROTOTYPE_SUFFIX;
-import static nasgen.StringConstants.SCRIPTOBJECT_INIT_DESC;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
+import static org.objectweb.asm.Opcodes.*;
+import static nasgen.StringConstants.*;
 
 /**
  * This class generates prototype class for a @ScriptClass annotated class.
- *
  */
 public class PrototypeGenerator extends ClassGenerator {
 
@@ -26,7 +12,7 @@ public class PrototypeGenerator extends ClassGenerator {
   private final String className;
   private final int memberCount;
 
-  PrototypeGenerator(final ScriptClassInfo sci) {
+  PrototypeGenerator(ScriptClassInfo sci) {
     this.scriptClassInfo = sci;
     this.className = scriptClassInfo.getPrototypeClassName();
     this.memberCount = scriptClassInfo.getPrototypeMemberCount();
@@ -41,22 +27,19 @@ public class PrototypeGenerator extends ClassGenerator {
       // add <clinit>
       emitStaticInitializer();
     }
-
     // add <init>
     emitConstructor();
-
     // add getClassName()
     emitGetClassName(scriptClassInfo.getName());
-
     cw.visitEnd();
     return cw.toByteArray();
   }
 
   // --Internals only below this point
-  private void emitFields() {
-    // introduce "Function" type instance fields for each
-    // prototype @Function in script class info
-    for (MemberInfo memInfo : scriptClassInfo.getMembers()) {
+
+  void emitFields() {
+    // introduce "Function" type instance fields for each prototype @Function in script class info
+    for (var memInfo : scriptClassInfo.getMembers()) {
       if (memInfo.isPrototypeFunction()) {
         addFunctionField(memInfo.getJavaName());
         memInfo = (MemberInfo) memInfo.clone();
@@ -75,14 +58,13 @@ public class PrototypeGenerator extends ClassGenerator {
         }
       }
     }
-
     addMapField();
   }
 
-  private void emitStaticInitializer() {
-    final MethodGenerator mi = makeStaticInitializer();
+  void emitStaticInitializer() {
+    var mi = makeStaticInitializer();
     emitStaticInitPrefix(mi, className, memberCount);
-    for (final MemberInfo memInfo : scriptClassInfo.getMembers()) {
+    for (var memInfo : scriptClassInfo.getMembers()) {
       if (memInfo.isPrototypeFunction() || memInfo.isPrototypeProperty()) {
         linkerAddGetterSetter(mi, className, memInfo);
       } else if (memInfo.isPrototypeGetter()) {
@@ -93,8 +75,8 @@ public class PrototypeGenerator extends ClassGenerator {
     emitStaticInitSuffix(mi, className);
   }
 
-  private void emitConstructor() {
-    final MethodGenerator mi = makeConstructor();
+  void emitConstructor() {
+    var mi = makeConstructor();
     mi.visitCode();
     mi.loadThis();
     if (memberCount > 0) {
@@ -112,8 +94,8 @@ public class PrototypeGenerator extends ClassGenerator {
     mi.visitEnd();
   }
 
-  private void initFunctionFields(final MethodGenerator mi) {
-    for (final MemberInfo memInfo : scriptClassInfo.getMembers()) {
+  void initFunctionFields(MethodGenerator mi) {
+    for (var memInfo : scriptClassInfo.getMembers()) {
       if (!memInfo.isPrototypeFunction()) {
         continue;
       }
@@ -123,34 +105,4 @@ public class PrototypeGenerator extends ClassGenerator {
     }
   }
 
-  /**
-   * External entry point for PrototypeGenerator if called from the command line
-   *
-   * @param args arguments, takes 1 argument which is the class to process
-   * @throws IOException if class cannot be read
-   */
-  public static void main(final String[] args) throws IOException {
-    if (args.length != 1) {
-      System.err.println("Usage: " + PrototypeGenerator.class.getName() + " <class>");
-      System.exit(1);
-    }
-
-    final String className = args[0].replace('.', '/');
-    final ScriptClassInfo sci = getScriptClassInfo(className + ".class");
-    if (sci == null) {
-      System.err.println("No @ScriptClass in " + className);
-      System.exit(2);
-      throw new AssertionError(); //guard against warning that sci is null below
-    }
-    try {
-      sci.verify();
-    } catch (final Exception e) {
-      System.err.println(e.getMessage());
-      System.exit(3);
-    }
-    final PrototypeGenerator gen = new PrototypeGenerator(sci);
-    try ( FileOutputStream fos = new FileOutputStream(className + PROTOTYPE_SUFFIX + ".class")) {
-      fos.write(gen.getClassBytes());
-    }
-  }
 }
