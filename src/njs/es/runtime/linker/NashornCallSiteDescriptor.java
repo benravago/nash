@@ -90,8 +90,6 @@ public final class NashornCallSiteDescriptor extends CallSiteDescriptor {
   /** Does this a callsite for a variable declaration? */
   public static final int CALLSITE_DECLARE = 1 << 9;
 
-  // we could have more tracing flags here, for example CALLSITE_TRACE_SCOPE, but bits are a bit precious right now given the program points
-
   /**
    * Number of bits the program point is shifted to the left in the flags (lowest bit containing a program point).
    * Always one larger than the largest flag shift. Note that introducing a new flag halves the number of program points we can have.
