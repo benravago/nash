@@ -133,21 +133,6 @@ public final class ScriptEnvironment {
   /** Timing */
   public final Timing _timing;
 
-  // Whether to use anonymous classes. See {@link #useAnonymousClasses(int)}.
-  private final AnonymousClasses _anonymousClasses;
-
-  private enum AnonymousClasses {
-    AUTO,
-    OFF,
-    ON
-  }
-
-  // Size threshold up to which we use anonymous classes in {@link AnonymousClasses#AUTO} setting
-  private final int _anonymous_classes_threshold;
-
-  // Default value for anonymous class threshold
-  private final static int DEFAULT_ANON_CLASS_THRESHOLD = 512;
-
   /**
    * Constructor
    *
@@ -205,17 +190,6 @@ public final class ScriptEnvironment {
     } else {
       _unstable_relink_threshold = configuredUrt;
     }
-    var anonClasses = options.getString("anonymous.classes");
-    if (anonClasses == null || anonClasses.equals("auto")) {
-      _anonymousClasses = AnonymousClasses.AUTO;
-    } else if (anonClasses.equals("true")) {
-      _anonymousClasses = AnonymousClasses.ON;
-    } else if (anonClasses.equals("false")) {
-      _anonymousClasses = AnonymousClasses.OFF;
-    } else {
-      throw new RuntimeException("Unsupported value for anonymous classes: " + anonClasses);
-    }
-    this._anonymous_classes_threshold = Options.getIntProperty("nashorn.anonymous.classes.threshold", DEFAULT_ANON_CLASS_THRESHOLD);
     var timezoneOption = options.get("timezone");
     if (timezoneOption != null) {
       this._timezone = (TimeZone) timezoneOption.getValue();
@@ -289,16 +263,6 @@ public final class ScriptEnvironment {
    */
   public boolean isTimingEnabled() {
     return _timing != null ? _timing.isEnabled() : false;
-  }
-
-  /**
-   * Returns true if compilation should use anonymous classes.
-   * @param sourceLength length of source being compiled.
-   * @return true if anonymous classes should be used
-   */
-  public boolean useAnonymousClasses(int sourceLength) {
-    return false; // TODO:
-    // return _anonymousClasses == AnonymousClasses.ON || (_anonymousClasses == AnonymousClasses.AUTO && sourceLength <= _anonymous_classes_threshold);
   }
 
 }

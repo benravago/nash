@@ -43,10 +43,6 @@ import java.lang.reflect.Modifier;
 
 import jdk.dynalink.DynamicLinker;
 
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import static org.objectweb.asm.Opcodes.V1_7;
-
 import javax.script.ScriptEngine;
 import nash.scripting.ClassFilter;
 import nash.scripting.ScriptObjectMirror;
@@ -64,7 +60,6 @@ import es.runtime.logging.Loggable;
 import es.runtime.logging.Logger;
 import es.runtime.options.LoggingOption.LoggerInfo;
 import es.runtime.options.Options;
-import es.util.WeakValueCache;
 import static es.codegen.CompilerConstants.*;
 import static es.runtime.ECMAErrors.typeError;
 import static es.runtime.ScriptRuntime.UNDEFINED;
@@ -208,47 +203,6 @@ public final class Context {
     public CodeInstaller getMultiClassCodeInstaller() {
       // This installer is perfectly suitable for installing multiple classes that reference each other as it produces classes with resolvable names, all defined in a single class loader.
       return this;
-    }
-  }
-
-  private final WeakValueCache<CodeSource, Class<?>> anonymousHostClasses = new WeakValueCache<>();
-
-  static final class AnonymousContextCodeInstaller extends ContextCodeInstaller {
-
-    private static final String ANONYMOUS_HOST_CLASS_NAME = Compiler.SCRIPTS_PACKAGE.replace('/', '.') + ".AnonymousHost";
-    private static final byte[] ANONYMOUS_HOST_CLASS_BYTES = getAnonymousHostClassBytes();
-
-    private final Class<?> hostClass;
-
-    AnonymousContextCodeInstaller(Context context, CodeSource codeSource, Class<?> hostClass) {
-      super(context, codeSource);
-      this.hostClass = hostClass;
-    }
-
-    @Override
-    public Class<?> install(String className, byte[] bytecode) {
-      ANONYMOUS_INSTALLED_SCRIPT_COUNT.increment();
-      return null; // UNSAFE.defineAnonymousClass(hostClass, bytecode, null);
-    }
-
-    @Override
-    public CodeInstaller getOnDemandCompilationInstaller() {
-      // This code loader can be indefinitely reused for on-demand recompilations for the same code source.
-      return this;
-    }
-
-    @Override
-    public CodeInstaller getMultiClassCodeInstaller() {
-      // This code loader can not be used to install multiple classes that reference each other, as they would have no resolvable names.
-      // Therefore, in such situation we must revert to an installer that produces named classes.
-      return new NamedContextCodeInstaller(context, codeSource, context.createNewLoader());
-    }
-
-    static byte[] getAnonymousHostClassBytes() {
-      var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-      cw.visit(V1_7, Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT, ANONYMOUS_HOST_CLASS_NAME.replace('.', '/'), null, "java/lang/Object", null);
-      cw.visitEnd();
-      return cw.toByteArray();
     }
   }
 
@@ -1060,19 +1014,9 @@ public final class Context {
     var url = source.getURL();
     var cs = new CodeSource(url, (CodeSigner[]) null);
     CodeInstaller installer;
-    if (!env.useAnonymousClasses(source.getLength()) || !env._lazy_compilation) {
-      // Persistent code cache and eager compilation preclude use of VM anonymous classes
+
       var loader = env._loader_per_compile ? createNewLoader() : scriptLoader;
       installer = new NamedContextCodeInstaller(this, cs, loader);
-    } else {
-      installer = new AnonymousContextCodeInstaller(this, cs, anonymousHostClasses.getOrCreate(cs,
-        (key) -> createNewLoader().installClass(
-           // NOTE: we're defining these constants in AnonymousContextCodeInstaller so they are not initialized if we don't use AnonymousContextCodeInstaller.
-           // As this method is only ever invoked from AnonymousContextCodeInstaller, this is okay.
-           AnonymousContextCodeInstaller.ANONYMOUS_HOST_CLASS_NAME,
-           AnonymousContextCodeInstaller.ANONYMOUS_HOST_CLASS_BYTES, cs)
-      ));
-    }
 
       var phases = Compiler.CompilationPhases.COMPILE_ALL;
       var compiler = Compiler.forInitialCompilation(installer, source, errMan);
