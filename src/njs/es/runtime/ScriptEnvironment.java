@@ -6,16 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.logging.Level;
 
 import es.codegen.Namespace;
-import es.runtime.linker.NashornCallSiteDescriptor;
-import es.runtime.options.KeyValueOption;
 import es.runtime.options.LoggingOption;
 import es.runtime.options.LoggingOption.LoggerInfo;
-import es.runtime.options.Option;
 import es.runtime.options.Options;
 
 /**
@@ -119,12 +115,6 @@ public final class ScriptEnvironment {
   /** Only parse the source code, do not compile */
   public final boolean _parse_only;
 
-  /** Directory (optional) to print files to */
-  public final String _print_code_dir;
-
-  /** List of functions to write to the print code dir, optional */
-  public final String _print_code_func;
-
   /** Print function will no print newline characters */
   public final boolean _print_no_newline;
 
@@ -226,25 +216,6 @@ public final class ScriptEnvironment {
       throw new RuntimeException("Unsupported value for anonymous classes: " + anonClasses);
     }
     this._anonymous_classes_threshold = Options.getIntProperty("nashorn.anonymous.classes.threshold", DEFAULT_ANON_CLASS_THRESHOLD);
-    String dir = null;
-    String func = null;
-    var pc = options.getString("print.code");
-    if (pc != null) {
-      var st = new StringTokenizer(pc, ",");
-      while (st.hasMoreTokens()) {
-        var st2 = new StringTokenizer(st.nextToken(), ":");
-        while (st2.hasMoreTokens()) {
-          var cmd = st2.nextToken();
-          if ("dir".equals(cmd)) {
-            dir = st2.nextToken();
-          } else if ("function".equals(cmd)) {
-            func = st2.nextToken();
-          }
-        }
-      }
-    }
-    _print_code_dir = dir;
-    _print_code_func = func;
     var timezoneOption = options.get("timezone");
     if (timezoneOption != null) {
       this._timezone = (TimeZone) timezoneOption.getValue();
