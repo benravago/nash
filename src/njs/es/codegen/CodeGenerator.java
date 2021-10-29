@@ -1742,8 +1742,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
         param.getSymbol().setFieldIndex(nextParam++);
       }
     }
-    // Debugging: print symbols? @see --print-symbols flag
-    printSymbols(block, function, (isFunctionBody ? "Function " : "Block in ") + (function.getIdent() == null ? "<anonymous>" : function.getIdent().getName()));
   }
 
   /**
@@ -3833,23 +3831,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
   void generateScopeCalls() {
     for (var scopeAccess : lc.getScopeCalls()) {
       scopeAccess.generateScopeCall();
-    }
-  }
-
-  /**
-   * Debug code used to print symbols
-   * @param block the block we are in
-   * @param function the function we are in
-   * @param ident identifier for block or function where applicable
-   */
-  void printSymbols(Block block, FunctionNode function, String ident) {
-    if (compiler.getScriptEnvironment()._print_symbols || function.getDebugFlag(FunctionNode.DEBUG_PRINT_SYMBOLS)) {
-      var out = compiler.getScriptEnvironment().getErr();
-      out.println("[BLOCK in '" + ident + "']");
-      if (!block.printSymbols(out)) {
-        out.println("<no symbols>");
-      }
-      out.println();
     }
   }
 
