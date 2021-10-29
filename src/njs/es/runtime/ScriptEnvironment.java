@@ -43,9 +43,6 @@ public final class ScriptEnvironment {
   /** Only compile script, do not run it or generate other ScriptObjects */
   public final boolean _compile_only;
 
-  /** Accept "const" keyword and treat it as variable. Interim feature */
-  public final boolean _const_as_var;
-
   /** Invalid lvalue expressions should be reported as early errors */
   public final boolean _early_lvalue_error;
 
@@ -149,7 +146,6 @@ public final class ScriptEnvironment {
     _class_cache_size = options.getInteger("class.cache.size");
     _classpath = options.getString("classpath");
     _compile_only = options.getBoolean("compile.only");
-    _const_as_var = options.getBoolean("const.as.var");
     _early_lvalue_error = options.getBoolean("early.lvalue.error");
     _empty_statements = options.getBoolean("empty.statements");
     if (options.getBoolean("function.statement.error")) {

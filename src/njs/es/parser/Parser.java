@@ -815,10 +815,6 @@ public class Parser extends AbstractParser implements Loggable {
           classDeclaration(false);
           break;
         }
-        if (env._const_as_var && type == CONST) {
-          variableStatement(TokenType.VAR);
-          break;
-        }
         if (type == IDENT) {
           if (T(k + 1) == COLON) {
             labelStatement();
@@ -1570,11 +1566,6 @@ public class Parser extends AbstractParser implements Loggable {
             flags |= ForNode.PER_ITERATION_SCOPE;
             // LET/CONST declaration captured in container block created above.
             varDeclList = variableDeclarationList(varType = type, false, forStart);
-            break;
-          }
-          if (env._const_as_var && type == CONST) {
-            // Var declaration captured in for outer block.
-            varDeclList = variableDeclarationList(varType = TokenType.VAR, false, forStart);
             break;
           }
           init = expression(unaryExpression(), COMMARIGHT.getPrecedence(), true);
