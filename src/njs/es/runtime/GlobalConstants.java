@@ -335,11 +335,7 @@ public final class GlobalConstants implements Loggable {
   }
 
   MethodHandle constantGetter(Object c) {
-    var mh = staticConstantGetter(c);
-    if (log.isEnabled()) {
-      return MethodHandleFactory.addDebugPrintout(log, Level.FINEST, mh, "getting as constant");
-    }
-    return mh;
+    return staticConstantGetter(c);
   }
 
   /**
@@ -391,10 +387,6 @@ public final class GlobalConstants implements Loggable {
         guard = null;
       } else {
         guard = MH.insertArguments(RECEIVER_GUARD, 0, acc, receiver);
-      }
-      if (log.isEnabled()) {
-        log.info("Linked getter " + quote(name) + " as MethodHandle.constant() -> " + c + " " + acc.getSwitchPoint());
-        mh = MethodHandleFactory.addDebugPrintout(log, Level.FINE, mh, "get const " + acc);
       }
       return new GuardedInvocation(mh, guard, acc.getSwitchPoint(), null);
     }

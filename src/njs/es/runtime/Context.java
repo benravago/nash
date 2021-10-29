@@ -1156,33 +1156,6 @@ public final class Context {
     return logger;
   }
 
-  /**
-   * Given a Loggable class, weave debug info info a method handle for that logger.
-   * Level.INFO is used
-   * @param type loggable
-   * @param mh    method handle
-   * @param text  debug printout to add
-   * @return instrumented method handle, or null if logger not enabled
-   */
-  public MethodHandle addLoggingToHandle(Class<? extends Loggable> type, MethodHandle mh, Supplier<String> text) {
-    return addLoggingToHandle(type, Level.INFO, mh, Integer.MAX_VALUE, false, text);
-  }
-
-  /**
-   * Given a Loggable class, weave debug info info a method handle for that logger.
-   * @param clazz            loggable
-   * @param level            log level
-   * @param mh               method handle
-   * @param paramStart       first parameter to print
-   * @param printReturnValue should we print the return value?
-   * @param text             debug printout to add
-   * @return instrumented method handle, or null if logger not enabled
-   */
-  public MethodHandle addLoggingToHandle(Class<? extends Loggable> clazz, Level level, MethodHandle mh, int paramStart, boolean printReturnValue, Supplier<String> text) {
-    var log = getLogger(clazz);
-    return log.isEnabled() ? MethodHandleFactory.addDebugPrintout(log, level, mh, paramStart, printReturnValue, text.get()) : mh;
-  }
-
   static String getLoggerName(Class<?> type) {
     var current = type;
     while (current != null) {
