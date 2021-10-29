@@ -41,7 +41,6 @@ import es.runtime.UnwarrantedOptimismException;
 import es.runtime.linker.Bootstrap;
 import es.runtime.linker.NameCodec;
 import es.runtime.linker.NashornCallSiteDescriptor;
-import es.runtime.logging.DebugLogger;
 
 import static es.codegen.CompilerConstants.*;
 import static es.codegen.ObjectClassGenerator.PRIMITIVE_FIELD_TYPE;
@@ -2129,7 +2128,6 @@ public class MethodEmitter {
   private final FieldAccess ERR_STREAM = staticField(System.class, "err", PrintStream.class);
   private final Call PRINT = virtualCallNoLookup(PrintStream.class, "print", void.class, Object.class);
   private final Call PRINTLN = virtualCallNoLookup(PrintStream.class, "println", void.class, Object.class);
-  private final Call PRINT_STACKTRACE = virtualCallNoLookup(Throwable.class, "printStackTrace", void.class);
 
   /**
    * Emit a System.err.print statement of whatever is on top of the bytecode stack
@@ -2170,18 +2168,6 @@ public class MethodEmitter {
     load(string);
     invoke(PRINTLN);
   }
-
-  /**
-   * Print a stacktrace to S
-   */
-  void stacktrace() {
-    new_(Throwable.class);
-    dup();
-    invoke(constructorNoLookup(Throwable.class));
-    invoke(PRINT_STACKTRACE);
-  }
-
-  private static int linePrefix = 0;
 
   /**
    * Set the current function node being emitted
