@@ -222,19 +222,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
   /** Does this function need the parent scope? It needs it if either it or its descendants use variables from it, or have a deep eval, or it's the program. */
   public static final int NEEDS_PARENT_SCOPE = USES_ANCESTOR_SCOPE | HAS_DEEP_EVAL | IS_PROGRAM;
 
-  // The following flags are derived from directive comments within this function.
-
-  /** parser, print parse tree */
-  public static final int DEBUG_PRINT_PARSE = 1 << 0;
-  /** parser, print lower parse tree */
-  public static final int DEBUG_PRINT_LOWER_PARSE = 1 << 1;
-  /** parser, print AST */
-  public static final int DEBUG_PRINT_AST = 1 << 2;
-  /** parser, print lower AST */
-  public static final int DEBUG_PRINT_LOWER_AST = 1 << 3;
-  /** parser, print symbols */
-  public static final int DEBUG_PRINT_SYMBOLS = 1 << 4;
-
   // callsite tracing, profiling within this function
 
   /** profile callsites in this function? */
@@ -251,9 +238,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
 
   /** extension callsite flags mask */
   public static final int DEBUG_CALLSITE_FLAGS =
-    DEBUG_PRINT_PARSE | DEBUG_PRINT_LOWER_PARSE |
-    DEBUG_PRINT_AST | DEBUG_PRINT_LOWER_AST |
-    DEBUG_PRINT_SYMBOLS | DEBUG_PROFILE |
+    DEBUG_PROFILE |
     DEBUG_TRACE_ENTEREXIT | DEBUG_TRACE_MISSES | DEBUG_TRACE_VALUES;
 
   /** What is the return type of this function? */
@@ -432,11 +417,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
       case "nashorn callsite trace misses" -> DEBUG_TRACE_MISSES;
       case "nashorn callsite trace objects" -> DEBUG_TRACE_VALUES;
       case "nashorn callsite profile" -> DEBUG_PROFILE;
-      case "nashorn print parse" -> DEBUG_PRINT_PARSE;
-      case "nashorn print lower parse" -> DEBUG_PRINT_LOWER_PARSE;
-      case "nashorn print ast" -> DEBUG_PRINT_AST;
-      case "nashorn print lower ast" -> DEBUG_PRINT_LOWER_AST;
-      case "nashorn print symbols" -> DEBUG_PRINT_SYMBOLS;
       default -> 0; // unknown/unsupported directive
     };
   }
