@@ -90,21 +90,6 @@ public final class NashornCallSiteDescriptor extends CallSiteDescriptor {
   /** Does this a callsite for a variable declaration? */
   public static final int CALLSITE_DECLARE = 1 << 9;
 
-  /** Flags that the call site is profiled; Contexts that have {@code "profile.callsites"} boolean property set emit code where call sites have this flag set. */
-  public static final int CALLSITE_PROFILE = 1 << 10;
-
-  /** Flags that the call site is traced; Contexts that have {@code "trace.callsites"} property set emit code where call sites have this flag set. */
-  public static final int CALLSITE_TRACE = 1 << 11;
-
-  /** Flags that the call site linkage miss (and thus, relinking) is traced; Contexts that have the keyword {@code "miss"} in their {@code "trace.callsites"} property emit code where call sites have this flag set. */
-  public static final int CALLSITE_TRACE_MISSES = 1 << 12;
-
-  /** Flags that entry/exit to/from the method linked at call site are traced; Contexts that have the keyword {@code "enterexit"} in their {@code "trace.callsites"} property emit code where call sites have this flag set. */
-  public static final int CALLSITE_TRACE_ENTEREXIT = 1 << 13;
-
-  /** Flags that values passed as arguments to and returned from the method linked at call site are traced; Contexts that have the keyword {@code "values"} in their {@code "trace.callsites"} property emit code where call sites have this flag set. */
-  public static final int CALLSITE_TRACE_VALUES = 1 << 14;
-
   // we could have more tracing flags here, for example CALLSITE_TRACE_SCOPE, but bits are a bit precious right now given the program points
 
   /**
@@ -437,26 +422,6 @@ public final class NashornCallSiteDescriptor extends CallSiteDescriptor {
   public static int getProgramPoint(CallSiteDescriptor desc) {
     assert isOptimistic(desc) : "program point requested from non-optimistic descriptor " + desc;
     return getFlags(desc) >> CALLSITE_PROGRAM_POINT_SHIFT;
-  }
-
-  boolean isProfile() {
-    return isFlag(CALLSITE_PROFILE);
-  }
-
-  boolean isTrace() {
-    return isFlag(CALLSITE_TRACE);
-  }
-
-  boolean isTraceMisses() {
-    return isFlag(CALLSITE_TRACE_MISSES);
-  }
-
-  boolean isTraceEnterExit() {
-    return isFlag(CALLSITE_TRACE_ENTEREXIT);
-  }
-
-  boolean isTraceObjects() {
-    return isFlag(CALLSITE_TRACE_VALUES);
   }
 
   boolean isOptimistic() {
