@@ -56,9 +56,6 @@ public final class ScriptEnvironment {
   /** Empty statements should be preserved in the AST */
   public final boolean _empty_statements;
 
-  /** Launch using as fx application */
-  public final boolean _fx;
-
   /** Use single Global instance per jsr223 engine instance. */
   public final boolean _global_per_engine;
 
@@ -190,7 +187,6 @@ public final class ScriptEnvironment {
     } else {
       _function_statement = FunctionStatementBehavior.ACCEPT;
     }
-    _fx = options.getBoolean("fx");
     _global_per_engine = options.getBoolean("global.per.engine");
     _optimistic_types = options.getBoolean("optimistic.types");
     var lazy_compilation = options.getBoolean("lazy.compilation");

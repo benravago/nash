@@ -137,10 +137,6 @@ public class Shell {
       return compileScripts(context, global, files);
     }
 
-    if (env._fx) {
-      return runFXScripts(context, global, files);
-    }
-
     return runScripts(context, global, files);
   }
 
@@ -394,42 +390,6 @@ public class Shell {
           return RUNTIME_ERROR;
         }
       }
-    } finally {
-      context.getOut().flush();
-      context.getErr().flush();
-      if (globalChanged) {
-        Context.setGlobal(oldGlobal);
-      }
-    }
-
-    return SUCCESS;
-  }
-
-  /**
-   * Runs launches "fx:bootstrap.js" with the given JavaScript files provided as arguments.
-   *
-   * @param context the nashorn context
-   * @param global the global scope
-   * @param files the list of script files to provide
-   *
-   * @return error code
-   * @throws IOException when any script file read results in I/O error
-   */
-  static int runFXScripts(Context context, Global global, List<String> files) throws IOException {
-    var oldGlobal = Context.getGlobal();
-    var globalChanged = (oldGlobal != global);
-    try {
-      if (globalChanged) {
-        Context.setGlobal(global);
-      }
-
-      global.addOwnProperty("$GLOBAL", Property.NOT_ENUMERABLE, global);
-      global.addOwnProperty("$SCRIPTS", Property.NOT_ENUMERABLE, files);
-      context.load(global, "fx:bootstrap.js");
-    } catch (NashornException e) {
-      context.getErrorManager().error(e.toString());
-
-      return RUNTIME_ERROR;
     } finally {
       context.getOut().flush();
       context.getErr().flush();
