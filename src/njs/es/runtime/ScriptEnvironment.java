@@ -140,15 +140,6 @@ public final class ScriptEnvironment {
   /** Enable disk cache for compiled scripts */
   public final boolean _persistent_cache;
 
-  /** Print the AST before lowering */
-  public final boolean _print_ast;
-
-  /** Print the AST after lowering */
-  public final boolean _print_lower_ast;
-
-  /** Print resulting bytecode for script */
-  public final boolean _print_code;
-
   /** Directory (optional) to print files to */
   public final String _print_code_dir;
 
@@ -250,9 +241,6 @@ public final class ScriptEnvironment {
     _no_typed_arrays = options.getBoolean("no.typed.arrays");
     _parse_only = options.getBoolean("parse.only");
     _persistent_cache = options.getBoolean("persistent.code.cache");
-    _print_ast = options.getBoolean("print.ast");
-    _print_lower_ast = options.getBoolean("print.lower.ast");
-    _print_code = options.getString("print.code") != null;
     _print_no_newline = options.getBoolean("print.no.newline");
     _print_parse = options.getBoolean("print.parse");
     _print_lower_parse = options.getBoolean("print.lower.parse");

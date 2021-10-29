@@ -330,11 +330,7 @@ abstract class CompilationPhase {
         newFunctionNode = transformFunction(newFunctionNode, codegen);
         codegen.generateScopeCalls();
       } catch (VerifyError e) {
-        if (senv._print_code) {
-          senv.getErr().println(e.getClass().getSimpleName() + ": " + e.getMessage());
-        } else {
-          throw e;
-        }
+        throw e;
       } catch (Throwable e) {
         // Provide source file and line number being compiled when the assertion occurred
         throw new AssertionError("Failed generating bytecode for " + fn.getSourceName() + ":" + codegen.getLastLineNumber(), e);
