@@ -65,9 +65,6 @@ public final class ScriptEnvironment {
   /** Empty statements should be preserved in the AST */
   public final boolean _empty_statements;
 
-  /** Show full Nashorn version */
-  public final boolean _fullversion;
-
   /** Launch using as fx application */
   public final boolean _fx;
 
@@ -149,9 +146,6 @@ public final class ScriptEnvironment {
   /** is this environment in scripting mode? */
   public final boolean _scripting;
 
-  /** print version info of Nashorn */
-  public final boolean _version;
-
   /** time zone for this environment */
   public final TimeZone _timezone;
 
@@ -201,7 +195,6 @@ public final class ScriptEnvironment {
     _dest_dir = options.getString("d");
     _early_lvalue_error = options.getBoolean("early.lvalue.error");
     _empty_statements = options.getBoolean("empty.statements");
-    _fullversion = options.getBoolean("fullversion");
     if (options.getBoolean("function.statement.error")) {
       _function_statement = FunctionStatementBehavior.ERROR;
     } else if (options.getBoolean("function.statement.warning")) {
@@ -231,7 +224,6 @@ public final class ScriptEnvironment {
     _persistent_cache = options.getBoolean("persistent.code.cache");
     _print_no_newline = options.getBoolean("print.no.newline");
     _scripting = options.getBoolean("scripting");
-    _version = options.getBoolean("version");
     var configuredUrt = options.getInteger("unstable.relink.threshold");
     // The default for this property is -1, so we can easily detect when it is not specified on command line.
     if (configuredUrt < 0) {

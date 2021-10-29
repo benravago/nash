@@ -7,7 +7,6 @@ import java.util.Objects;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import es.runtime.Context;
-import es.runtime.Version;
 
 /**
  * JSR-223 compliant script engine factory for Nashorn.
@@ -87,7 +86,7 @@ public final class NashornScriptEngineFactory implements ScriptEngineFactory {
     return switch (key) {
       case ScriptEngine.NAME -> "javascript";
       case ScriptEngine.ENGINE -> "Oracle Nashorn";
-      case ScriptEngine.ENGINE_VERSION -> Version.version();
+      case ScriptEngine.ENGINE_VERSION -> "0.0";
       case ScriptEngine.LANGUAGE -> "ECMAScript";
       case ScriptEngine.LANGUAGE_VERSION -> "ECMA - 262 Edition 5.1";
       case "THREADING" -> null;

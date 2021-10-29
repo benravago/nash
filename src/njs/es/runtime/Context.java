@@ -498,13 +498,6 @@ public final class Context {
     if (env._persistent_cache) {
       codeStore = newCodeStore(this);
     }
-    // print version info if asked.
-    if (env._version) {
-      getErr().println("nashorn " + Version.version());
-    }
-    if (env._fullversion) {
-      getErr().println("nashorn full version " + Version.fullVersion());
-    }
     if (Options.getBooleanProperty("nashorn.fields.dual")) {
       fieldMode = FieldMode.DUAL;
     } else if (Options.getBooleanProperty("nashorn.fields.objects")) {
