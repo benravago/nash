@@ -391,9 +391,6 @@ public final class ObjectClassGenerator implements Loggable {
     classEmitter.end();
     var code = classEmitter.toByteArray();
     var env = context.getEnv();
-    if (env._verify_code) {
-      context.verify(code);
-    }
     return code;
   }
 

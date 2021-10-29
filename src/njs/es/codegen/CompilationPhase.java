@@ -330,7 +330,7 @@ abstract class CompilationPhase {
         newFunctionNode = transformFunction(newFunctionNode, codegen);
         codegen.generateScopeCalls();
       } catch (VerifyError e) {
-        if (senv._verify_code || senv._print_code) {
+        if (senv._print_code) {
           senv.getErr().println(e.getClass().getSimpleName() + ": " + e.getMessage());
           if (senv._dump_on_error) {
             e.printStackTrace(senv.getErr());
@@ -354,10 +354,6 @@ abstract class CompilationPhase {
         var className = compileUnit.getUnitClassName();
         compiler.addClass(className, bytecode); //classes are only added to the bytecode map if compile unit is used
         CompileUnit.increaseEmitCount();
-        // should we verify the generated code?
-        if (senv._verify_code) {
-          compiler.getCodeInstaller().verify(bytecode);
-        }
       }
       return newFunctionNode;
     }
