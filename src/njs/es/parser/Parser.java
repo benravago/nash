@@ -353,9 +353,6 @@ public class Parser extends AbstractParser implements Loggable {
     } else {
       errors.error(message);
     }
-    if (env._dump_on_error) {
-      e.printStackTrace(env.getErr());
-    }
   }
 
   /**
@@ -374,9 +371,6 @@ public class Parser extends AbstractParser implements Loggable {
         errors.error(pe);
       } else {
         errors.error(message);
-      }
-      if (env._dump_on_error) {
-        e.printStackTrace(env.getErr());
       }
     }
 

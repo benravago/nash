@@ -62,9 +62,6 @@ public final class ScriptEnvironment {
   /** Directory in which source files and generated class files are dumped */
   public final String _dest_dir;
 
-  /** Display stack trace upon error, default is false */
-  public final boolean _dump_on_error;
-
   /** Invalid lvalue expressions should be reported as early errors */
   public final boolean _early_lvalue_error;
 
@@ -223,7 +220,6 @@ public final class ScriptEnvironment {
     _debug_lines = options.getBoolean("debug.lines");
     _debug_scopes = options.getBoolean("debug.scopes");
     _dest_dir = options.getString("d");
-    _dump_on_error = options.getBoolean("doe");
     _early_lvalue_error = options.getBoolean("early.lvalue.error");
     _empty_statements = options.getBoolean("empty.statements");
     _fullversion = options.getBoolean("fullversion");

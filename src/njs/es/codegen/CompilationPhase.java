@@ -332,9 +332,6 @@ abstract class CompilationPhase {
       } catch (VerifyError e) {
         if (senv._print_code) {
           senv.getErr().println(e.getClass().getSimpleName() + ": " + e.getMessage());
-          if (senv._dump_on_error) {
-            e.printStackTrace(senv.getErr());
-          }
         } else {
           throw e;
         }

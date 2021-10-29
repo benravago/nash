@@ -510,9 +510,6 @@ public final class Compiler implements Loggable {
         newFunctionNode = phase.apply(this, phases, newFunctionNode);
       } catch (ParserException error) {
         errors.error(error);
-        if (env._dump_on_error) {
-          error.printStackTrace(env.getErr());
-        }
         return null;
       }
       log.fine(phase, " done for function ", quote(name));
