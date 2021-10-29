@@ -18,7 +18,6 @@ import es.runtime.ScriptFunction;
 import es.runtime.Source;
 import es.runtime.UserAccessorProperty;
 import es.runtime.linker.LinkerCallSite;
-import static es.runtime.linker.NashornCallSiteDescriptor.*;
 
 /**
  * IR representation for function (or script.)
@@ -100,9 +99,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
 
   // The ES6 module
   private final Module module;
-
-  // The debug flags
-  private final int debugFlags;
 
   /** Is anonymous function flag. */
   public static final int IS_ANONYMOUS = 1 << 0;
@@ -222,25 +218,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
   /** Does this function need the parent scope? It needs it if either it or its descendants use variables from it, or have a deep eval, or it's the program. */
   public static final int NEEDS_PARENT_SCOPE = USES_ANCESTOR_SCOPE | HAS_DEEP_EVAL | IS_PROGRAM;
 
-  // callsite tracing, profiling within this function
-
-  /** profile callsites in this function? */
-  public static final int DEBUG_PROFILE = 1 << 5;
-
-  /** trace callsite enterexit in this function? */
-  public static final int DEBUG_TRACE_ENTEREXIT = 1 << 6;
-
-  /** trace callsite misses in this function? */
-  public static final int DEBUG_TRACE_MISSES = 1 << 7;
-
-  /** trace callsite values in this function? */
-  public static final int DEBUG_TRACE_VALUES = 1 << 8;
-
-  /** extension callsite flags mask */
-  public static final int DEBUG_CALLSITE_FLAGS =
-    DEBUG_PROFILE |
-    DEBUG_TRACE_ENTEREXIT | DEBUG_TRACE_MISSES | DEBUG_TRACE_VALUES;
-
   /** What is the return type of this function? */
   public Type returnType = Type.UNKNOWN;
 
@@ -263,9 +240,8 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @param body       body of the function
    * @param endParserState The parser state at the end of the parsing.
    * @param module     the module
-   * @param debugFlags the debug flags
    */
-  public FunctionNode(Source source, int lineNumber, long token, int finish, long firstToken, long lastToken, Namespace namespace, IdentNode ident, String name, List<IdentNode> parameters, Map<IdentNode, Expression> paramExprs, FunctionNode.Kind kind, int flags, Block body, Object endParserState, Module module, int debugFlags) {
+  public FunctionNode(Source source, int lineNumber, long token, int finish, long firstToken, long lastToken, Namespace namespace, IdentNode ident, String name, List<IdentNode> parameters, Map<IdentNode, Expression> paramExprs, FunctionNode.Kind kind, int flags, Block body, Object endParserState, Module module) {
     super(token, finish);
     this.source = source;
     this.lineNumber = lineNumber;
@@ -284,7 +260,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
     this.rootClass = null;
     this.endParserState = endParserState;
     this.module = module;
-    this.debugFlags = debugFlags;
   }
 
   FunctionNode(FunctionNode functionNode, long lastToken, Object endParserState, int flags, String name, Type returnType, CompileUnit compileUnit, Block body, List<IdentNode> parameters, int thisProperties, Class<?> rootClass, Source source, Namespace namespace) {
@@ -308,7 +283,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
     this.kind = functionNode.kind;
     this.firstToken = functionNode.firstToken;
     this.module = functionNode.module;
-    this.debugFlags = functionNode.debugFlags;
   }
 
   @Override
@@ -331,24 +305,7 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
    * @return callsite flags
    */
   public int getCallSiteFlags() {
-    var callsiteFlags = 0;
-    // quick check for extension callsite flags turned on by directives.
-    if ((debugFlags & DEBUG_CALLSITE_FLAGS) == 0) {
-      return callsiteFlags;
-    }
-    if (getDebugFlag(DEBUG_PROFILE)) {
-      callsiteFlags |= CALLSITE_PROFILE;
-    }
-    if (getDebugFlag(DEBUG_TRACE_MISSES)) {
-      callsiteFlags |= CALLSITE_TRACE | CALLSITE_TRACE_MISSES;
-    }
-    if (getDebugFlag(DEBUG_TRACE_VALUES)) {
-      callsiteFlags |= CALLSITE_TRACE | CALLSITE_TRACE_ENTEREXIT | CALLSITE_TRACE_VALUES;
-    }
-    if (getDebugFlag(DEBUG_TRACE_ENTEREXIT)) {
-      callsiteFlags |= CALLSITE_TRACE | CALLSITE_TRACE_ENTEREXIT;
-    }
-    return callsiteFlags;
+    return 0; // none for now
   }
 
   /**
@@ -404,21 +361,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
   public static String getSourceName(Source source) {
     var explicitURL = source.getExplicitURL();
     return explicitURL != null ? explicitURL : source.getName();
-  }
-
-  /**
-   * Function to parse nashorn per-function extension directive comments.
-   * @param directive nashorn extension directive string
-   * @return integer flag for the given directive.
-   */
-  public static int getDirectiveFlag(String directive) {
-    return switch (directive) {
-      case "nashorn callsite trace enterexit" -> DEBUG_TRACE_ENTEREXIT;
-      case "nashorn callsite trace misses" -> DEBUG_TRACE_MISSES;
-      case "nashorn callsite trace objects" -> DEBUG_TRACE_VALUES;
-      case "nashorn callsite profile" -> DEBUG_PROFILE;
-      default -> 0; // unknown/unsupported directive
-    };
   }
 
   /**
@@ -487,23 +429,6 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
   @Override
   public FunctionNode setFlag(LexicalContext lc, int flag) {
     return setFlags(lc, flags | flag);
-  }
-
-  /**
-   * Returns the debug flags for this function.
-   * @return the debug flags
-   */
-  public int getDebugFlags() {
-    return debugFlags;
-  }
-
-  /**
-   * Checks whether a debug flag is set for this function.
-   * @param debugFlag the debug flag
-   * @return true if the flag is set
-   */
-  public boolean getDebugFlag(int debugFlag) {
-    return (debugFlags & debugFlag) != 0;
   }
 
   /**

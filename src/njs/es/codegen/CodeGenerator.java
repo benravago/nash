@@ -207,7 +207,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     this.compiler = compiler;
     this.evalCode = compiler.getSource().isEvalCode();
     this.continuationEntryPoints = continuationEntryPoints;
-    this.callSiteFlags = compiler.getScriptEnvironment()._callsite_flags;
+    this.callSiteFlags = 0;
     this.log = initLogger(compiler.getContext());
   }
 

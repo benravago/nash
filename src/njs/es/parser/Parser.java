@@ -426,7 +426,7 @@ public class Parser extends AbstractParser implements Loggable {
   FunctionNode createFunctionNode(ParserContextFunctionNode function, long startToken, IdentNode ident, List<IdentNode> parameters, FunctionNode.Kind kind, int functionLine, Block body) {
     // assert body.isFunctionBody() || body.getFlag(Block.IS_PARAMETER_BLOCK) && ((BlockStatement) body.getLastStatement()).getBlock().isFunctionBody();
     // Start new block.
-    return new FunctionNode(source, functionLine, body.getToken(), Token.descPosition(body.getToken()), startToken, function.getLastToken(), namespace, ident, function.getName(), parameters, function.getParameterExpressions(), kind, function.getFlags(), body, function.getEndParserState(), function.getModule(), function.getDebugFlags());
+    return new FunctionNode(source, functionLine, body.getToken(), Token.descPosition(body.getToken()), startToken, function.getLastToken(), namespace, ident, function.getName(), parameters, function.getParameterExpressions(), kind, function.getFlags(), body, function.getEndParserState(), function.getModule());
   }
 
   /**

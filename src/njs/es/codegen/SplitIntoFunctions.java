@@ -143,8 +143,7 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
       FunctionNode.IS_ANONYMOUS | FunctionNode.USES_ANCESTOR_SCOPE | FunctionNode.IS_SPLIT,
       body,
       null,
-      originalFn.getModule(),
-      originalFn.getDebugFlags()
+      originalFn.getModule()
     ).setCompileUnit(lc, splitNode.getCompileUnit());
 
     // Call the function:

@@ -50,9 +50,6 @@ public final class ScriptEnvironment {
   /** Accept "const" keyword and treat it as variable. Interim feature */
   public final boolean _const_as_var;
 
-  /** Accumulated callsite flags that will be used when bootstrapping script callsites */
-  public final int _callsite_flags;
-
   /** Generate line number table in class files */
   public final boolean _debug_lines;
 
@@ -276,24 +273,6 @@ public final class ScriptEnvironment {
     }
     _print_code_dir = dir;
     _print_code_func = func;
-    var callSiteFlags = 0;
-    if (options.getBoolean("profile.callsites")) {
-      callSiteFlags |= NashornCallSiteDescriptor.CALLSITE_PROFILE;
-    }
-    if (options.get("trace.callsites") instanceof KeyValueOption) {
-      callSiteFlags |= NashornCallSiteDescriptor.CALLSITE_TRACE;
-      var kv = (KeyValueOption) options.get("trace.callsites");
-      if (kv.hasValue("miss")) {
-        callSiteFlags |= NashornCallSiteDescriptor.CALLSITE_TRACE_MISSES;
-      }
-      if (kv.hasValue("enterexit") || (callSiteFlags & NashornCallSiteDescriptor.CALLSITE_TRACE_MISSES) == 0) {
-        callSiteFlags |= NashornCallSiteDescriptor.CALLSITE_TRACE_ENTEREXIT;
-      }
-      if (kv.hasValue("objects")) {
-        callSiteFlags |= NashornCallSiteDescriptor.CALLSITE_TRACE_VALUES;
-      }
-    }
-    this._callsite_flags = callSiteFlags;
     var timezoneOption = options.get("timezone");
     if (timezoneOption != null) {
       this._timezone = (TimeZone) timezoneOption.getValue();
