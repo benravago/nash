@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
@@ -23,7 +22,6 @@ import es.ir.Optimistic;
 import es.runtime.CodeInstaller;
 import es.runtime.Context;
 import es.runtime.ErrorManager;
-import es.runtime.FunctionInitializer;
 import es.runtime.ParserException;
 import es.runtime.RecompilableScriptFunctionData;
 import es.runtime.ScriptEnvironment;
@@ -502,8 +500,6 @@ public final class Compiler implements Loggable {
       newFunctionNode.uniqueName(reservedName);
     }
     var info = log.isLoggable(Level.INFO);
-    var timeLogger = env.isTimingEnabled() ? env._timing.getLogger() : null;
-    var time = 0L;
     for (var phase : phases) {
       log.fine(phase, " starting for ", name);
       try {
@@ -513,7 +509,6 @@ public final class Compiler implements Loggable {
         return null;
       }
       log.fine(phase, " done for function ", quote(name));
-      time += (env.isTimingEnabled() ? phase.getEndTime() - phase.getStartTime() : 0L);
     }
     if (typeInformationFile != null && !phases.isRestOfCompilation()) {
       OptimisticTypesPersistence.store(typeInformationFile, invalidatedProgramPoints);
@@ -522,10 +517,6 @@ public final class Compiler implements Loggable {
     if (info) {
       var sb = new StringBuilder("<< Finished compile job for ");
       sb.append(newFunctionNode.getSource()).append(':').append(quote(newFunctionNode.getName()));
-      if (time > 0L && timeLogger != null) {
-        assert env.isTimingEnabled();
-        sb.append(" in ").append(TimeUnit.NANOSECONDS.toMillis(time)).append(" ms");
-      }
       log.info(sb);
     }
     return newFunctionNode;

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.logging.Level;
 
 import es.codegen.Namespace;
 import es.runtime.options.LoggingOption;
@@ -127,9 +126,6 @@ public final class ScriptEnvironment {
   /** Logging */
   public final Map<String, LoggerInfo> _loggers;
 
-  /** Timing */
-  public final Timing _timing;
-
   /**
    * Constructor
    *
@@ -200,8 +196,6 @@ public final class ScriptEnvironment {
     }
     var loggingOption = (LoggingOption) options.get("log");
     this._loggers = loggingOption == null ? new HashMap<String, LoggerInfo>() : loggingOption.getLoggers();
-    var timeLoggerInfo = _loggers.get(Timing.getLoggerName());
-    this._timing = new Timing(timeLoggerInfo != null && timeLoggerInfo.getLevel() != Level.OFF);
   }
 
   /**
@@ -251,14 +245,6 @@ public final class ScriptEnvironment {
    */
   public boolean hasLogger(String name) {
     return _loggers.get(name) != null;
-  }
-
-  /**
-   * Check if compilation/runtime timings are enabled
-   * @return true if enabled
-   */
-  public boolean isTimingEnabled() {
-    return _timing != null ? _timing.isEnabled() : false;
   }
 
 }

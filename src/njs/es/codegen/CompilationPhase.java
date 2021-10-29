@@ -1,10 +1,8 @@
 package es.codegen;
 
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import es.codegen.Compiler.CompilationPhases;
@@ -12,13 +10,9 @@ import es.ir.Block;
 import es.ir.FunctionNode;
 import es.ir.LiteralNode;
 import es.ir.Node;
-import es.ir.Symbol;
 import es.ir.visitor.NodeVisitor;
 import es.ir.visitor.SimpleNodeVisitor;
-import es.runtime.CodeInstaller;
 import es.runtime.RecompilableScriptFunctionData;
-import es.runtime.ScriptEnvironment;
-import es.runtime.logging.DebugLogger;
 import static es.runtime.logging.DebugLogger.quote;
 
 /**
@@ -428,12 +422,6 @@ abstract class CompilationPhase {
 
   static final CompilationPhase INSTALL_PHASE = new InstallPhase();
 
-  // start time of transform - used for timing, see {@link es.runtime.Timing}
-  private long startTime;
-
-  // start time of transform - used for timing, see {@link es.runtime.Timing}
-  private long endTime;
-
   // boolean that is true upon transform completion
   private boolean isFinished;
 
@@ -445,7 +433,6 @@ abstract class CompilationPhase {
    */
   protected FunctionNode begin(Compiler compiler, FunctionNode functionNode) {
     compiler.getLogger().indent();
-    startTime = System.nanoTime();
     return functionNode;
   }
 
@@ -457,22 +444,12 @@ abstract class CompilationPhase {
    */
   protected FunctionNode end(Compiler compiler, FunctionNode functionNode) {
     compiler.getLogger().unindent();
-    endTime = System.nanoTime();
-    compiler.getScriptEnvironment()._timing.accumulateTime(toString(), endTime - startTime);
     isFinished = true;
     return functionNode;
   }
 
   boolean isFinished() {
     return isFinished;
-  }
-
-  long getStartTime() {
-    return startTime;
-  }
-
-  long getEndTime() {
-    return endTime;
   }
 
   abstract FunctionNode transform(Compiler compiler, CompilationPhases phases, FunctionNode functionNode) throws CompilationException;

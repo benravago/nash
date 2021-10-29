@@ -66,7 +66,6 @@ import es.runtime.ScriptEnvironment;
 import es.runtime.ScriptFunctionData;
 import es.runtime.ScriptingFunctions;
 import es.runtime.Source;
-import es.runtime.Timing;
 import es.runtime.linker.NameCodec;
 import es.runtime.logging.DebugLogger;
 import es.runtime.logging.Loggable;
@@ -222,8 +221,6 @@ public class Parser extends AbstractParser implements Loggable {
    * @return function node resulting from successful parse
    */
   public FunctionNode parse(String scriptName, int startPos, int len, int reparseFlags) {
-    var isTimingEnabled = env.isTimingEnabled();
-    var t0 = isTimingEnabled ? System.nanoTime() : 0L;
     log.info(this, " begin for '", scriptName, "'");
     try {
       stream = new TokenStream();
@@ -237,13 +234,8 @@ public class Parser extends AbstractParser implements Loggable {
       handleParseException(e);
       return null;
     } finally {
-      final String end = this + " end '" + scriptName + "'";
-      if (isTimingEnabled) {
-        env._timing.accumulateTime(toString(), System.nanoTime() - t0);
-        log.info(end, "' in ", Timing.toMillisPrint(System.nanoTime() - t0), " ms");
-      } else {
-        log.info(end);
-      }
+      var end = this + " end '" + scriptName + "'";
+      log.info(end);
     }
   }
 
