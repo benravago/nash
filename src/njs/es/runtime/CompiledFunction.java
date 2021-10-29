@@ -681,14 +681,6 @@ final class CompiledFunction {
     log.info("Generating and installing bytecode from reusable IR...");
     logRecompile("Rest-of compilation [CODE PIPELINE REUSE] ", fn, ct, effectiveOptInfo.invalidatedProgramPoints);
     var normalFn = compiler.compile(fn, CompilationPhases.GENERATE_BYTECODE_AND_INSTALL);
-    if (effectiveOptInfo.data.usePersistentCodeCache()) {
-      var data = effectiveOptInfo.data;
-      var functionNodeId = data.getFunctionNodeId();
-      var typeMap = data.typeMap(ct);
-      var paramTypes = typeMap == null ? null : typeMap.getParameterTypes(functionNodeId);
-      var cacheKey = CodeStore.getCacheKey(functionNodeId, paramTypes);
-      compiler.persistClassInfo(cacheKey, normalFn);
-    }
     var canBeDeoptimized = normalFn.canBeDeoptimized();
     if (log.isEnabled()) {
       log.unindent();

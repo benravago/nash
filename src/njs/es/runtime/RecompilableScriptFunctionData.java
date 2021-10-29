@@ -609,36 +609,18 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
     return loadedProgramPoints != null ? loadedProgramPoints : new TreeMap<Integer, Type>();
   }
 
-  FunctionInitializer compileTypeSpecialization(MethodType actualCallSiteType, ScriptObject runtimeScope, boolean persist) {
+  FunctionInitializer compileTypeSpecialization(MethodType actualCallSiteType, ScriptObject runtimeScope) {
     // We're creating an empty script object for holding local variables.
     // AssignSymbols will populate it with explicit Undefined values for undefined local variables (see AssignSymbols#defineSymbol() and CompilationEnvironment#declareLocalSymbol()).
     if (log.isEnabled()) {
       log.info("Parameter type specialization of '", functionName, "' signature: ", actualCallSiteType);
     }
-    var persistentCache = persist && usePersistentCodeCache();
+
     String cacheKey = null;
-    if (persistentCache) {
-      var typeMap = typeMap(actualCallSiteType);
-      var paramTypes = typeMap == null ? null : typeMap.getParameterTypes(functionNodeId);
-      cacheKey = CodeStore.getCacheKey(functionNodeId, paramTypes);
-      var newInstaller = getInstallerForNewCode();
-      var script = newInstaller.loadScript(source, cacheKey);
-      if (script != null) {
-        Compiler.updateCompilationId(script.getCompilationId());
-        return script.installFunction(this, newInstaller);
-      }
-    }
     var fn = reparse();
     var compiler = getCompiler(fn, actualCallSiteType, runtimeScope);
     var compiledFn = compiler.compile(fn, fn.isCached() ? CompilationPhases.COMPILE_ALL_CACHED : CompilationPhases.COMPILE_ALL);
-    if (persist && !compiledFn.hasApplyToCallSpecialization()) {
-      compiler.persistClassInfo(cacheKey, compiledFn);
-    }
     return new FunctionInitializer(compiledFn, compiler.getInvalidatedProgramPoints());
-  }
-
-  boolean usePersistentCodeCache() {
-    return installer != null && installer.getContext().getEnv()._persistent_cache;
   }
 
   MethodType explicitParams(MethodType callSiteType) {
@@ -786,7 +768,7 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
       existingBest = pickFunction(callSiteType, true); // try vararg last
     }
     if (existingBest == null) {
-      existingBest = addCode(compileTypeSpecialization(callSiteType, runtimeScope, true), callSiteType);
+      existingBest = addCode(compileTypeSpecialization(callSiteType, runtimeScope), callSiteType);
     }
     assert existingBest != null;
     // if the best one is an apply to call, it has to match the callsite exactly or we need to regenerate
@@ -798,7 +780,7 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
       // special case: we had an apply to call, but we failed to make it fit.
       // Try to generate a specialized one for this callsite.
       // It may be another apply to call specialization, or it may not, but whatever it is, it is a specialization that is guaranteed to fit
-      existingBest = addCode(compileTypeSpecialization(callSiteType, runtimeScope, false), callSiteType);
+      existingBest = addCode(compileTypeSpecialization(callSiteType, runtimeScope), callSiteType);
     }
     return existingBest;
   }

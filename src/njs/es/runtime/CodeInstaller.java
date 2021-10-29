@@ -42,26 +42,6 @@ public interface CodeInstaller {
   long getUniqueScriptId();
 
   /**
-   * Store a compiled script for later reuse
-   * @param cacheKey key to use in cache
-   * @param source the script source
-   * @param mainClassName the main class name
-   * @param classBytes map of class names to class bytes
-   * @param initializers compilation id -&gt; FunctionInitializer map
-   * @param constants constants array
-   * @param compilationId compilation id
-   */
-  void storeScript(String cacheKey, Source source, String mainClassName, Map<String, byte[]> classBytes, Map<Integer, FunctionInitializer> initializers, Object[] constants, int compilationId);
-
-  /**
-   * Load a previously compiled script
-   * @param source the script source
-   * @param functionKey the function id and signature
-   * @return compiled script data
-   */
-  StoredScript loadScript(Source source, String functionKey);
-
-  /**
    * Returns a code installer {@code #isCompatibleWith(CodeInstaller) compatible with} this installer, but is suitable for on-demand compilations. Can return itself if it is itself suitable.
    * @return a compatible code installer suitable for on-demand compilations.
    */

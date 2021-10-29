@@ -52,16 +52,11 @@ import nash.scripting.ClassFilter;
 import nash.scripting.ScriptObjectMirror;
 
 import es.codegen.Compiler;
-import static es.codegen.CompilerConstants.*;
 import es.codegen.ObjectClassGenerator;
 import es.ir.FunctionNode;
 import es.lookup.MethodHandleFactory;
 import es.objects.Global;
 import es.parser.Parser;
-import static es.runtime.CodeStore.newCodeStore;
-import static es.runtime.ECMAErrors.typeError;
-import static es.runtime.ScriptRuntime.UNDEFINED;
-import static es.runtime.Source.sourceFor;
 import es.runtime.events.RuntimeEvent;
 import es.runtime.linker.Bootstrap;
 import es.runtime.logging.DebugLogger;
@@ -70,6 +65,10 @@ import es.runtime.logging.Logger;
 import es.runtime.options.LoggingOption.LoggerInfo;
 import es.runtime.options.Options;
 import es.util.WeakValueCache;
+import static es.codegen.CompilerConstants.*;
+import static es.runtime.ECMAErrors.typeError;
+import static es.runtime.ScriptRuntime.UNDEFINED;
+import static es.runtime.Source.sourceFor;
 
 /**
  * This class manages the global state of execution. Context is immutable.
@@ -92,7 +91,7 @@ public final class Context {
   public static final String NASHORN_DEBUG_MODE = "nashorn.debugMode";
 
   // nashorn load psuedo URL prefixes
-  
+
   private static final String LOAD_CLASSPATH = "classpath:";
   private static final String LOAD_FX = "fx:";
   private static final String LOAD_NASHORN = "nashorn:";
@@ -167,18 +166,6 @@ public final class Context {
     @Override
     public long getUniqueScriptId() {
       return context.getUniqueScriptId();
-    }
-
-    @Override
-    public void storeScript(String cacheKey, Source source, String mainClassName, Map<String, byte[]> classBytes, Map<Integer, FunctionInitializer> initializers, Object[] constants, int compilationId) {
-      if (context.codeStore != null) {
-        context.codeStore.store(cacheKey, source, mainClassName, classBytes, initializers, constants, compilationId);
-      }
-    }
-
-    @Override
-    public StoredScript loadScript(Source source, String functionKey) {
-      return (context.codeStore != null) ? context.codeStore.load(source, functionKey) : null;
     }
 
     @Override
@@ -269,9 +256,6 @@ public final class Context {
 
   // in-memory cache for loaded classes
   private ClassCache classCache;
-
-  // persistent code store
-  private CodeStore codeStore;
 
   // A factory for linking global properties as constant method handles.
   // It is created when the first Global is created, and invalidated forever once the second global is created.
@@ -369,29 +353,29 @@ public final class Context {
   // Current environment.
   private final ScriptEnvironment env;
 
-  // class loader to resolve classes from script. 
+  // class loader to resolve classes from script.
   private final ClassLoader appLoader;
 
   ClassLoader getAppLoader() {
     return appLoader;
   }
 
-  // Class loader to load classes compiled from scripts. 
+  // Class loader to load classes compiled from scripts.
   private final ScriptLoader scriptLoader;
 
-  // Dynamic linker for linking call sites in script code loaded by this context 
+  // Dynamic linker for linking call sites in script code loaded by this context
   private final DynamicLinker dynamicLinker;
 
-  // Current error manager. 
+  // Current error manager.
   private final ErrorManager errors;
 
-  // Unique id for script. Used only when --loader-per-compile=false 
+  // Unique id for script. Used only when --loader-per-compile=false
   private final AtomicLong uniqueScriptId;
 
-  // Optional class filter to use for Java classes. Can be null. 
+  // Optional class filter to use for Java classes. Can be null.
   private final ClassFilter classFilter;
 
-  // Process-wide singleton structure loader 
+  // Process-wide singleton structure loader
   private static final StructureLoader theStructLoader;
   private static final ConcurrentMap<String, Class<?>> structureClasses = new ConcurrentHashMap<>();
 
@@ -491,9 +475,6 @@ public final class Context {
     var cacheSize = env._class_cache_size;
     if (cacheSize > 0) {
       classCache = new ClassCache(this, cacheSize);
-    }
-    if (env._persistent_cache) {
-      codeStore = newCodeStore(this);
     }
     if (Options.getBooleanProperty("nashorn.fields.dual")) {
       fieldMode = FieldMode.DUAL;
@@ -1064,28 +1045,22 @@ public final class Context {
       }
       return script;
     }
-    StoredScript storedScript = null;
     FunctionNode functionNode = null;
     // Don't use code store if optimistic types is enabled but lazy compilation is not. // TODO: review for how to remove code store
     // This would store a full script compilation with many wrong optimistic assumptions that would do more harm than good on later runs with both optimistic types and lazy compilation enabled.
-    var useCodeStore = codeStore != null && !env._parse_only && (!env._optimistic_types || env._lazy_compilation);
-    var cacheKey = useCodeStore ? CodeStore.getCacheKey("script", null) : null;
-    if (useCodeStore) {
-      storedScript = codeStore.load(source, cacheKey);
-    }
-    if (storedScript == null) {
+
       functionNode = new Parser(env, source, errMan, getLogger(Parser.class)).parse();
       if (errMan.hasErrors()) {
         return null;
       }
-    }
+
     if (env._parse_only) {
       return null;
     }
     var url = source.getURL();
     var cs = new CodeSource(url, (CodeSigner[]) null);
     CodeInstaller installer;
-    if (!env.useAnonymousClasses(source.getLength()) || env._persistent_cache || !env._lazy_compilation) {
+    if (!env.useAnonymousClasses(source.getLength()) || !env._lazy_compilation) {
       // Persistent code cache and eager compilation preclude use of VM anonymous classes
       var loader = env._loader_per_compile ? createNewLoader() : scriptLoader;
       installer = new NamedContextCodeInstaller(this, cs, loader);
@@ -1098,7 +1073,7 @@ public final class Context {
            AnonymousContextCodeInstaller.ANONYMOUS_HOST_CLASS_BYTES, cs)
       ));
     }
-    if (storedScript == null) {
+
       var phases = Compiler.CompilationPhases.COMPILE_ALL;
       var compiler = Compiler.forInitialCompilation(installer, source, errMan);
       var compiledFunction = compiler.compile(functionNode, phases);
@@ -1106,11 +1081,7 @@ public final class Context {
         return null;
       }
       script = compiledFunction.getRootClass();
-      compiler.persistClassInfo(cacheKey, compiledFunction);
-    } else {
-      Compiler.updateCompilationId(storedScript.getCompilationId());
-      script = storedScript.installScript(source, installer);
-    }
+
     cacheClass(source, script);
     return script;
   }

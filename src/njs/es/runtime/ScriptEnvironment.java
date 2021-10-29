@@ -119,9 +119,6 @@ public final class ScriptEnvironment {
   /** Only parse the source code, do not compile */
   public final boolean _parse_only;
 
-  /** Enable disk cache for compiled scripts */
-  public final boolean _persistent_cache;
-
   /** Directory (optional) to print files to */
   public final String _print_code_dir;
 
@@ -205,7 +202,6 @@ public final class ScriptEnvironment {
     _no_syntax_extensions = options.getBoolean("no.syntax.extensions");
     _no_typed_arrays = options.getBoolean("no.typed.arrays");
     _parse_only = options.getBoolean("parse.only");
-    _persistent_cache = options.getBoolean("persistent.code.cache");
     _print_no_newline = options.getBoolean("print.no.newline");
     _scripting = options.getBoolean("scripting");
     var configuredUrt = options.getInteger("unstable.relink.threshold");
