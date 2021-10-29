@@ -1087,9 +1087,6 @@ public final class Context {
       storedScript = codeStore.load(source, cacheKey);
     }
     if (storedScript == null) {
-      if (env._dest_dir != null) {
-        source.dump(env._dest_dir);
-      }
       functionNode = new Parser(env, source, errMan, getLogger(Parser.class)).parse();
       if (errMan.hasErrors()) {
         return null;
