@@ -2,7 +2,6 @@ package es.runtime;
 
 import static es.codegen.CompilerConstants.virtualCallNoLookup;
 
-import java.util.concurrent.atomic.LongAdder;
 import es.codegen.CompilerConstants;
 
 /**
@@ -12,9 +11,6 @@ public class Scope extends ScriptObject {
 
   // This is used to store return state of split functions.
   private int splitState = -1;
-
-  // This is updated only in debug mode - counts number of {@code ScriptObject} instances created that are scope
-  private static final LongAdder count = Context.DEBUG ? new LongAdder() : null;
 
   /** Method handle that points to {@link Scope#getSplitState}. */
   public static final CompilerConstants.Call GET_SPLIT_STATE = virtualCallNoLookup(Scope.class, "getSplitState", int.class);
@@ -28,7 +24,6 @@ public class Scope extends ScriptObject {
    */
   public Scope(PropertyMap map) {
     super(map);
-    incrementCount();
   }
 
   /**
@@ -39,7 +34,6 @@ public class Scope extends ScriptObject {
    */
   public Scope(ScriptObject proto, PropertyMap map) {
     super(proto, map);
-    incrementCount();
   }
 
   /**
@@ -51,7 +45,6 @@ public class Scope extends ScriptObject {
    */
   public Scope(PropertyMap map, long[] primitiveSpill, Object[] objectSpill) {
     super(map, primitiveSpill, objectSpill);
-    incrementCount();
   }
 
   @Override
@@ -83,21 +76,6 @@ public class Scope extends ScriptObject {
    */
   public void setSplitState(int state) {
     splitState = state;
-  }
-
-  /**
-   * Get number of {@code Scope} instances created.
-   * If not running in debug mode this is always 0.
-   * @return number of scope ScriptObjects created
-   */
-  public static long getScopeCount() {
-    return count != null ? count.sum() : 0;
-  }
-
-  static void incrementCount() {
-    if (Context.DEBUG) {
-      count.increment();
-    }
   }
 
 }

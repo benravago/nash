@@ -191,9 +191,6 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
    * @param map {@link PropertyMap} used to create the initial object
    */
   public ScriptObject(PropertyMap map) {
-    if (Context.DEBUG) {
-      ScriptObject.count.increment();
-    }
     this.arrayData = ArrayData.EMPTY_ARRAY;
     this.setMap(map == null ? PropertyMap.newMap() : map);
   }
@@ -2973,24 +2970,6 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
       }
     }
     return false;
-  }
-
-  // This is updated only in debug mode - counts number of {@code ScriptObject} instances created
-  private static LongAdder count;
-
-  static {
-    if (Context.DEBUG) {
-      count = new LongAdder();
-    }
-  }
-
-  /**
-   * Get number of {@code ScriptObject} instances created.
-   * If not running in debug mode this is always 0
-   * @return number of ScriptObjects created
-   */
-  public static long getCount() {
-    return count.longValue();
   }
 
 }

@@ -17,17 +17,6 @@ public class PropertySwitchPoints {
 
   private final static SwitchPoint[] EMPTY_SWITCHPOINT_ARRAY = new SwitchPoint[0];
 
-  // These counters are updated in debug mode
-  private static LongAdder switchPointsAdded;
-  private static LongAdder switchPointsInvalidated;
-
-  static /*<init>*/ {
-    if (Context.DEBUG) {
-      switchPointsAdded = new LongAdder();
-      switchPointsInvalidated = new LongAdder();
-    }
-  }
-
   /**
    * Copy constructor
    * @param switchPoints Proto switchpoints to copy
@@ -41,31 +30,6 @@ public class PropertySwitchPoints {
         }
       }
     }
-  }
-
-  /**
-   * Return aggregate switchpoints added to all ProtoSwitchPoints
-   * @return the number of switchpoints added
-   */
-  public static long getSwitchPointsAdded() {
-    return switchPointsAdded.longValue();
-  }
-
-  /**
-   * Return aggregate switchPointMap invalidated in all ProtoSwitchPoints
-   * @return the number of switchpoints invalidated
-   */
-  public static long getSwitchPointsInvalidated() {
-    return switchPointsInvalidated.longValue();
-  }
-
-  /**
-   * Return number of property switchPoints added to a ScriptObject.
-   * @param obj the object
-   * @return the switchpoint count
-   */
-  public static int getSwitchPointCount(ScriptObject obj) {
-    return obj.getMap().getSwitchPointCount();
   }
 
   /**
@@ -104,9 +68,6 @@ public class PropertySwitchPoints {
   }
 
   synchronized void add(String key, SwitchPoint switchPoint) {
-    if (Context.DEBUG) {
-      switchPointsAdded.increment();
-    }
     var set = this.switchPointMap.get(key);
     if (set == null) {
       set = new WeakSwitchPointSet();
@@ -128,9 +89,6 @@ public class PropertySwitchPoints {
   synchronized void invalidateProperty(Property prop) {
     var set = switchPointMap.get(prop.getKey());
     if (set != null) {
-      if (Context.DEBUG) {
-        switchPointsInvalidated.add(set.size());
-      }
       var switchPoints = set.elements().toArray(EMPTY_SWITCHPOINT_ARRAY);
       SwitchPoint.invalidateAll(switchPoints);
       this.switchPointMap.remove(prop.getKey());
@@ -146,9 +104,6 @@ public class PropertySwitchPoints {
     for (var entry : switchPointMap.entrySet()) {
       if (map.findProperty(entry.getKey()) != null) {
         continue;
-      }
-      if (Context.DEBUG) {
-        switchPointsInvalidated.add(entry.getValue().size());
       }
       var switchPoints = entry.getValue().elements().toArray(EMPTY_SWITCHPOINT_ARRAY);
       SwitchPoint.invalidateAll(switchPoints);

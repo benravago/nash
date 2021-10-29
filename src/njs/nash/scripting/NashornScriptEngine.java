@@ -79,14 +79,7 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
     // throw ParseException on first error from script
     var errMgr = new Context.ThrowErrorManager();
     // create new Nashorn Context
-        try {
-          this.nashornContext = new Context(options, errMgr, appLoader, classFilter);
-        } catch (RuntimeException e) {
-          if (Context.DEBUG) {
-            e.printStackTrace();
-          }
-          throw e;
-        }
+    this.nashornContext = new Context(options, errMgr, appLoader, classFilter);
 
     // cache this option that is used often
     this._global_per_engine = nashornContext.getEnv()._global_per_engine;
@@ -283,17 +276,8 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
   // Create a new Nashorn Global object
   Global createNashornGlobal() {
     Global newGlobal = null;
-    try {
-      newGlobal = nashornContext.newGlobal();
-    } catch (RuntimeException e) {
-      if (Context.DEBUG) {
-        e.printStackTrace();
-      }
-      throw e;
-    }
-
+    newGlobal = nashornContext.newGlobal();
     nashornContext.initGlobal(newGlobal, this);
-
     return newGlobal;
   }
 

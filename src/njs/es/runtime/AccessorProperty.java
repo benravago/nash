@@ -430,7 +430,7 @@ public class AccessorProperty extends Property {
     if (cachedGetter != null) {
       getter = cachedGetter;
     } else {
-      getter = debug(createGetter(getLocalType(), type, primitiveGetter, objectGetter, INVALID_PROGRAM_POINT), getLocalType(), type, "get");
+      getter = createGetter(getLocalType(), type, primitiveGetter, objectGetter, INVALID_PROGRAM_POINT);
       getterCache[i] = getter;
     }
     assert getter.type().returnType() == type && getter.type().parameterType(0) == Object.class;
@@ -444,7 +444,7 @@ public class AccessorProperty extends Property {
       return getOptimisticPrimitiveGetter(type, programPoint);
     }
     checkUndeclared();
-    return debug(createGetter(getLocalType(), type, primitiveGetter, objectGetter, programPoint), getLocalType(), type, "get");
+    return createGetter(getLocalType(), type, primitiveGetter, objectGetter, programPoint);
   }
 
   MethodHandle getOptimisticPrimitiveGetter(Class<?> type, int programPoint) {
@@ -486,7 +486,7 @@ public class AccessorProperty extends Property {
   }
 
   MethodHandle generateSetter(Class<?> forType, Class<?> type) {
-    return debug(createSetter(forType, type, primitiveSetter, objectSetter), getLocalType(), type, "set");
+    return createSetter(forType, type, primitiveSetter, objectSetter);
   }
 
   /**
@@ -514,7 +514,7 @@ public class AccessorProperty extends Property {
       var newMap = getWiderMap(currentMap, newProperty);
       var widerSetter = newProperty.getSetter(type, newMap);
       var ct = getLocalType();
-      mh = MH.filterArguments(widerSetter, 0, MH.insertArguments(debugReplace(ct, type, currentMap, newMap), 1, newMap));
+      mh = MH.filterArguments(widerSetter, 0, MH.insertArguments(REPLACE_MAP, 1, newMap));
       if (ct != null && ct.isPrimitive() && !type.isPrimitive()) {
         mh = ObjectClassGenerator.createGuardBoxedPrimitiveSetter(ct, generateSetter(ct, ct), mh);
       }
@@ -523,7 +523,7 @@ public class AccessorProperty extends Property {
       mh = generateSetter(!forType.isPrimitive() ? Object.class : forType, type);
     }
     if (isBuiltin()) {
-      mh = MH.filterArguments(mh, 0, debugInvalidate(MH.insertArguments(INVALIDATE_SP, 0, this), getKey().toString()));
+      mh = MH.filterArguments(mh, 0, MH.insertArguments(INVALIDATE_SP, 0, this));
     }
     assert mh.type().returnType() == void.class : mh.type();
     return mh;
@@ -540,41 +540,6 @@ public class AccessorProperty extends Property {
 
   boolean needsInvalidator(int typeIndex, int currentTypeIndex) {
     return canChangeType() && typeIndex > currentTypeIndex;
-  }
-
-  MethodHandle debug(MethodHandle mh, Class<?> forType, Class<?> type, String tag) {
-    if (!Context.DEBUG || !Global.hasInstance()) {
-      return mh;
-    }
-    var context = Context.getContextTrusted();
-    assert context != null;
-    return context.addLoggingToHandle(ObjectClassGenerator.class, Level.INFO, mh, 0, true,
-      new Supplier<String>() {
-        @Override
-        public String get() {
-          return tag + " '" + getKey() + "' (property=" + Hex.id(this) + ", slot=" + getSlot() + " " + getClass().getSimpleName() + " forType=" + stripName(forType) + ", type=" + stripName(type) + ')';
-        }
-      });
-  }
-
-  MethodHandle debugReplace(Class<?> oldType, Class<?> newType, PropertyMap oldMap, PropertyMap newMap) {
-    if (!Context.DEBUG || !Global.hasInstance()) {
-      return REPLACE_MAP;
-    }
-    var context = Context.getContextTrusted();
-    assert context != null;
-    var mh = context.addLoggingToHandle(ObjectClassGenerator.class, REPLACE_MAP, () -> "Type change for '" + getKey() + "' " + oldType + "=>" + newType);
-    mh = context.addLoggingToHandle(ObjectClassGenerator.class, Level.FINEST, mh, Integer.MAX_VALUE, false, () -> "Setting map " + Hex.id(oldMap) + " => " + Hex.id(newMap) + " " + oldMap + " => " + newMap);
-    return mh;
-  }
-
-  static MethodHandle debugInvalidate(MethodHandle invalidator, String key) {
-    if (!Context.DEBUG || !Global.hasInstance()) {
-      return invalidator;
-    }
-    var context = Context.getContextTrusted();
-    assert context != null;
-    return context.addLoggingToHandle(ObjectClassGenerator.class, invalidator, () -> "Field change callback for " + key + " triggered ");
   }
 
   private static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {

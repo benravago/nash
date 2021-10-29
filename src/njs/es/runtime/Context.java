@@ -265,9 +265,6 @@ public final class Context {
     }
   }
 
-  /** Is Context global debug mode enabled ? */
-  public static final boolean DEBUG = Options.getBooleanProperty("nashorn.debug");
-
   private static final ThreadLocal<Global> currentGlobal = new ThreadLocal<>();
 
   // in-memory cache for loaded classes
@@ -843,16 +840,6 @@ public final class Context {
       } else {
         throw new ClassNotFoundException(fullName);
       }
-    }
-  }
-
-  /**
-   * Hook to print stack trace for a {@link Throwable} that occurred during execution
-   * @param t throwable for which to dump stack
-   */
-  public static void printStackTrace(Throwable t) {
-    if (Context.DEBUG) {
-      t.printStackTrace(Context.getCurrentErr());
     }
   }
 

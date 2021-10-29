@@ -62,7 +62,7 @@ public final class RewriteException extends Exception {
   public static final Call ASSERT_ARRAY_LENGTH = staticCallNoLookup(RewriteException.class, "assertArrayLength", void.class, Object[].class, int.class);
 
   RewriteException(UnwarrantedOptimismException e, Object[] byteCodeSlots, String[] byteCodeSymbolNames, int[] previousContinuationEntryPoints) {
-    super("", e, false, Context.DEBUG);
+    super("", e, false, false);
     this.byteCodeSlots = byteCodeSlots;
     this.runtimeScope = mergeSlotsWithScope(byteCodeSlots, byteCodeSymbolNames);
     this.previousContinuationEntryPoints = previousContinuationEntryPoints;

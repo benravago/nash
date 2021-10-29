@@ -58,7 +58,7 @@ public final class UnwarrantedOptimismException extends RuntimeException {
    * @param returnType type of the returned value. Used to disambiguate the return type. E.g. an {@code ObjectArrayData} might return a {@link Double} for a particular element getter, but still throw this exception even if the call site can accept a double, since the array's type is actually {@code Type#OBJECT}. In this case, it must explicitly use this constructor to indicate its values are to be considered {@code Type#OBJECT} and not {@code Type#NUMBER}.
    */
   public UnwarrantedOptimismException(Object returnValue, int programPoint, Type returnType) {
-    super("", null, false, Context.DEBUG);
+    super("", null, false, false);
     assert returnType != Type.OBJECT || returnValue == null || !Type.typeFor(returnValue.getClass()).isNumeric();
     assert returnType != Type.INT;
     this.returnValue = returnValue;

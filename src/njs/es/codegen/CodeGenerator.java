@@ -1915,7 +1915,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
       newFunctionObject(newFunctionNode, true);
       return newFunctionNode;
     } catch (Throwable t) {
-      Context.printStackTrace(t);
       var e = new VerifyError("Code generation bug in \"" + functionNode.getName() + "\": likely stack misaligned: " + t + " " + functionNode.getSource().getName());
       e.initCause(t);
       throw e;

@@ -100,9 +100,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
     this.spillLength = spillLength;
     this.flags = flags;
     this.softReferenceDerivationLimit = INITIAL_SOFT_REFERENCE_DERIVATION_LIMIT;
-    if (Context.DEBUG) {
-      count.increment();
-    }
   }
 
   /**
@@ -122,10 +119,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
     this.freeSlots = propertyMap.freeSlots;
     this.sharedProtoMap = propertyMap.sharedProtoMap;
     this.softReferenceDerivationLimit = softReferenceDerivationLimit;
-    if (Context.DEBUG) {
-      count.increment();
-      clonedCount.increment();
-    }
   }
 
   /**
@@ -552,9 +545,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
     } else {
       cachedMap = null;
     }
-    if (Context.DEBUG && cachedMap != null) {
-      protoHistoryHit.increment();
-    }
     return cachedMap;
   }
 
@@ -592,9 +582,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
       var ref = history.get(property);
       var historicMap = ref == null ? null : ref.get();
       if (historicMap != null) {
-        if (Context.DEBUG) {
-          historyHit.increment();
-        }
         return historicMap;
       }
     }
@@ -712,9 +699,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
     var nextMap = checkProtoHistory(newProto);
     if (nextMap != null) {
       return nextMap;
-    }
-    if (Context.DEBUG) {
-      setProtoNewMapCount.increment();
     }
     var newMap = makeUnsharedCopy();
     addToProtoHistory(newProto, newMap);
@@ -867,68 +851,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
       sb.append("<<< END: Map diff\n");
     }
     return sb.toString();
-  }
-
-  // counters updated only in debug mode
-
-  private static LongAdder count;
-  private static LongAdder clonedCount;
-  private static LongAdder historyHit;
-  private static LongAdder protoInvalidations;
-  private static LongAdder protoHistoryHit;
-  private static LongAdder setProtoNewMapCount;
-
-  static /*<init>*/ {
-    if (Context.DEBUG) {
-      count = new LongAdder();
-      clonedCount = new LongAdder();
-      historyHit = new LongAdder();
-      protoInvalidations = new LongAdder();
-      protoHistoryHit = new LongAdder();
-      setProtoNewMapCount = new LongAdder();
-    }
-  }
-
-  /**
-   * @return Total number of maps.
-   */
-  public static long getCount() {
-    return count.longValue();
-  }
-
-  /**
-   * @return The number of maps that were cloned.
-   */
-  public static long getClonedCount() {
-    return clonedCount.longValue();
-  }
-
-  /**
-   * @return The number of times history was successfully used.
-   */
-  public static long getHistoryHit() {
-    return historyHit.longValue();
-  }
-
-  /**
-   * @return The number of times prototype changes caused invalidation.
-   */
-  public static long getProtoInvalidations() {
-    return protoInvalidations.longValue();
-  }
-
-  /**
-   * @return The number of times proto history was successfully used.
-   */
-  public static long getProtoHistoryHit() {
-    return protoHistoryHit.longValue();
-  }
-
-  /**
-   * @return The number of times prototypes were modified.
-   */
-  public static long getSetProtoNewMapCount() {
-    return setProtoNewMapCount.longValue();
   }
 
 }

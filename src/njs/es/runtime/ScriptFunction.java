@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.concurrent.atomic.LongAdder;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -135,9 +134,6 @@ public class ScriptFunction extends ScriptObject {
    */
   ScriptFunction(ScriptFunctionData data, PropertyMap map, ScriptObject scope, Global global) {
     super(map);
-    if (Context.DEBUG) {
-      constructorCount.increment();
-    }
     this.data = data;
     this.scope = scope;
     this.setInitialProto(global.getFunctionPrototype());
@@ -375,9 +371,6 @@ public class ScriptFunction extends ScriptObject {
    * thrown from it
    */
   final Object invoke(Object self, Object... arguments) throws Throwable {
-    if (Context.DEBUG) {
-      invokes.increment();
-    }
     return data.invoke(this, self, arguments);
   }
 
@@ -398,9 +391,6 @@ public class ScriptFunction extends ScriptObject {
    */
   @SuppressWarnings("unused")
   Object allocate() {
-    if (Context.DEBUG) {
-      allocations.increment();
-    }
     assert !isBoundFunction(); // allocate never invoked on bound functions
     var proto = getAllocatorPrototype();
     var object = data.allocate(getAllocatorMap(proto));
@@ -586,40 +576,6 @@ public class ScriptFunction extends ScriptObject {
       }
     }
     return null;
-  }
-
-  // These counters are updated only in debug mode.
-  private static LongAdder constructorCount;
-  private static LongAdder invokes;
-  private static LongAdder allocations;
-
-  static {
-    if (Context.DEBUG) {
-      constructorCount = new LongAdder();
-      invokes = new LongAdder();
-      allocations = new LongAdder();
-    }
-  }
-
-  /**
-   * @return the constructorCount
-   */
-  public static long getConstructorCount() {
-    return constructorCount.longValue();
-  }
-
-  /**
-   * @return the invokes
-   */
-  public static long getInvokes() {
-    return invokes.longValue();
-  }
-
-  /**
-   * @return the allocations
-   */
-  public static long getAllocations() {
-    return allocations.longValue();
   }
 
   @Override

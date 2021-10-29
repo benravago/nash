@@ -2432,9 +2432,6 @@ public final class Global extends Scope {
     if (env._scripting) {
       initScripting(env);
     }
-    if (Context.DEBUG) {
-        initDebug();
-    }
     copyBuiltins();
     // expose script (command line) arguments as "arguments" property of global
     arguments = wrapAsObject(env.getArguments().toArray());
@@ -2562,10 +2559,6 @@ public final class Global extends Scope {
     this.string = this.builtinString;
     this.syntaxError = this.builtinSyntaxError;
     this.typeError = this.builtinTypeError;
-  }
-
-  void initDebug() {
-    this.addOwnProperty("Debug", Attribute.NOT_ENUMERABLE, initConstructor("Debug", ScriptObject.class));
   }
 
   Object printImpl(boolean stdout, Object... objects) {

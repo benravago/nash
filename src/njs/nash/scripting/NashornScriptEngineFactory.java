@@ -113,14 +113,7 @@ public final class NashornScriptEngineFactory implements ScriptEngineFactory {
 
   @Override
   public ScriptEngine getScriptEngine() {
-    try {
-      return new NashornScriptEngine(this, DEFAULT_OPTIONS, getAppClassLoader(), null);
-    } catch (RuntimeException e) {
-      if (Context.DEBUG) {
-        e.printStackTrace();
-      }
-      throw e;
-    }
+    return new NashornScriptEngine(this, DEFAULT_OPTIONS, getAppClassLoader(), null);
   }
 
   /**
@@ -181,14 +174,7 @@ public final class NashornScriptEngineFactory implements ScriptEngineFactory {
   }
 
   private ScriptEngine newEngine(String[] args, ClassLoader appLoader, ClassFilter classFilter) {
-    try {
-      return new NashornScriptEngine(this, args, appLoader, classFilter);
-    } catch (RuntimeException e) {
-      if (Context.DEBUG) {
-        e.printStackTrace();
-      }
-      throw e;
-    }
+    return new NashornScriptEngine(this, args, appLoader, classFilter);
   }
 
   private static final List<String> names = List.of(
