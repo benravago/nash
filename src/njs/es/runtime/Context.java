@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,21 +69,6 @@ import static es.runtime.Source.sourceFor;
  */
 public final class Context {
 
-  // nashorn specific security runtime access permission names
-
-  /** Permission needed to pass arbitrary nashorn command line options when creating Context. */
-  public static final String NASHORN_SET_CONFIG = "nashorn.setConfig";
-  /** Permission needed to create Nashorn Context instance. */
-  public static final String NASHORN_CREATE_CONTEXT = "nashorn.createContext";
-  /** Permission needed to create Nashorn Global instance. */
-  public static final String NASHORN_CREATE_GLOBAL = "nashorn.createGlobal";
-  /** Permission to get current Nashorn Context from thread local storage. */
-  public static final String NASHORN_GET_CONTEXT = "nashorn.getContext";
-  /** Permission to use Java reflection/jsr292 from script code. */
-  public static final String NASHORN_JAVA_REFLECTION = "nashorn.JavaReflection";
-  /** Permission to enable nashorn debug mode. */
-  public static final String NASHORN_DEBUG_MODE = "nashorn.debugMode";
-
   // nashorn load psuedo URL prefixes
 
   private static final String LOAD_CLASSPATH = "classpath:";
@@ -93,9 +77,6 @@ public final class Context {
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
   private static final MethodType CREATE_PROGRAM_FUNCTION_TYPE = MethodType.methodType(ScriptFunction.class, ScriptObject.class);
-
-  private static final LongAdder NAMED_INSTALLED_SCRIPT_COUNT = new LongAdder();
-  private static final LongAdder ANONYMOUS_INSTALLED_SCRIPT_COUNT = new LongAdder();
 
   // Should scripts use only object slots for fields, or dual long/object slots? The default behaviour is to couple this to optimistic types, using dual representation if optimistic types are enabled and single field representation otherwise.
   // This can be overridden by setting either the "nashorn.fields.objects" or "nashorn.fields.dual" system property.
@@ -113,14 +94,6 @@ public final class Context {
   // Keeps track of which builtin prototypes and properties have been relinked. Currently we are conservative and associate the name of a builtin class with all its properties, so it's enough to invalidate a property to break all assumptions about a prototype.
   // This can be changed to a more fine grained approach, but no one ever needs this, given the very rare occurrence of swapping out only parts of a builtin v.s. the entire builtin object
   private final Map<String, SwitchPoint> builtinSwitchPoints = new HashMap<>();
-
-  static long getNamedInstalledScriptCount() {
-    return NAMED_INSTALLED_SCRIPT_COUNT.sum();
-  }
-
-  static long getAnonymousInstalledScriptCount() {
-    return ANONYMOUS_INSTALLED_SCRIPT_COUNT.sum();
-  }
 
   /**
    * ContextCodeInstaller that has the privilege of installing classes in the Context.
@@ -189,7 +162,6 @@ public final class Context {
     public Class<?> install(String className, byte[] bytecode) {
       usageCount++;
       bytesDefined += bytecode.length;
-      NAMED_INSTALLED_SCRIPT_COUNT.increment();
       return loader.installClass(Compiler.binaryName(className), bytecode, codeSource);
     }
 
