@@ -1976,7 +1976,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
 
   void lineNumber(int lineNumber) {
     if (lineNumber != lastLineNumber && lineNumber != Node.NO_LINE_NUMBER) {
-      method.lineNumber(lineNumber);
+      // method.lineNumber(lineNumber);
       lastLineNumber = lineNumber;
     }
   }
@@ -4462,7 +4462,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     if (unwarrantedOptimismHandlers.isEmpty()) {
       return false;
     }
-    method.lineNumber(0);
+    // method.lineNumber(0);
     var handlerSpecs = new ArrayList<OptimismExceptionHandlerSpec>(unwarrantedOptimismHandlers.size() * 4 / 3);
     for (var spec : unwarrantedOptimismHandlers.keySet()) {
       handlerSpecs.add(new OptimismExceptionHandlerSpec(spec, true));
@@ -4778,7 +4778,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     var ci = getContinuationInfo();
     method.label(ci.getHandlerLabel());
     // There should never be an exception thrown from the continuation handler, but in case there is (meaning, Nashorn has a bug), then line number 0 will be an indication of where it came from (line numbers are Uint16).
-    method.lineNumber(0);
+    // method.lineNumber(0);
     var stack = ci.getTargetLabel().getStack();
     var lvarTypes = stack.getLocalVariableTypesCopy();
     var symbolBoundary = stack.getSymbolBoundaryCopy();
@@ -4875,7 +4875,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     Label tryBegin = null;
     if (returnValueType.isPrimitive()) {
       // If the conversion throws an exception, we want to report the line number of the continuation point.
-      method.lineNumber(ci.lineNumber);
+      // method.lineNumber(ci.lineNumber);
       if (targetCatchLabel != METHOD_BOUNDARY) {
         tryBegin = new Label("");
         method.label(tryBegin);
@@ -4897,7 +4897,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     method.goto_(ci.getTargetLabel());
     // Make a scope-popping exception delegate if needed
     if (catchLabel != targetCatchLabel) {
-      method.lineNumber(0);
+      // method.lineNumber(0);
       assert scopePopCount > 0;
       method.catch_(catchLabel);
       popScopes(scopePopCount);

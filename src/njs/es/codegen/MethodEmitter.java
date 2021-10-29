@@ -2183,19 +2183,6 @@ public class MethodEmitter {
     method.visitFieldInsn(PUTSTATIC, className, fieldName, fieldDescriptor);
   }
 
-  /**
-   * Register line number at a label
-   * @param line  line number
-   */
-  void lineNumber(int line) {
-    if (context.getEnv()._debug_lines) {
-      debug_label("[LINE]", line);
-      var l = new org.objectweb.asm.Label();
-      method.visitLabel(l);
-      method.visitLineNumber(line, l);
-    }
-  }
-
   void beforeJoinPoint(JoinPredecessor joinPredecessor) {
     var next = joinPredecessor.getLocalVariableConversion();
     while (next != null) {
