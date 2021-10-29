@@ -50,9 +50,6 @@ public final class ScriptEnvironment {
   /** Accept "const" keyword and treat it as variable. Interim feature */
   public final boolean _const_as_var;
 
-  /** Put all variables in scopes to make them debuggable */
-  public final boolean _debug_scopes;
-
   /** Invalid lvalue expressions should be reported as early errors */
   public final boolean _early_lvalue_error;
 
@@ -184,7 +181,6 @@ public final class ScriptEnvironment {
     _classpath = options.getString("classpath");
     _compile_only = options.getBoolean("compile.only");
     _const_as_var = options.getBoolean("const.as.var");
-    _debug_scopes = options.getBoolean("debug.scopes");
     _early_lvalue_error = options.getBoolean("early.lvalue.error");
     _empty_statements = options.getBoolean("empty.statements");
     if (options.getBoolean("function.statement.error")) {
