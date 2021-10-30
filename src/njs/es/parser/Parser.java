@@ -3451,7 +3451,8 @@ public class Parser extends AbstractParser {
       newLexer.restoreState(new Lexer.State(position, Integer.MAX_VALUE, line, -1, linePosition, SEMICOLON));
       return newLexer;
     }
-    private static final long serialVersionUID = -1;
+
+    private static final long serialVersionUID = 1;
   }
 
   void addFunctionDeclarations(ParserContextFunctionNode functionNode) {

@@ -9,7 +9,6 @@ import es.codegen.types.Type;
  * This exception is thrown from an optimistic operation, e.g. an integer add, that was to optimistic for what really took place.
  * Typically things like trying to get an array element that we want to be an int, and it was a double, and an int add that actually overflows and needs a double for the representation
  */
-@SuppressWarnings("serial")
 public final class UnwarrantedOptimismException extends RuntimeException {
 
   /** Denotes an invalid program point */
@@ -135,12 +134,10 @@ public final class UnwarrantedOptimismException extends RuntimeException {
       + ")]";
   }
 
-  void writeObject(ObjectOutputStream out) throws NotSerializableException {
+  private void writeObject(ObjectOutputStream out) throws NotSerializableException {
     throw new NotSerializableException(getClass().getName());
   }
-
-  void readObject(ObjectInputStream in) throws NotSerializableException {
+  private void readObject(ObjectInputStream in) throws NotSerializableException {
     throw new NotSerializableException(getClass().getName());
   }
-
 }

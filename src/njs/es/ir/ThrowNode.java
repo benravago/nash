@@ -100,4 +100,5 @@ public final class ThrowNode extends Statement implements JoinPredecessor {
     return conversion;
   }
 
+  private static final long serialVersionUID = 1;
 }

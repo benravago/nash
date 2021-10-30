@@ -109,5 +109,5 @@ public final class BooleanType extends Type {
     return Type.INT.add(method, programPoint);
   }
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1;
 }

@@ -7,7 +7,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +19,6 @@ import es.ir.Block;
 import es.ir.BreakNode;
 import es.ir.BreakableNode;
 import es.ir.CallNode;
-import es.ir.CaseNode;
-import es.ir.CatchNode;
 import es.ir.ContinueNode;
 import es.ir.Expression;
 import es.ir.ExpressionStatement;
@@ -35,7 +32,6 @@ import es.ir.JoinPredecessor;
 import es.ir.JoinPredecessorExpression;
 import es.ir.JumpStatement;
 import es.ir.JumpToInlinedFinally;
-import es.ir.LabelNode;
 import es.ir.LexicalContext;
 import es.ir.LexicalContextNode;
 import es.ir.LiteralNode;
@@ -131,8 +127,6 @@ final class LocalVariableTypesCalculator extends SimpleNodeVisitor {
    */
   static class TypeHolderExpression extends Expression {
 
-    private static final long serialVersionUID = 1L;
-
     private final Type type;
 
     TypeHolderExpression(Type type) {
@@ -154,6 +148,8 @@ final class LocalVariableTypesCalculator extends SimpleNodeVisitor {
     public void toString(StringBuilder sb, boolean printType) {
       throw new AssertionError();
     }
+
+    private static final long serialVersionUID = 1;
   }
 
   private static final Map<Type, LvarType> TO_LVAR_TYPE = new IdentityHashMap<>();

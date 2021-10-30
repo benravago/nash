@@ -13,8 +13,6 @@ import es.parser.TokenType;
  */
 public abstract class Node implements Cloneable, Serializable {
 
-  private static final long serialVersionUID = 1L;
-
   /** Constant used for synthetic AST nodes that have no line number. */
   public static final int NO_LINE_NUMBER = -1;
 
@@ -271,4 +269,5 @@ public abstract class Node implements Cloneable, Serializable {
     return newNode;
   }
 
+  private static final long serialVersionUID = 1;
 }

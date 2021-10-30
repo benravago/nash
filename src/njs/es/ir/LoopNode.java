@@ -3,6 +3,7 @@ package es.ir;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import es.codegen.Label;
 
 /**
@@ -153,4 +154,5 @@ public abstract class LoopNode extends BreakableStatement {
    */
   public abstract boolean hasPerIterationScope();
 
+  private static final long serialVersionUID = 1;
 }

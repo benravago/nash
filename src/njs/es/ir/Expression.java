@@ -118,4 +118,5 @@ public abstract class Expression extends Node {
     return test == null || test.isAlwaysTrue();
   }
 
+  private static final long serialVersionUID = 1;
 }

@@ -137,4 +137,5 @@ public final class CaseNode extends Node implements JoinPredecessor, Labels, Ter
     return Collections.unmodifiableList(Collections.singletonList(entry));
   }
 
+  private static final long serialVersionUID = 1;
 }

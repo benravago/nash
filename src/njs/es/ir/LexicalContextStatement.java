@@ -29,4 +29,5 @@ abstract class LexicalContextStatement extends Statement implements LexicalConte
     return Acceptor.accept(this, visitor);
   }
 
+  private static final long serialVersionUID = 1;
 }

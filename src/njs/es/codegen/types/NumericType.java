@@ -17,5 +17,5 @@ public abstract class NumericType extends Type implements BytecodeNumericOps {
     super(name, type, weight, slots);
   }
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1;
 }

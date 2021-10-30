@@ -24,7 +24,6 @@ import static es.codegen.CompilerConstants.*;
 /**
  * Used to signal to the linker to relink the callee
  */
-@SuppressWarnings("serial")
 public final class RewriteException extends Exception {
 
   private static final MethodHandleFunctionality MH = MethodHandleFactory.getFunctionality();
@@ -340,12 +339,10 @@ public final class RewriteException extends Exception {
     return sb.toString();
   }
 
-  void writeObject(ObjectOutputStream out) throws NotSerializableException {
+  private void writeObject(ObjectOutputStream out) throws NotSerializableException {
     throw new NotSerializableException(getClass().getName());
   }
-
-  void readObject(ObjectInputStream in) throws NotSerializableException {
+  private void readObject(ObjectInputStream in) throws NotSerializableException {
     throw new NotSerializableException(getClass().getName());
   }
-
 }

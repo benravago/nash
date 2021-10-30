@@ -1,7 +1,5 @@
 package es.ir;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import es.codegen.types.Type;
@@ -244,4 +242,5 @@ public final class UnaryNode extends Expression implements Assignment<Expression
     return (this.type == type) ? this : new UnaryNode(this, expression, type, programPoint);
   }
 
+  private static final long serialVersionUID = 1;
 }

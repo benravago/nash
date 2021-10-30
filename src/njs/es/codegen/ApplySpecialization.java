@@ -72,14 +72,12 @@ public final class ApplySpecialization extends SimpleNodeVisitor {
     this.compiler = compiler;
   }
 
-  @SuppressWarnings("serial")
   static class TransformFailedException extends RuntimeException {
     TransformFailedException(FunctionNode fn, String message) {
       super(massageURL(fn.getSource().getURL()) + '.' + fn.getName() + " => " + message, null, false, false);
     }
   }
 
-  @SuppressWarnings("serial")
   static class AppliesFoundException extends RuntimeException {
     AppliesFoundException() {
       super("applies_found", null, false, false);

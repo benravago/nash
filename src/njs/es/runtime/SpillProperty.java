@@ -10,8 +10,6 @@ import java.lang.invoke.MethodHandles;
  */
 public class SpillProperty extends AccessorProperty {
 
-  private static final long serialVersionUID = 3028496245198669460L;
-
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
   private static final MethodHandle PARRAY_GETTER = MH.asType(MH.getter(LOOKUP, ScriptObject.class, "primitiveSpill", long[].class), MH.type(long[].class, Object.class));
@@ -187,5 +185,6 @@ public class SpillProperty extends AccessorProperty {
     objectGetter = objectGetter(slot);
     objectSetter = objectSetter(slot);
   }
-
+  
+  private static final long serialVersionUID = 1;
 }

@@ -452,4 +452,5 @@ public class Block extends Node implements BreakableNode, Terminal, Flags<Block>
     return getFlag(IS_SWITCH_BLOCK);
   }
 
+  private static final long serialVersionUID = 1;
 }

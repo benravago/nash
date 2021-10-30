@@ -108,4 +108,5 @@ public final class ObjectNode extends Expression implements LexicalContextNode, 
     return splitRanges == null ? null : Collections.unmodifiableList(splitRanges);
   }
 
+  private static final long serialVersionUID = 1;
 }

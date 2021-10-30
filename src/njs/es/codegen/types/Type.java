@@ -826,7 +826,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
       @Override public Type aload(MethodVisitor method) { method.visitInsn(IALOAD); return INT; }
       @Override public Type newarray(MethodVisitor method) { method.visitIntInsn(NEWARRAY, T_INT); return this; }
       @Override public Type getElementType() { return INT; }
-      private static final long serialVersionUID = 1L;
+      private static final long serialVersionUID = 1;
     });
 
   /** This is the singleton for long arrays */
@@ -836,7 +836,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
       @Override public Type aload(MethodVisitor method) { method.visitInsn(LALOAD); return LONG; }
       @Override public Type newarray(MethodVisitor method) { method.visitIntInsn(NEWARRAY, T_LONG); return this; }
       @Override public Type getElementType() { return LONG; }
-      private static final long serialVersionUID = 1L;
+      private static final long serialVersionUID = 1;
     });
 
   /** This is the singleton for numeric arrays */
@@ -846,7 +846,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
       @Override public Type aload(MethodVisitor method) { method.visitInsn(DALOAD); return NUMBER; }
       @Override public Type newarray(MethodVisitor method) { method.visitIntInsn(NEWARRAY, T_DOUBLE); return this; }
       @Override public Type getElementType() { return NUMBER; }
-      private static final long serialVersionUID = 1L;
+      private static final long serialVersionUID = 1;
     });
 
   /** This is the singleton for object arrays */
@@ -856,13 +856,13 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
   /** This type, always an object type, just a toString override */
   public static final Type THIS = new ObjectType() {
     @Override public String toString() { return "this"; }
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   };
 
   /** Scope type, always an object type, just a toString override */
   public static final Type SCOPE = new ObjectType() {
     @Override public String toString() { return "scope"; }
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   };
 
   static interface Unknown {
@@ -881,7 +881,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
     @Override public Type convert(MethodVisitor method, Type to) { throw new UnsupportedOperationException("convert => " + to); }
     @Override public void ret(MethodVisitor method) { throw new UnsupportedOperationException("return"); }
     @Override public Type add(MethodVisitor method, int programPoint) { throw new UnsupportedOperationException("add"); }
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -891,7 +891,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
   public static final Type UNKNOWN = new ValueLessType("<unknown>") {
     @Override public String getDescriptor() { return "<unknown>"; }
     @Override public char getBytecodeStackType() { return 'U'; }
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   };
 
   /**
@@ -901,7 +901,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
   public static final Type SLOT_2 = new ValueLessType("<slot_2>") {
     @Override public String getDescriptor() { return "<slot_2>"; }
     @Override public char getBytecodeStackType() { throw new UnsupportedOperationException("getBytecodeStackType"); }
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   };
 
   static <T extends Type> T putInCache(T type) {
@@ -917,5 +917,5 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
     return Type.typeFor(typeClass);
   }
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1;
 }

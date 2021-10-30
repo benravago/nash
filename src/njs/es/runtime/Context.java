@@ -990,7 +990,6 @@ public final class Context {
   /**
    * Cache for compiled script classes.
    */
-  @SuppressWarnings("serial")
   static class ClassCache extends LinkedHashMap<Source, ClassReference> {
 
     private final int size;

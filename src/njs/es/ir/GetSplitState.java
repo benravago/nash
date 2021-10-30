@@ -43,4 +43,5 @@ public final class GetSplitState extends Expression {
     return INSTANCE;
   }
 
+  private static final long serialVersionUID = 1;
 }

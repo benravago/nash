@@ -59,4 +59,5 @@ public final class JumpToInlinedFinally extends JumpStatement {
     return ((Block) target).getEntryLabel();
   }
 
+  private static final long serialVersionUID = 1;
 }

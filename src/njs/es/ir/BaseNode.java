@@ -129,4 +129,5 @@ public abstract class BaseNode extends Expression implements FunctionCall, Optim
    */
   public abstract BaseNode setIsSuper();
 
+  private static final long serialVersionUID = 1;
 }

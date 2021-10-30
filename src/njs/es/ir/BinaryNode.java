@@ -432,4 +432,5 @@ public final class BinaryNode extends Expression implements Assignment<Expressio
     return (this.type == type) ? this : new BinaryNode(this, lhs, rhs, type, programPoint);
   }
 
+  private static final long serialVersionUID = 1;
 }

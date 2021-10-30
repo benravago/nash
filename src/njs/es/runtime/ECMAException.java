@@ -13,7 +13,6 @@ import static es.runtime.ScriptRuntime.UNDEFINED;
  * The actual thrown object from script need not be a Java exception and so it is wrapped as an instance field called "thrown" here.
  * This exception class is also used to represent ECMA errors thrown from runtime code (for example, TypeError, ReferenceError thrown from Nashorn engine runtime).
  */
-@SuppressWarnings("serial")
 public final class ECMAException extends NashornException {
 
   /** Method handle pointing to the constructor {@link ECMAException#create(Object, String, int, int)}, */

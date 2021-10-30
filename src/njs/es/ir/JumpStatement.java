@@ -106,4 +106,5 @@ public abstract class JumpStatement extends Statement implements JoinPredecessor
     return conversion;
   }
 
+  private static final long serialVersionUID = 1;
 }

@@ -96,4 +96,5 @@ public final class WithNode extends LexicalContextStatement {
     return (this.expression == expression) ? this : Node.replaceInLexicalContext(lc, this, new WithNode(this, expression, body));
   }
 
+  private static final long serialVersionUID = 1;
 }

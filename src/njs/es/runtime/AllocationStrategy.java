@@ -16,8 +16,6 @@ import static es.lookup.Lookup.MH;
  */
 final public class AllocationStrategy implements Serializable {
 
-  private static final long serialVersionUID = 1L;
-
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
   // Number of fields in the allocated object
@@ -149,4 +147,5 @@ final public class AllocationStrategy implements Serializable {
     }
   }
 
+  private static final long serialVersionUID = 1;
 }

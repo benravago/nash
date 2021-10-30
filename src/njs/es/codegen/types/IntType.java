@@ -228,5 +228,5 @@ class IntType extends BitwiseType {
     throw new UnsupportedOperationException("cmp");
   }
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1;
 }

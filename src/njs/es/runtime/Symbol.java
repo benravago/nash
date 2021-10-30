@@ -10,8 +10,6 @@ public final class Symbol implements Serializable {
 
   private final String name;
 
-  private static final long serialVersionUID = -2988436597549486913L;
-
   /**
    * Symbol constructor
    * @param name symbol name
@@ -44,8 +42,6 @@ public final class Symbol implements Serializable {
    */
   static class GlobalSymbol implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
     private final String name;
 
     GlobalSymbol(String name) {
@@ -55,6 +51,9 @@ public final class Symbol implements Serializable {
     Object readResolve() {
       return NativeSymbol.from(null, name);
     }
-  }
 
+    private static final long serialVersionUID = 1;
+  }
+  
+  private static final long serialVersionUID = 1;
 }

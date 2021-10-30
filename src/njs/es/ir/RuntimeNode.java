@@ -381,4 +381,5 @@ public class RuntimeNode extends Expression {
     return true;
   }
 
+  private static final long serialVersionUID = 1;
 }

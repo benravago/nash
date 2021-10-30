@@ -43,4 +43,5 @@ public final class SetSplitState extends Statement {
       .append('(').append(state).append(");");
   }
 
+  private static final long serialVersionUID = 1;
 }

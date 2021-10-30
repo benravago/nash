@@ -35,4 +35,5 @@ public final class ErrorNode extends Expression {
     sb.append("<error>");
   }
 
+  private static final long serialVersionUID = 1;
 }

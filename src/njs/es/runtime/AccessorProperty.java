@@ -1,8 +1,5 @@
 package es.runtime;
 
-import java.util.function.Supplier;
-import java.util.logging.Level;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
@@ -13,11 +10,8 @@ import java.lang.invoke.SwitchPoint;
 import es.codegen.ObjectClassGenerator;
 import es.codegen.types.Type;
 import es.lookup.Lookup;
-import es.objects.Global;
-import es.util.Hex;
 import static es.codegen.ObjectClassGenerator.*;
 import static es.lookup.Lookup.MH;
-import static es.lookup.MethodHandleFactory.stripName;
 import static es.runtime.JSType.getAccessorTypeIndex;
 import static es.runtime.JSType.getNumberOfAccessorTypes;
 import static es.runtime.UnwarrantedOptimismException.INVALID_PROGRAM_POINT;
@@ -34,7 +28,6 @@ public class AccessorProperty extends Property {
   private static final MethodHandle INVALIDATE_SP = findOwnMH_S("invalidateSwitchPoint", Object.class, AccessorProperty.class, Object.class);
 
   private static final int NOOF_TYPES = getNumberOfAccessorTypes();
-  private static final long serialVersionUID = 3371720170182154920L;
 
   // Properties in different maps for the same structure class will share their field getters and setters.
   // This could be further extended to other method handles that are looked up in the AccessorProperty constructor, but right now these are the most frequently retrieved ones, and lookup of method handle natives only registers in the profiler for them.
@@ -195,7 +188,7 @@ public class AccessorProperty extends Property {
     initializeType();
   }
 
-  void initGetterSetter(Class<?> structure) {
+  final void initGetterSetter(Class<?> structure) {
     var slot = getSlot();
     // primitiveGetter and primitiveSetter are only used in dual fields mode.
     // Setting them to null also works in dual field mode, it only means that the property never has a primitive representation.
@@ -289,12 +282,6 @@ public class AccessorProperty extends Property {
    */
   protected final void initializeType() {
     setType(!hasDualFields() ? Object.class : null);
-  }
-
-  void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-    s.defaultReadObject();
-    // Restore getters array
-    GETTER_CACHE = new MethodHandle[NOOF_TYPES];
   }
 
   static MethodHandle bindTo(MethodHandle mh, Object receiver) {
@@ -546,4 +533,10 @@ public class AccessorProperty extends Property {
     return MH.findStatic(LOOKUP, AccessorProperty.class, name, MH.type(rtype, types));
   }
 
+  private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+    s.defaultReadObject();
+    // Restore getters array
+    GETTER_CACHE = new MethodHandle[NOOF_TYPES];
+  }
+  private static final long serialVersionUID = 1;
 }

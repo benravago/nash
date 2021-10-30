@@ -256,4 +256,5 @@ public final class ForNode extends LoopNode {
     return isForInOrOf() && hasPerIterationScope();
   }
 
+  private static final long serialVersionUID = 1;
 }

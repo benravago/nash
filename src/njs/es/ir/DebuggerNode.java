@@ -30,4 +30,5 @@ public final class DebuggerNode extends Statement {
     sb.append("debugger");
   }
 
+  private static final long serialVersionUID = 1;
 }

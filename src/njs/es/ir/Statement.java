@@ -77,4 +77,5 @@ public abstract class Statement extends Node implements Terminal {
     return isTerminal() || hasGoto();
   }
 
+  private static final long serialVersionUID = 1;
 }

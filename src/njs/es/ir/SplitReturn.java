@@ -38,4 +38,5 @@ public final class SplitReturn extends Statement {
     return INSTANCE;
   }
 
+  private static final long serialVersionUID = 1;
 }

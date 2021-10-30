@@ -200,4 +200,5 @@ public final class SwitchNode extends BreakableStatement {
     return Node.replaceInLexicalContext(lc, this, new SwitchNode(this, expression, cases, defaultCaseIndex, conversion, uniqueInteger, tag));
   }
 
+  private static final long serialVersionUID = 1;
 }

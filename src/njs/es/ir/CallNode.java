@@ -41,7 +41,6 @@ public final class CallNode extends LexicalContextExpression implements Optimist
    */
   public static class EvalArgs implements Serializable {
 
-    private static final long serialVersionUID = 1L;
     private final List<Expression> args;
 
     // location string for the eval call
@@ -77,6 +76,8 @@ public final class CallNode extends LexicalContextExpression implements Optimist
     public String getLocation() {
       return this.location;
     }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /** arguments for 'eval' call. Non-null only if this call node is 'eval' */
@@ -292,4 +293,5 @@ public final class CallNode extends LexicalContextExpression implements Optimist
     return true;
   }
 
+  private static final long serialVersionUID = 1;
 }

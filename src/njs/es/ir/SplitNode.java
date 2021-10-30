@@ -95,10 +95,10 @@ public class SplitNode extends LexicalContextStatement implements CompileUnitHol
     return (this.compileUnit == compileUnit) ? this : Node.replaceInLexicalContext(lc, this, new SplitNode(this, body, compileUnit));
   }
 
-  void writeObject(ObjectOutputStream out) throws IOException {
+  private void writeObject(ObjectOutputStream out) throws IOException {
     // We are only serializing the AST after we run SplitIntoFunctions;
     // no SplitNodes can remain for the serialization.
     throw new NotSerializableException(getClass().getName());
   }
-
+  private static final long serialVersionUID = 1;
 }

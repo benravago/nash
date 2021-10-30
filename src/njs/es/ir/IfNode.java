@@ -119,4 +119,5 @@ public final class IfNode extends Statement implements JoinPredecessor {
     return conversion;
   }
 
+  private static final long serialVersionUID = 1;
 }

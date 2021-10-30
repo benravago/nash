@@ -8,7 +8,6 @@ import es.parser.Token;
 /**
  * ECMAScript parser exceptions.
  */
-@SuppressWarnings("serial")
 public final class ParserException extends NashornException {
 
   // Source from which this ParserException originated

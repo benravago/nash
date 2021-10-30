@@ -4,9 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 import es.codegen.types.Type;
 
@@ -16,8 +14,6 @@ import es.codegen.types.Type;
  * see -Dnashorn.codegen.debug, --log=codegen
  */
 public final class Label implements Serializable {
-
-  private static final long serialVersionUID = 1L;
 
   /**
    * byte code generation evaluation type stack for consistency check and correct opcode selection.
@@ -563,4 +559,5 @@ public final class Label implements Serializable {
     return str;
   }
 
+  private static final long serialVersionUID = 1;
 }

@@ -51,4 +51,5 @@ public final class BreakNode extends JumpStatement {
     return target.getBreakLabel();
   }
 
+  private static final long serialVersionUID = 1;
 }

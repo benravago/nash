@@ -98,4 +98,5 @@ public class BlockStatement extends Statement {
     return (this.block == block) ? this : new BlockStatement(this, block);
   }
 
+  private static final long serialVersionUID = 1;
 }

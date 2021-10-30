@@ -79,4 +79,5 @@ abstract class BreakableStatement extends LexicalContextStatement implements Bre
 
   abstract JoinPredecessor setLocalVariableConversionChanged(LexicalContext lc, LocalVariableConversion conversion);
 
+  private static final long serialVersionUID = 1;
 }

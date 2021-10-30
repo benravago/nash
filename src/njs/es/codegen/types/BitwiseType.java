@@ -17,5 +17,5 @@ public abstract class BitwiseType extends NumericType implements BytecodeBitwise
     super(name, type, weight, slots);
   }
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1;
 }

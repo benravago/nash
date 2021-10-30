@@ -28,8 +28,6 @@ public final class StoredScript implements Serializable {
   @SuppressWarnings("serial") // Not statically typed as Serializable
   private final Map<Integer, FunctionInitializer> initializers;
 
-  private static final long serialVersionUID = 2958227232195298340L;
-
   /**
    * Constructor.
    * @param compilationId compilation id
@@ -127,5 +125,6 @@ public final class StoredScript implements Serializable {
     var cs = (StoredScript) obj;
     return mainClassName.equals(cs.mainClassName) && classBytes.equals(cs.classBytes) && Arrays.equals(constants, cs.constants);
   }
-
+  
+  private static final long serialVersionUID = 1;
 }

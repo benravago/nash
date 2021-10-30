@@ -567,10 +567,10 @@ public final class Symbol implements Comparable<Symbol>, Cloneable, Serializable
     return symbol;
   }
 
-  void readObject(ObjectInputStream in) throws ClassNotFoundException, IOException {
+  private void readObject(ObjectInputStream in) throws ClassNotFoundException, IOException {
     in.defaultReadObject();
     firstSlot = -1;
     fieldIndex = -1;
   }
-
+  private static final long serialVersionUID = 1;
 }

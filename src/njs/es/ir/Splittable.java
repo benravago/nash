@@ -2,6 +2,7 @@ package es.ir;
 
 import java.io.Serializable;
 import java.util.List;
+
 import es.codegen.CompileUnit;
 
 /**
@@ -19,7 +20,7 @@ public interface Splittable {
    * A SplitRange is a range in a splittable expression.
    * It defines the boundaries of the split range and provides a compile unit for code generation.
    */
-  final class SplitRange implements CompileUnitHolder, Serializable { // TODO: can be a record
+  final class SplitRange implements CompileUnitHolder, Serializable {
 
     // Compile unit associated with the postsets range.
     private final CompileUnit compileUnit;
@@ -63,6 +64,8 @@ public interface Splittable {
     public CompileUnit getCompileUnit() {
       return compileUnit;
     }
+    
+    private static final long serialVersionUID = 1;
   }
 
 }

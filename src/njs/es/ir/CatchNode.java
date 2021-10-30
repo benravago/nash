@@ -157,4 +157,5 @@ public final class CatchNode extends Statement {
     return isSyntheticRethrow;
   }
 
+  private static final long serialVersionUID = 1;
 }

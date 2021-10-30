@@ -252,4 +252,5 @@ public final class VarNode extends Statement implements Assignment<IdentNode> {
     return init instanceof FunctionNode node && node.isDeclared();
   }
 
+  private static final long serialVersionUID = 1;
 }

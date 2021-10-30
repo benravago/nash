@@ -256,6 +256,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
     @Override public boolean isLocal() { return true; }
     @Override public boolean isAlwaysFalse() { return !isTrue(); }
     @Override public boolean isAlwaysTrue() { return isTrue(); }
+    
+    private static final long serialVersionUID = 1;
   }
 
   @Immutable
@@ -271,6 +273,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
     @Override public boolean isTrue() { return value; }
     @Override public Type getType() { return Type.BOOLEAN; }
     @Override public Type getWidestOperationType() { return Type.BOOLEAN; }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -314,6 +318,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
 
     @Override public Type getType() { return type; }
     @Override public Type getWidestOperationType() { return getType(); }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -346,6 +352,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
     UndefinedLiteralNode(UndefinedLiteralNode literalNode) {
       super(literalNode);
     }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -385,6 +393,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
       sb.append(value);
       sb.append('\"');
     }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -424,6 +434,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
     public void toString(StringBuilder sb, boolean printType) {
       sb.append(value.toString());
     }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -481,6 +493,8 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
 
     @Override public Type getType() { return Type.OBJECT; }
     @Override public Type getWidestOperationType() { return Type.OBJECT; }
+    
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -840,6 +854,7 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
       sb.append(']');
     }
 
+    private static final long serialVersionUID = 1;
   } // ArrayLiteralNode
 
   /**
@@ -887,4 +902,5 @@ public abstract class LiteralNode<T> extends Expression implements PropertyKey {
     return new ArrayLiteralNode(token, finish, value);
   }
 
+  private static final long serialVersionUID = 1;
 }

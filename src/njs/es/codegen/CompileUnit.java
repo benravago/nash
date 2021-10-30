@@ -172,4 +172,5 @@ public final class CompileUnit implements Comparable<CompileUnit>, Serializable 
     return className.compareTo(o.className);
   }
 
+  private static final long serialVersionUID = 1;
 }

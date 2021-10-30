@@ -58,4 +58,5 @@ public final class ExpressionList extends Expression {
     sb.append(")");
   }
 
+  private static final long serialVersionUID = 1;
 }

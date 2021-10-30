@@ -90,8 +90,6 @@ public abstract class Property implements Serializable {
   /** SwitchPoint that is invalidated when property is changed, optional */
   protected transient SwitchPoint builtinSwitchPoint;
 
-  private static final long serialVersionUID = 2099814273074501176L;
-
   /**
    * Constructor
    *
@@ -626,4 +624,5 @@ public abstract class Property implements Serializable {
     return (flags & IS_ACCESSOR_PROPERTY) != 0;
   }
 
+  private static final long serialVersionUID = 1;
 }

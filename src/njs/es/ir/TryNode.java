@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
@@ -281,4 +280,5 @@ public final class TryNode extends LexicalContextStatement implements JoinPredec
     return conversion;
   }
 
+  private static final long serialVersionUID = 1;
 }

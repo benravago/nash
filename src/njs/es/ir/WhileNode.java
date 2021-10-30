@@ -118,4 +118,5 @@ public final class WhileNode extends LoopNode {
     return false;
   }
 
+  private static final long serialVersionUID = 1;
 }

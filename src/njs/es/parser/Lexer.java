@@ -1607,7 +1607,7 @@ public class Lexer extends Scanner {
       return expression;
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -1641,7 +1641,7 @@ public class Lexer extends Scanner {
       return '/' + getExpression() + '/' + options;
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   }
 
   /**
@@ -1655,7 +1655,7 @@ public class Lexer extends Scanner {
     public XMLToken(String expression) {
       super(expression);
     }
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
   }
 
 }

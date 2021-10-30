@@ -39,4 +39,5 @@ public final class EmptyNode extends Statement {
     sb.append(';');
   }
 
+  private static final long serialVersionUID = 1;
 }

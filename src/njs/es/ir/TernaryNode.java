@@ -3,7 +3,6 @@ package es.ir;
 import es.codegen.types.Type;
 import es.ir.annotations.Immutable;
 import es.ir.visitor.NodeVisitor;
-import es.parser.TokenType;
 
 /**
  * TernaryNode represent the ternary operator {@code ?:}.
@@ -140,4 +139,5 @@ public final class TernaryNode extends Expression {
     return (this.falseExpr == falseExpr) ? this : new TernaryNode(this, test, trueExpr, falseExpr);
   }
 
+  private static final long serialVersionUID = 1;
 }

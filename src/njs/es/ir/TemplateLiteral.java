@@ -46,4 +46,5 @@ public final class TemplateLiteral extends Expression {
     return Collections.unmodifiableList(exprs);
   }
 
+  private static final long serialVersionUID = 1;
 }

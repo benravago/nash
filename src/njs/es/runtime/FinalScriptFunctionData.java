@@ -15,8 +15,6 @@ final class FinalScriptFunctionData extends ScriptFunctionData {
   // documentation key for this function, may be null
   private String docKey;
 
-  private static final long serialVersionUID = -930632846167768864L;
-
   /**
    * Constructor - used for bind
    *
@@ -148,4 +146,5 @@ final class FinalScriptFunctionData extends ScriptFunctionData {
     return mh.type().parameterCount() >= 1 && mh.type().parameterType(0) == boolean.class;
   }
 
+  private static final long serialVersionUID = 1;
 }

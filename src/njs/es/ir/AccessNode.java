@@ -91,5 +91,5 @@ public final class AccessNode extends BaseNode {
     return isSuper() ? this : new AccessNode(this, base, property, isFunction(), type, programPoint, true);
   }
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1;
 }

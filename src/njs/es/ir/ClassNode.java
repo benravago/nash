@@ -120,4 +120,5 @@ public class ClassNode extends Expression {
     sb.append("}");
   }
 
+  private static final long serialVersionUID = 1;
 }

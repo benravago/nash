@@ -108,8 +108,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
 
   private static final int GET_SET_PREFIX_LENGTH = "*et ".length();
 
-  private static final long serialVersionUID = 4914839316174633726L;
-
   /**
    * Constructor - public as scripts use it
    *
@@ -405,12 +403,12 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
     private final byte[] serializedAst;
     private volatile transient Reference<FunctionNode> cachedAst;
 
-    private static final long serialVersionUID = 1L;
-
     SerializedAst(FunctionNode fn, Reference<FunctionNode> cachedAst) {
       this.serializedAst = AstSerializer.serialize(fn);
       this.cachedAst = cachedAst;
     }
+
+    private static final long serialVersionUID = 1;
   }
 
   FunctionNode deserialize(byte[] serializedAst) {
@@ -850,7 +848,7 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
     return true;
   }
 
-  void writeObject(ObjectOutputStream out) throws IOException {
+  private void writeObject(ObjectOutputStream out) throws IOException {
     var localCachedAst = cachedAst;
     out.defaultWriteObject();
     // We need to persist SerializedAst for split functions as they can't reparse the source code.
@@ -860,10 +858,9 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
       out.writeObject(null);
     }
   }
-
-  void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+  private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     cachedAst = in.readObject();
   }
-
+  private static final long serialVersionUID = 1;
 }

@@ -402,4 +402,5 @@ public final class IdentNode extends Expression implements PropertyKey, Function
     return Token.descLength(getToken()) != name.length();
   }
 
+  private static final long serialVersionUID = 1;
 }

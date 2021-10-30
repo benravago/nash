@@ -85,4 +85,5 @@ public final class ExpressionStatement extends Statement {
     return (this.expression == expression) ? this : new ExpressionStatement(this, expression);
   }
 
+  private static final long serialVersionUID = 1;
 }

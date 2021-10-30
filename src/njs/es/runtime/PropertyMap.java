@@ -5,9 +5,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.LongAdder;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -82,8 +80,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
 
   private transient BitSet freeSlots;
 
-  private static final long serialVersionUID = -7041836752008732533L;
-
   /**
    * Constructs a new property map.
    *
@@ -127,22 +123,6 @@ public class PropertyMap implements Iterable<Object>, Serializable {
    */
   protected PropertyMap(PropertyMap propertyMap) {
     this(propertyMap, propertyMap.properties, propertyMap.flags, propertyMap.fieldCount, propertyMap.spillLength, propertyMap.softReferenceDerivationLimit);
-  }
-
-  void writeObject(ObjectOutputStream out) throws IOException {
-    out.defaultWriteObject();
-    out.writeObject(properties.getProperties());
-  }
-
-  void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    in.defaultReadObject();
-    var props = (Property[]) in.readObject();
-    this.properties = EMPTY_HASHMAP.immutableAdd(props);
-    assert className != null;
-    var structure = Context.forStructureClass(className);
-    for (var prop : props) {
-      prop.initMethodHandles(structure);
-    }
   }
 
   /**
@@ -853,4 +833,19 @@ public class PropertyMap implements Iterable<Object>, Serializable {
     return sb.toString();
   }
 
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    out.defaultWriteObject();
+    out.writeObject(properties.getProperties());
+  }
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    var props = (Property[]) in.readObject();
+    this.properties = EMPTY_HASHMAP.immutableAdd(props);
+    assert className != null;
+    var structure = Context.forStructureClass(className);
+    for (var prop : props) {
+      prop.initMethodHandles(structure);
+    }
+  }
+  private static final long serialVersionUID = 1;
 }

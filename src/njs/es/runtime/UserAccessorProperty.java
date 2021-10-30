@@ -1,7 +1,5 @@
 package es.runtime;
 
-import java.util.concurrent.Callable;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -20,8 +18,6 @@ import static es.runtime.linker.NashornCallSiteDescriptor.CALLSITE_PROGRAM_POINT
  * Actual getter and setter functions are stored in underlying ScriptObject. Only the 'slot' info is stored in the property.
  */
 public final class UserAccessorProperty extends SpillProperty {
-
-  private static final long serialVersionUID = -5928687246526840321L;
 
   static final class Accessors {
 
@@ -312,5 +308,6 @@ public final class UserAccessorProperty extends SpillProperty {
   private static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(LOOKUP, UserAccessorProperty.class, name, MH.type(rtype, types));
   }
-
+  
+  private static final long serialVersionUID = 1;
 }

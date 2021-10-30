@@ -71,8 +71,6 @@ public abstract class ScriptFunctionData implements Serializable {
   /** Flag for built-in constructors */
   public static final int IS_BUILTIN_CONSTRUCTOR = IS_BUILTIN | IS_CONSTRUCTOR;
 
-  private static final long serialVersionUID = 4252901245508769114L;
-
   /**
    * Constructor
    *
@@ -705,9 +703,9 @@ public abstract class ScriptFunctionData implements Serializable {
     volatile MethodHandle constructor;
   }
 
-  void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     code = new LinkedList<>();
   }
-
+  private static final long serialVersionUID = 1;
 }

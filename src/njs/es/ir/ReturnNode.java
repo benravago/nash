@@ -97,4 +97,5 @@ public class ReturnNode extends Statement {
     return (this.expression == expression) ? this : new ReturnNode(this, expression);
   }
 
+  private static final long serialVersionUID = 1;
 }

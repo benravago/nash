@@ -51,4 +51,5 @@ public class ContinueNode extends JumpStatement {
     return ((LoopNode) target).getContinueLabel();
   }
 
+  private static final long serialVersionUID = 1;
 }

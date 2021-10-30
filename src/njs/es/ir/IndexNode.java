@@ -98,4 +98,5 @@ public final class IndexNode extends BaseNode {
     return isSuper() ? this : new IndexNode(this, base, index, isFunction(), type, programPoint, true);
   }
 
+  private static final long serialVersionUID = 1;
 }

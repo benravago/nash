@@ -14,8 +14,6 @@ public final class SharedPropertyMap extends PropertyMap {
   @SuppressWarnings("serial") // Not statically typed as Serializable
   private SwitchPoint switchPoint;
 
-  private static final long serialVersionUID = 2166297719721778876L;
-
   /**
    * Create a new shared property map from the given {@code map}.
    * @param map property map to copy
@@ -51,5 +49,6 @@ public final class SharedPropertyMap extends PropertyMap {
       switchPoint = null;
     }
   }
-
+  
+  private static final long serialVersionUID = 1;
 }

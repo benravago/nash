@@ -95,4 +95,5 @@ public class JoinPredecessorExpression extends Expression implements JoinPredece
     }
   }
 
+  private static final long serialVersionUID = 1;
 }

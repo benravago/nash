@@ -176,4 +176,5 @@ public final class PropertyNode extends Node {
     return computed;
   }
 
+  private static final long serialVersionUID = 1;
 }

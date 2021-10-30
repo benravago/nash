@@ -94,4 +94,5 @@ public final class LabelNode extends LexicalContextStatement implements JoinPred
     return (this.localVariableConversion == localVariableConversion) ? this : Node.replaceInLexicalContext(lc, this, new LabelNode(this, labelName, body, localVariableConversion));
   }
 
+  private static final long serialVersionUID = 1;
 }

@@ -937,4 +937,5 @@ public final class FunctionNode extends LexicalContextExpression implements Flag
       new FunctionNode(this, lastToken, endParserState, flags, name, returnType, compileUnit, body, parameters, thisProperties, rootClass, source, namespace));
   }
 
+  private static final long serialVersionUID = 1;
 }

@@ -9,7 +9,6 @@ import java.io.Serializable;
 
 import java.lang.invoke.MethodType;
 
-import es.codegen.CompileUnit;
 import es.codegen.FunctionSignature;
 import es.codegen.types.Type;
 import es.ir.FunctionNode;
@@ -25,8 +24,6 @@ public final class FunctionInitializer implements Serializable {
   private final int flags;
   private transient Map<Integer, Type> invalidatedProgramPoints;
   private transient Class<?> code;
-
-  private static final long serialVersionUID = -5420835725902966692L;
 
   /**
    * Constructor.
@@ -108,14 +105,13 @@ public final class FunctionInitializer implements Serializable {
     return invalidatedProgramPoints;
   }
 
-  void writeObject(ObjectOutputStream out) throws IOException {
+  private void writeObject(ObjectOutputStream out) throws IOException {
     out.defaultWriteObject();
     Type.writeTypeMap(invalidatedProgramPoints, out);
   }
-
-  void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     invalidatedProgramPoints = Type.readTypeMap(in);
   }
-
+  private static final long serialVersionUID = 1;
 }
