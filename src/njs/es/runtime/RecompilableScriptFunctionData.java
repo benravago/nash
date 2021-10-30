@@ -27,7 +27,6 @@ import es.codegen.Compiler.CompilationPhases;
 import es.codegen.CompilerConstants;
 import es.codegen.FunctionSignature;
 import es.codegen.Namespace;
-import es.codegen.OptimisticTypesPersistence;
 import es.codegen.TypeMap;
 import es.codegen.types.Type;
 import es.ir.Block;
@@ -559,14 +558,13 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
   Compiler getCompiler(FunctionNode functionNode, MethodType actualCallSiteType, ScriptObject runtimeScope, Map<Integer, Type> invalidatedProgramPoints, int[] continuationEntryPoints) {
     var typeMap = typeMap(actualCallSiteType);
     var paramTypes = typeMap == null ? null : typeMap.getParameterTypes(functionNodeId);
-    var typeInformationFile = OptimisticTypesPersistence.getLocationDescriptor(source, functionNodeId, paramTypes);
+    // var typeInformationFile = OptimisticTypesPersistence.getLocationDescriptor(source, functionNodeId, paramTypes);
     return Compiler.forOnDemandCompilation(
       getInstallerForNewCode(),
       functionNode.getSource(), // source
       this, // compiledFunction, i.e. this RecompilableScriptFunctionData
       typeMap, // type map
-      getEffectiveInvalidatedProgramPoints(invalidatedProgramPoints, typeInformationFile), // invalidated program points
-      typeInformationFile,
+      getEffectiveInvalidatedProgramPoints(invalidatedProgramPoints), // invalidated program points
       continuationEntryPoints, // continuation entry points
       runtimeScope); // runtime scope
   }
@@ -579,12 +577,8 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
    * @return either the existing map, or a loaded map from the persistent type info cache, or a new empty map if neither an existing map or a persistent cached type info is available.
    */
   @SuppressWarnings("unused")
-  static Map<Integer, Type> getEffectiveInvalidatedProgramPoints(Map<Integer, Type> invalidatedProgramPoints, Object typeInformationFile) {
-    if (invalidatedProgramPoints != null) {
-      return invalidatedProgramPoints;
-    }
-    var loadedProgramPoints = OptimisticTypesPersistence.load(typeInformationFile);
-    return loadedProgramPoints != null ? loadedProgramPoints : new TreeMap<Integer, Type>();
+  static Map<Integer, Type> getEffectiveInvalidatedProgramPoints(Map<Integer, Type> invalidatedProgramPoints) {
+    return (invalidatedProgramPoints != null) ? invalidatedProgramPoints : new TreeMap<Integer, Type>();
   }
 
   FunctionInitializer compileTypeSpecialization(MethodType actualCallSiteType, ScriptObject runtimeScope) {

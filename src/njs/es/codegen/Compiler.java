@@ -77,9 +77,6 @@ public final class Compiler {
   // If this is a recompilation, this is how we pass in the invalidations, e.g. programPoint=17, Type == int means that using whatever was at program point 17 as an int failed.
   private final Map<Integer, Type> invalidatedProgramPoints;
 
-  // Descriptor of the location where we write the type information after compilation.
-  private final Object typeInformationFile;
-
   // Compile unit name of first compile unit - this prefix will be used for all classes that a compilation generates.
   private final String firstCompileUnitName;
 
@@ -315,19 +312,19 @@ public final class Compiler {
    * @param runtimeScope             runtime scope for recompilation type lookup in {@code TypeEvaluator}
    * @return a new compiler
    */
-  public static Compiler forOnDemandCompilation(CodeInstaller installer, Source source, RecompilableScriptFunctionData compiledFunction, TypeMap types, Map<Integer, Type> invalidatedProgramPoints, Object typeInformationFile, int[] continuationEntryPoints, ScriptObject runtimeScope) {
+  public static Compiler forOnDemandCompilation(CodeInstaller installer, Source source, RecompilableScriptFunctionData compiledFunction, TypeMap types, Map<Integer, Type> invalidatedProgramPoints, int[] continuationEntryPoints, ScriptObject runtimeScope) {
     var context = installer.getContext();
-    return new Compiler(context, installer, source, context.getErrorManager(), true, compiledFunction, types, invalidatedProgramPoints, typeInformationFile, continuationEntryPoints, runtimeScope);
+    return new Compiler(context, installer, source, context.getErrorManager(), true, compiledFunction, types, invalidatedProgramPoints, continuationEntryPoints, runtimeScope);
   }
 
   /**
    * Convenience constructor for non on-demand compiler instances.
    */
   Compiler(Context context, CodeInstaller installer, Source source, ErrorManager errors) {
-    this(context, installer, source, errors, false, null, null, null, null, null, null);
+    this(context, installer, source, errors, false, null, null, null, null, null);
   }
 
-  Compiler(Context context, CodeInstaller installer, Source source, ErrorManager errors, boolean isOnDemand, RecompilableScriptFunctionData compiledFunction, TypeMap types, Map<Integer, Type> invalidatedProgramPoints, Object typeInformationFile, int[] continuationEntryPoints, ScriptObject runtimeScope) {
+  Compiler(Context context, CodeInstaller installer, Source source, ErrorManager errors, boolean isOnDemand, RecompilableScriptFunctionData compiledFunction, TypeMap types, Map<Integer, Type> invalidatedProgramPoints, int[] continuationEntryPoints, ScriptObject runtimeScope) {
     this.context = context;
     this.env = context.getEnv();
     this.installer = installer;
@@ -341,7 +338,6 @@ public final class Compiler {
     this.compiledFunction = compiledFunction;
     this.types = types;
     this.invalidatedProgramPoints = invalidatedProgramPoints == null ? new HashMap<>() : invalidatedProgramPoints;
-    this.typeInformationFile = typeInformationFile;
     this.continuationEntryPoints = continuationEntryPoints == null ? null : continuationEntryPoints.clone();
     this.typeEvaluator = new TypeEvaluator(this, runtimeScope);
     this.firstCompileUnitName = firstCompileUnitName();
@@ -475,9 +471,6 @@ public final class Compiler {
         errors.error(error);
         return null;
       }
-    }
-    if (typeInformationFile != null && !phases.isRestOfCompilation()) {
-      OptimisticTypesPersistence.store(typeInformationFile, invalidatedProgramPoints);
     }
     return newFunctionNode;
   }
