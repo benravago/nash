@@ -9,7 +9,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
@@ -32,17 +31,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import es.codegen.types.Type;
-import es.runtime.Context;
-import es.runtime.RecompilableScriptFunctionData;
 import es.runtime.Source;
-import es.runtime.logging.DebugLogger;
 import es.runtime.options.Options;
 
 /**
@@ -206,7 +198,7 @@ public final class OptimisticTypesPersistence {
    * @param e the exception that represents the error.
    */
   static void reportError(String msg, Exception e) {
-    getLogger().warning(msg, "\n", exceptionToString(e));
+    // TODO: getLogger().warning(msg, "\n", exceptionToString(e));
   }
 
   /**
@@ -278,10 +270,10 @@ public final class OptimisticTypesPersistence {
     versionDir.mkdirs();
     if (versionDir.isDirectory()) {
       // FIXME: Logger is disabled as Context.getContext() always returns null here because global scope object will not be created by the time this method gets invoked
-      getLogger().info("Optimistic type persistence directory is " + versionDir);
+      // getLogger().info("Optimistic type persistence directory is " + versionDir);
       return versionDir;
     }
-    getLogger().warning("Could not create optimistic type persistence directory " + versionDir);
+    // getLogger().warning("Could not create optimistic type persistence directory " + versionDir);
     return null;
   }
 
@@ -374,7 +366,7 @@ public final class OptimisticTypesPersistence {
    */
   static boolean isSymbolicLink(File file) {
     if (Files.isSymbolicLink(file.toPath())) {
-      getLogger().warning("Directory " + file + " is a symlink");
+      // getLogger().warning("Directory " + file + " is a symlink");
       return true;
     }
     return false;
@@ -390,17 +382,6 @@ public final class OptimisticTypesPersistence {
 
   static Object getFileLock(File file) {
     return locks[(file.hashCode() & Integer.MAX_VALUE) % locks.length];
-  }
-
-  static DebugLogger getLogger() {
-    try {
-      return Context.getContext().getLogger(RecompilableScriptFunctionData.class);
-    } catch (NullPointerException e) {
-      // Don't print stacktrace until we revisit this, NPE is a known issue here
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return DebugLogger.DISABLED_LOGGER;
   }
 
   static void scheduleCleanup() {

@@ -3,8 +3,6 @@ package es.codegen;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
@@ -78,7 +76,6 @@ import es.ir.visitor.SimpleNodeVisitor;
 import es.objects.Global;
 import es.parser.Lexer.RegexToken;
 import es.parser.TokenType;
-import es.runtime.Context;
 import es.runtime.ECMAException;
 import es.runtime.JSType;
 import es.runtime.OptimisticReturnFilters;
@@ -93,9 +90,6 @@ import es.runtime.Undefined;
 import es.runtime.UnwarrantedOptimismException;
 import es.runtime.arrays.ArrayData;
 import es.runtime.linker.LinkerCallSite;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import es.runtime.options.Options;
 import es.util.Hex;
 import static es.codegen.CompilerConstants.*;
@@ -120,8 +114,7 @@ import static es.runtime.linker.NashornCallSiteDescriptor.*;
  * <p>
  * The CodeGenerator visits nodes only once and emits bytecode for them.
  */
-@Logger(name = "codegen")
-final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContext> implements Loggable {
+final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContext> {
 
   private static final Type SCOPE_TYPE = Type.typeFor(ScriptObject.class);
 
@@ -173,8 +166,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
   // Current compile unit
   private CompileUnit unit;
 
-  private final DebugLogger log;
-
   // From what size should we use spill instead of fields for JavaScript objects?
   static final int OBJECT_SPILL_THRESHOLD = Options.getIntProperty("nashorn.spill.threshold", 256);
 
@@ -208,17 +199,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     this.evalCode = compiler.getSource().isEvalCode();
     this.continuationEntryPoints = continuationEntryPoints;
     this.callSiteFlags = 0;
-    this.log = initLogger(compiler.getContext());
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
   }
 
   /**
@@ -1861,7 +1841,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
     // Of course, even that might not be sufficient; the function might have a code dependency on the type of the variables in its enclosing scopes, and the type of such a variable can be different in catch and finally blocks.
     // So, in the future we will have to decide to either generate a unique method for each inlined copy of the function, maybe figure out its exact type closure and deduplicate based on that, or just decide that functions in finally blocks aren't worth it, and generate one method with most generic type closure.
     if (!emittedMethods.contains(fnName)) {
-      log.info("=== BEGIN ", fnName);
       assert functionNode.getCompileUnit() != null : "no compile unit for " + fnName + " " + Hex.id(functionNode);
       unit = lc.pushCompileUnit(functionNode.getCompileUnit());
       assert lc.hasCompileUnits();
@@ -1904,7 +1883,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
         method.end(); // wrap up this method
         unit = lc.popCompileUnit(functionNode.getCompileUnit());
         popMethodEmitter();
-        log.info("=== END ", functionNode.getName());
       } else {
         markOptimistic = false;
       }

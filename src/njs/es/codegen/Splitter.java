@@ -18,17 +18,13 @@ import es.ir.Statement;
 import es.ir.VarNode;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.runtime.Context;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import es.runtime.options.Options;
 import static es.codegen.CompilerConstants.SPLIT_PREFIX;
 
 /**
  * Split the IR into smaller compile units.
  */
-@Logger(name = "splitter")
-final class Splitter extends SimpleNodeVisitor implements Loggable {
+final class Splitter extends SimpleNodeVisitor {
 
   // Current compiler.
   private final Compiler compiler;
@@ -45,8 +41,6 @@ final class Splitter extends SimpleNodeVisitor implements Loggable {
   // Weight threshold for when to start a split.
   public static final long SPLIT_THRESHOLD = Options.getIntProperty("nashorn.compiler.splitter.threshold", 32 * 1024);
 
-  private final DebugLogger log;
-
   /**
    * Constructor.
    *
@@ -58,17 +52,6 @@ final class Splitter extends SimpleNodeVisitor implements Loggable {
     this.compiler = compiler;
     this.outermost = functionNode;
     this.outermostCompileUnit = outermostCompileUnit;
-    this.log = initLogger(compiler.getContext());
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
   }
 
   /**
@@ -78,12 +61,10 @@ final class Splitter extends SimpleNodeVisitor implements Loggable {
    */
   FunctionNode split(FunctionNode fn, boolean top) {
     var functionNode = fn;
-    log.fine("Initiating split of '", functionNode.getName(), "'");
     var weight = WeighNodes.weigh(functionNode);
     // We know that our LexicalContext is empty outside the call to functionNode.accept(this) below, so we can pass null to all methods expecting a LexicalContext parameter.
     assert lc.isEmpty() : "LexicalContext not empty";
     if (weight >= SPLIT_THRESHOLD) {
-      log.info("Splitting function '", functionNode.getName(), "' as its weight ", weight, " exceeds split threshold ", SPLIT_THRESHOLD);
       functionNode = (FunctionNode) functionNode.accept(this);
       if (functionNode.isSplit()) {
         // Weight has changed so weigh again, this time using block weight cache
@@ -259,7 +240,6 @@ final class Splitter extends SimpleNodeVisitor implements Loggable {
         final CompileUnit unit = compiler.findUnit(totalWeight);
         ranges.add(new Splittable.SplitRange(unit, lo, postsets.length));
       }
-      log.info("Splitting array literal in '", functionNode.getName(), "' as its weight ", weight, " exceeds split threshold ", SPLIT_THRESHOLD);
       return arrayLiteralNode.setSplitRanges(lc, ranges);
     }
     return literal;
@@ -296,7 +276,6 @@ final class Splitter extends SimpleNodeVisitor implements Loggable {
       var unit = compiler.findUnit(totalWeight);
       ranges.add(new Splittable.SplitRange(unit, lo, properties.size()));
     }
-    log.info("Splitting object node in '", functionNode.getName(), "' as its weight ", weight, " exceeds split threshold ", SPLIT_THRESHOLD);
     return objectNode.setSplitRanges(lc, ranges);
   }
 

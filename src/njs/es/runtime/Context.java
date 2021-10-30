@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -54,10 +53,6 @@ import es.objects.Global;
 import es.parser.Parser;
 import es.runtime.events.RuntimeEvent;
 import es.runtime.linker.Bootstrap;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
-import es.runtime.options.LoggingOption.LoggerInfo;
 import es.runtime.options.Options;
 import static es.codegen.CompilerConstants.*;
 import static es.runtime.ECMAErrors.typeError;
@@ -409,7 +404,6 @@ public final class Context {
     } else {
       fieldMode = FieldMode.AUTO; // TODO: always do this
     }
-    initLoggers();
   }
 
   /**
@@ -776,7 +770,7 @@ public final class Context {
         currentGlobalConstants.invalidateForever();
         return;
       }
-      var newGlobalConstants = new GlobalConstants(getLogger(GlobalConstants.class));
+      var newGlobalConstants = new GlobalConstants();
       if (globalConstantsRef.compareAndSet(null, newGlobalConstants)) {
         // First invocation; we're creating the first Global in this Context.
         // Create the GlobalConstants object for this Context.
@@ -965,17 +959,13 @@ public final class Context {
     errMan.reset();
     var script = findCachedClass(source);
     if (script != null) {
-      var log = getLogger(Compiler.class);
-      if (log.isEnabled()) {
-        log.fine(new RuntimeEvent<>(Level.INFO, source), "Code cache hit for ", source, " avoiding recompile.");
-      }
       return script;
     }
     FunctionNode functionNode = null;
     // Don't use code store if optimistic types is enabled but lazy compilation is not. // TODO: review for how to remove code store
     // This would store a full script compilation with many wrong optimistic assumptions that would do more harm than good on later runs with both optimistic types and lazy compilation enabled.
 
-      functionNode = new Parser(env, source, errMan, getLogger(Parser.class)).parse();
+      functionNode = new Parser(env, source, errMan).parse();
       if (errMan.hasErrors()) {
         return null;
       }
@@ -1014,24 +1004,18 @@ public final class Context {
    * Cache for compiled script classes.
    */
   @SuppressWarnings("serial")
-  @Logger(name = "classcache")
-  static class ClassCache extends LinkedHashMap<Source, ClassReference> implements Loggable {
+  static class ClassCache extends LinkedHashMap<Source, ClassReference> {
 
     private final int size;
     private final ReferenceQueue<Class<?>> queue;
-    private final DebugLogger log;
 
     ClassCache(Context context, int size) {
       super(size, 0.75f, true);
       this.size = size;
       this.queue = new ReferenceQueue<>();
-      this.log = initLogger(context);
     }
 
     void cache(Source source, Class<?> clazz) {
-      if (log.isEnabled()) {
-        log.info("Caching ", source, " in class cache");
-      }
       put(source, new ClassReference(clazz, queue, source));
     }
 
@@ -1044,26 +1028,10 @@ public final class Context {
     public ClassReference get(Object key) {
       for (ClassReference ref; (ref = (ClassReference) queue.poll()) != null;) {
         var source = ref.source;
-        if (log.isEnabled()) {
-          log.info("Evicting ", source, " from class cache.");
-        }
         remove(source);
       }
       var ref = super.get(key);
-      if (ref != null && log.isEnabled()) {
-        log.info("Retrieved class reference for ", ref.source, " from class cache");
-      }
       return ref;
-    }
-
-    @Override
-    public DebugLogger initLogger(Context context) {
-      return context.getLogger(getClass());
-    }
-
-    @Override
-    public DebugLogger getLogger() {
-      return log;
     }
   }
 
@@ -1087,59 +1055,6 @@ public final class Context {
     if (classCache != null) {
       classCache.cache(source, clazz);
     }
-  }
-
-  // logging
-  private final Map<String, DebugLogger> loggers = new HashMap<>();
-
-  void initLoggers() {
-    ((Loggable) MethodHandleFactory.getFunctionality()).initLogger(this);
-  }
-
-  /**
-   * Get a logger, given a loggable class
-   * @param clazz a Loggable class
-   * @return debuglogger associated with that class
-   */
-  public DebugLogger getLogger(Class<? extends Loggable> clazz) {
-    return getLogger(clazz, null);
-  }
-
-  /**
-   * Get a logger, given a loggable class
-   * @param clazz a Loggable class
-   * @param initHook an init hook - if this is the first time the logger is created in the context, run the init hook
-   * @return debuglogger associated with that class
-   */
-  public DebugLogger getLogger(Class<? extends Loggable> clazz, Consumer<DebugLogger> initHook) {
-    var name = getLoggerName(clazz);
-    var logger = loggers.get(name);
-    if (logger == null) {
-      if (!env.hasLogger(name)) {
-        return DebugLogger.DISABLED_LOGGER;
-      }
-      final LoggerInfo info = env._loggers.get(name);
-      logger = new DebugLogger(name, info.getLevel(), info.isQuiet());
-      if (initHook != null) {
-        initHook.accept(logger);
-      }
-      loggers.put(name, logger);
-    }
-    return logger;
-  }
-
-  static String getLoggerName(Class<?> type) {
-    var current = type;
-    while (current != null) {
-      var log = current.getAnnotation(Logger.class);
-      if (log != null) {
-        assert !"".equals(log.name());
-        return log.name();
-      }
-      current = current.getSuperclass();
-    }
-    assert false;
-    return null;
   }
 
   /**

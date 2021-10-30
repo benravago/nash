@@ -45,9 +45,6 @@ import es.parser.Parser;
 import es.parser.Token;
 import es.parser.TokenType;
 import es.runtime.linker.NameCodec;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import es.runtime.options.Options;
 import static es.lookup.Lookup.MH;
 
@@ -56,8 +53,7 @@ import static es.lookup.Lookup.MH;
  *
  * The common denominator is that it can get new invokers during its lifespan, unlike {@code FinalScriptFunctionData}
  */
-@Logger(name = "recompile")
-public final class RecompilableScriptFunctionData extends ScriptFunctionData implements Loggable {
+public final class RecompilableScriptFunctionData extends ScriptFunctionData {
 
   /** Prefix used for all recompiled script classes */
   public static final String RECOMPILATION_PREFIX = "Recompilation$";
@@ -105,8 +101,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
-  private transient DebugLogger log;
-
   @SuppressWarnings("serial") // Not statically typed as Serializable
   private final Map<String, Integer> externalScopeDepths;
 
@@ -145,7 +139,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
       assert nfn.getParent() == null;
       nfn.setParent(this);
     }
-    createLogger();
   }
 
   static <K, V> Map<K, V> smallMap(Map<K, V> map) {
@@ -167,16 +160,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
     } else {
       return set;
     }
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context ctxt) {
-    return ctxt.getLogger(this.getClass());
   }
 
   /**
@@ -338,7 +321,7 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
     var descPosition = Token.descPosition(token);
     var context = Context.getContextTrusted();
     // source starts at line 0, so even though lineNumber is the correct declaration line, back off one to make it exclusive
-    var parser = new Parser(context.getEnv(), source, new Context.ThrowErrorManager(), lineNumber - 1, context.getLogger(Parser.class));
+    var parser = new Parser(context.getEnv(), source, new Context.ThrowErrorManager(), lineNumber - 1);
     if (getFunctionFlag(FunctionNode.IS_ANONYMOUS)) {
       parser.setFunctionName(functionName);
     }
@@ -607,10 +590,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
   FunctionInitializer compileTypeSpecialization(MethodType actualCallSiteType, ScriptObject runtimeScope) {
     // We're creating an empty script object for holding local variables.
     // AssignSymbols will populate it with explicit Undefined values for undefined local variables (see AssignSymbols#defineSymbol() and CompilationEnvironment#declareLocalSymbol()).
-    if (log.isEnabled()) {
-      log.info("Parameter type specialization of '", functionName, "' signature: ", actualCallSiteType);
-    }
-
     String cacheKey = null;
     var fn = reparse();
     var compiler = getCompiler(fn, actualCallSiteType, runtimeScope);
@@ -654,21 +633,13 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
     return (!getFunctionFlag(FunctionNode.IS_DECLARED) && f.isDeclared()) ? f.clearFlag(null, FunctionNode.IS_DECLARED) : f;
   }
 
-  void logLookup(boolean shouldLog, MethodType targetType) {
-    if (shouldLog && log.isEnabled()) {
-      log.info("Looking up ", DebugLogger.quote(functionName), " type=", targetType);
-    }
-  }
-
   MethodHandle lookup(FunctionInitializer fnInit, boolean shouldLog) {
     var type = fnInit.getMethodType();
-    logLookup(shouldLog, type);
     return lookupCodeMethod(fnInit.getCode(), type);
   }
 
   MethodHandle lookup(FunctionNode fn) {
     var type = new FunctionSignature(fn).getMethodType();
-    logLookup(true, type);
     return lookupCodeMethod(fn.getCompileUnit().getCode(), type);
   }
 
@@ -899,11 +870,6 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData imp
   void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     cachedAst = in.readObject();
-    createLogger();
-  }
-
-  void createLogger() {
-    log = initLogger(Context.getContextTrusted());
   }
 
 }

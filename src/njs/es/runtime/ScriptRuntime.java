@@ -26,11 +26,9 @@ import es.objects.AbstractIterator;
 import es.objects.Global;
 import es.objects.NativeObject;
 import es.objects.NativeJava;
-import es.objects.NativeArray;
 import es.parser.Lexer;
 import es.runtime.arrays.ArrayIndex;
 import es.runtime.linker.Bootstrap;
-import es.runtime.linker.InvokeByName;
 import static es.codegen.CompilerConstants.staticCall;
 import static es.codegen.CompilerConstants.staticCallNoLookup;
 import static es.runtime.ECMAErrors.rangeError;
@@ -933,7 +931,6 @@ public final class ScriptRuntime {
     var context = Context.getContextTrusted();
     var sp = context.getBuiltinSwitchPoint(name);
     assert sp != null;
-    context.getLogger(ApplySpecialization.class).info("Overwrote special name '" + name + "' - invalidating switchpoint");
     SwitchPoint.invalidateAll(new SwitchPoint[]{sp});
   }
 

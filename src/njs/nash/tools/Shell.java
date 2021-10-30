@@ -320,7 +320,7 @@ public class Shell {
 
       // For each file on the command line.
       for (var fileName : files) {
-        var functionNode = new Parser(env, sourceFor(fileName, new File(fileName)), errors, 0, context.getLogger(Parser.class)).parse();
+        var functionNode = new Parser(env, sourceFor(fileName, new File(fileName)), errors, 0).parse();
 
         if (errors.getNumberOfErrors() != 0) {
           return COMPILATION_ERROR;

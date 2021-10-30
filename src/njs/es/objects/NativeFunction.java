@@ -259,7 +259,7 @@ public final class NativeFunction {
 
   static Parser getParser(String sourceText) {
     var env = Global.getEnv();
-    return new Parser(env, sourceFor("<function>", sourceText), new Context.ThrowErrorManager(), null);
+    return new Parser(env, sourceFor("<function>", sourceText), new Context.ThrowErrorManager());
   }
 
 }

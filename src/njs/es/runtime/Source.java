@@ -17,10 +17,8 @@ import java.io.PrintWriter;
 import java.io.Reader;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -35,15 +33,11 @@ import java.lang.ref.WeakReference;
 import nash.scripting.URLReader;
 
 import es.parser.Token;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 
 /**
  * Source objects track the origin of JavaScript entities.
  */
-@Logger(name = "source")
-public final class Source implements Loggable {
+public final class Source {
 
   private static final int BUF_SIZE = 8 * 1024;
   private static final Cache CACHE = new Cache();
@@ -351,10 +345,7 @@ public final class Source implements Loggable {
   }
 
   static void debug(Object... msg) {
-    var logger = getLoggerStatic();
-    if (logger != null) {
-      logger.info(msg);
-    }
+    // no-op
   }
 
   char[] data() {
@@ -883,20 +874,6 @@ public final class Source implements Loggable {
     }
   }
 
-  static DebugLogger getLoggerStatic() {
-    final Context context = Context.getContextTrustedOrNull();
-    return context == null ? null : context.getLogger(Source.class);
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return initLogger(Context.getContextTrusted());
-  }
 
   File dumpFile(File dirFile) {
     var u = getURL();

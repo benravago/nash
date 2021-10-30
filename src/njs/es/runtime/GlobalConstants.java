@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -16,17 +15,12 @@ import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
 
 import es.lookup.Lookup;
-import es.lookup.MethodHandleFactory;
 import es.runtime.linker.NashornCallSiteDescriptor;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import es.util.Hex;
 import static es.codegen.CompilerConstants.*;
 import static es.lookup.Lookup.MH;
 import static es.runtime.UnwarrantedOptimismException.INVALID_PROGRAM_POINT;
 import static es.runtime.linker.NashornCallSiteDescriptor.getProgramPoint;
-import static es.runtime.logging.DebugLogger.quote;
 
 /**
  * Each context owns one of these.
@@ -53,8 +47,7 @@ import static es.runtime.logging.DebugLogger.quote;
  *
  * As long as all Globals in a Context share the same GlobalConstants instance, we need synchronization whenever we access it.
  */
-@Logger(name = "const")
-public final class GlobalConstants implements Loggable {
+public final class GlobalConstants {
 
   /**
    * Should we only try to link globals as constants, and not generic script objects.
@@ -68,31 +61,10 @@ public final class GlobalConstants implements Loggable {
   private static final MethodHandle INVALIDATE_SP = virtualCall(LOOKUP, GlobalConstants.class, "invalidateSwitchPoint", Object.class, Object.class, Access.class).methodHandle();
   private static final MethodHandle RECEIVER_GUARD = staticCall(LOOKUP, GlobalConstants.class, "receiverGuard", boolean.class, Access.class, Object.class, Object.class).methodHandle();
 
-  // Logger for constant getters
-  private final DebugLogger log;
-
   // Access map for this global - associates a symbol name with an Access object, with getter and invalidation information
   private final Map<Object, Access> map = new HashMap<>();
 
   private final AtomicBoolean invalidatedForever = new AtomicBoolean(false);
-
-  /**
-   * Constructor - used only by global
-   * @param log logger, or null if none
-   */
-  public GlobalConstants(DebugLogger log) {
-    this.log = log == null ? DebugLogger.DISABLED_LOGGER : log;
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return DebugLogger.DISABLED_LOGGER;
-  }
 
   /**
    * Information about a constant access and its potential invalidations
@@ -168,7 +140,7 @@ public final class GlobalConstants implements Loggable {
 
     @Override
     public String toString() {
-      return "[" + quote(name) + " <id=" + Hex.id(this) + "> inv#=" + invalidations + '/' + MAX_RETRIES + " sp_inv=" + sp.hasBeenInvalidated() + ']';
+      return "[" + Hex.quote(name) + " <id=" + Hex.id(this) + "> inv#=" + invalidations + '/' + MAX_RETRIES + " sp_inv=" + sp.hasBeenInvalidated() + ']';
     }
 
     String getName() {
@@ -186,7 +158,6 @@ public final class GlobalConstants implements Loggable {
    */
   public void invalidateAll() {
     if (!invalidatedForever.get()) {
-      log.info("New global created - invalidating all constant callsites without increasing invocation count.");
       synchronized (this) {
         for (var acc : map.values()) {
           acc.invalidateUncounted();
@@ -201,7 +172,6 @@ public final class GlobalConstants implements Loggable {
    */
   public void invalidateForever() {
     if (invalidatedForever.compareAndSet(false, true)) {
-      log.info("New global created - invalidating all constant callsites.");
       synchronized (this) {
         for (var acc : map.values()) {
           acc.invalidateForever();
@@ -219,19 +189,9 @@ public final class GlobalConstants implements Loggable {
    */
   @SuppressWarnings("unused")
   synchronized Object invalidateSwitchPoint(Object obj, Access acc) {
-    if (log.isEnabled()) {
-      log.info("*** Invalidating switchpoint " + acc.getSwitchPoint() + " for receiver=" + obj + " access=" + acc);
-    }
     acc.invalidateOnce();
     if (acc.mayRetry()) {
-      if (log.isEnabled()) {
-        log.info("Retry is allowed for " + acc + "... Creating a new switchpoint.");
-      }
       acc.newSwitchPoint();
-    } else {
-      if (log.isEnabled()) {
-        log.info("This was the last time I allowed " + quote(acc.getName()) + " to relink as constant.");
-      }
     }
     return obj;
   }
@@ -299,17 +259,10 @@ public final class GlobalConstants implements Loggable {
     var name = NashornCallSiteDescriptor.getOperand(desc);
     synchronized (this) {
       var acc = getOrCreateSwitchPoint(name);
-      if (log.isEnabled()) {
-        log.fine("Trying to link constant SETTER ", acc);
-      }
       if (!acc.mayRetry() || invalidatedForever.get()) {
-        if (log.isEnabled()) {
-          log.fine("*** SET: Giving up on " + quote(name) + " - retry count has exceeded " + DynamicLinker.getLinkedCallSiteLocation());
-        }
         return null;
       }
       if (acc.hasBeenInvalidated()) {
-        log.info("New chance for " + acc);
         acc.newSwitchPoint();
       }
       assert !acc.hasBeenInvalidated();
@@ -320,7 +273,6 @@ public final class GlobalConstants implements Loggable {
       var invalidator = MH.asType(boundInvalidator, boundInvalidator.type().changeParameterType(0, receiverType).changeReturnType(receiverType));
       var mh = MH.filterArguments(inv.getInvocation(), 0, MH.insertArguments(invalidator, 1, acc));
       assert inv.getSwitchPoints() == null : Arrays.asList(inv.getSwitchPoints());
-      log.info("Linked setter " + quote(name) + " " + acc.getSwitchPoint());
       return new GuardedInvocation(mh, inv.getGuard(), acc.getSwitchPoint(), inv.getException());
     }
   }
@@ -357,15 +309,8 @@ public final class GlobalConstants implements Loggable {
     var name = NashornCallSiteDescriptor.getOperand(desc);
     synchronized (this) {
       var acc = getOrCreateSwitchPoint(name);
-      log.fine("Starting to look up object value " + name);
       var c = find.getObjectValue();
-      if (log.isEnabled()) {
-        log.fine("Trying to link constant GETTER " + acc + " value = " + c);
-      }
       if (acc.hasBeenInvalidated() || acc.guardFailed() || invalidatedForever.get()) {
-        if (log.isEnabled()) {
-          log.info("*** GET: Giving up on " + quote(name) + " - retry count has exceeded " + DynamicLinker.getLinkedCallSiteLocation());
-        }
         return null;
       }
       var cmh = constantGetter(c);

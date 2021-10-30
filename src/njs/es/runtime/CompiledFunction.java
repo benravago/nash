@@ -3,12 +3,10 @@ package es.runtime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandle;
@@ -21,15 +19,11 @@ import jdk.dynalink.linker.GuardedInvocation;
 
 import es.codegen.Compiler;
 import es.codegen.Compiler.CompilationPhases;
-import es.codegen.TypeMap;
 import es.codegen.types.ArrayType;
 import es.codegen.types.Type;
 import es.ir.FunctionNode;
 import es.objects.annotations.SpecializedFunction.LinkLogic;
-import es.runtime.events.RecompilationEvent;
 import es.runtime.linker.Bootstrap;
-import es.runtime.logging.DebugLogger;
-import es.util.Hex;
 import static es.lookup.Lookup.MH;
 import static es.runtime.UnwarrantedOptimismException.INVALID_PROGRAM_POINT;
 import static es.runtime.UnwarrantedOptimismException.isValid;
@@ -45,8 +39,6 @@ final class CompiledFunction {
   private static final MethodHandle RELINK_COMPOSABLE_INVOKER = findOwnMH("relinkComposableInvoker", void.class, CallSite.class, CompiledFunction.class, boolean.class);
   private static final MethodHandle HANDLE_REWRITE_EXCEPTION = findOwnMH("handleRewriteException", MethodHandle.class, CompiledFunction.class, OptimismInfo.class, RewriteException.class);
   private static final MethodHandle RESTOF_INVOKER = MethodHandles.exactInvoker(MethodType.methodType(Object.class, RewriteException.class));
-
-  private final DebugLogger log;
 
   static final Collection<CompiledFunction> NO_FUNCTIONS = Collections.emptySet();
 
@@ -69,10 +61,10 @@ final class CompiledFunction {
   }
 
   CompiledFunction(MethodHandle invoker, MethodHandle constructor, Specialization specialization) {
-    this(invoker, constructor, 0, null, specialization, DebugLogger.DISABLED_LOGGER);
+    this(invoker, constructor, 0, null, specialization);
   }
 
-  CompiledFunction(MethodHandle invoker, MethodHandle constructor, int flags, MethodType callSiteType, Specialization specialization, DebugLogger log) {
+  CompiledFunction(MethodHandle invoker, MethodHandle constructor, int flags, MethodType callSiteType, Specialization specialization) {
     this.specialization = specialization;
     if (specialization != null && specialization.isOptimistic()) {
       // An optimistic builtin with isOptimistic=true works like any optimistic generated function, i.e. it can throw unwarranted optimism exceptions.
@@ -88,11 +80,10 @@ final class CompiledFunction {
     this.constructor = constructor;
     this.flags = flags;
     this.callSiteType = callSiteType;
-    this.log = log;
   }
 
   CompiledFunction(MethodHandle invoker, RecompilableScriptFunctionData functionData, Map<Integer, Type> invalidatedProgramPoints, MethodType callSiteType, int flags) {
-    this(invoker, null, flags, callSiteType, null, functionData.getLogger());
+    this(invoker, null, flags, callSiteType, null);
     optimismInfo = ((flags & FunctionNode.IS_DEOPTIMIZABLE) != 0) ? new OptimismInfo(functionData, invalidatedProgramPoints) :null;
   }
 
@@ -636,17 +627,6 @@ final class CompiledFunction {
     return list;
   }
 
-  void logRecompile(String reason, FunctionNode fn, MethodType type, Map<Integer, Type> ipp) {
-    if (log.isEnabled()) {
-      log.info(reason, DebugLogger.quote(fn.getName()), " signature: ", type);
-      log.indent();
-      for (var str : toStringInvalidations(ipp)) {
-        log.fine(str);
-      }
-      log.unindent();
-    }
-  }
-
   /**
    * Handles a {@link RewriteException} raised during the execution of this function by recompiling (if needed) the function with an optimistic assumption invalidated at the program point indicated by the exception, and then executing a rest-of method to complete the execution with the deoptimized version.
    * @param oldOptInfo the optimism info of this function. We must store it explicitly as a bound argument in the method handle, otherwise it could be null for handling a rewrite exception in an outer invocation of a recursive function when recursive invocations of the function have completely deoptimized it.
@@ -654,10 +634,6 @@ final class CompiledFunction {
    * @return the method handle for the rest-of method, for folding composition.
    */
   synchronized MethodHandle handleRewriteException(OptimismInfo oldOptInfo, RewriteException re) {
-    if (log.isEnabled()) {
-      log.info(new RecompilationEvent(Level.INFO, re, re.getReturnValueNonDestructive()), "caught RewriteException ", re.getMessageShort());
-      log.indent();
-    }
     var type = type();
     // Compiler needs a call site type as its input, which always has a callee parameter, so we must add it if this function doesn't have a callee parameter.
     var ct = type.parameterType(0) == ScriptFunction.class ? type : type.insertParameterTypes(0, ScriptFunction.class);
@@ -671,27 +647,15 @@ final class CompiledFunction {
     if (!shouldRecompile) {
       // It didn't necessarily recompile, e.g. for an outer invocation of a recursive function if we already recompiled a deoptimized version for an inner invocation.
       // We still need to do the rest of from the beginning
-      logRecompile("Rest-of compilation [STANDALONE] ", fn, ct, effectiveOptInfo.invalidatedProgramPoints);
       return restOfHandle(effectiveOptInfo, compiler.compile(fn, cached ? CompilationPhases.COMPILE_CACHED_RESTOF : CompilationPhases.COMPILE_ALL_RESTOF), currentOptInfo != null);
     }
-    logRecompile("Deoptimizing recompilation (up to bytecode) ", fn, ct, effectiveOptInfo.invalidatedProgramPoints);
     fn = compiler.compile(fn, cached ? CompilationPhases.RECOMPILE_CACHED_UPTO_BYTECODE : CompilationPhases.COMPILE_UPTO_BYTECODE);
-    log.fine("Reusable IR generated");
     // compile the rest of the function, and install it
-    log.info("Generating and installing bytecode from reusable IR...");
-    logRecompile("Rest-of compilation [CODE PIPELINE REUSE] ", fn, ct, effectiveOptInfo.invalidatedProgramPoints);
     var normalFn = compiler.compile(fn, CompilationPhases.GENERATE_BYTECODE_AND_INSTALL);
     var canBeDeoptimized = normalFn.canBeDeoptimized();
-    if (log.isEnabled()) {
-      log.unindent();
-      log.info("Done.");
-      log.info("Recompiled '", fn.getName(), "' (", Hex.id(this), ") ", canBeDeoptimized ? "can still be deoptimized." : " is completely deoptimized.");
-      log.finest("Looking up invoker...");
-    }
     var newInvoker = effectiveOptInfo.data.lookup(fn);
     invoker = newInvoker.asType(type.changeReturnType(newInvoker.type().returnType()));
     constructor = null; // Will be regenerated when needed
-    log.info("Done: ", invoker);
     var restOf = restOfHandle(effectiveOptInfo, compiler.compile(fn, CompilationPhases.GENERATE_BYTECODE_AND_INSTALL_RESTOF), canBeDeoptimized);
     // Note that we only adjust the switch point after we set the invoker/constructor. This is important.
     if (canBeDeoptimized) {
@@ -716,16 +680,14 @@ final class CompiledFunction {
     private final RecompilableScriptFunctionData data;
     private final Map<Integer, Type> invalidatedProgramPoints;
     private SwitchPoint optimisticAssumptions;
-    private final DebugLogger log;
 
     OptimismInfo(RecompilableScriptFunctionData data, Map<Integer, Type> invalidatedProgramPoints) {
       this.data = data;
-      this.log = data.getLogger();
       this.invalidatedProgramPoints = invalidatedProgramPoints == null ? new TreeMap<>() : invalidatedProgramPoints;
       newOptimisticAssumptions();
     }
 
-    void newOptimisticAssumptions() {
+    private void newOptimisticAssumptions() {
       optimisticAssumptions = new SwitchPoint();
     }
 
@@ -733,9 +695,6 @@ final class CompiledFunction {
       var retType = e.getReturnType();
       var previousFailedType = invalidatedProgramPoints.put(e.getProgramPoint(), retType);
       if (previousFailedType != null && !previousFailedType.narrowerThan(retType)) {
-        var stack = e.getStackTrace();
-        var functionId = stack.length == 0 ? data.getName() : stack[0].getClassName() + "." + stack[0].getMethodName();
-        log.info("RewriteException for an already invalidated program point ", e.getProgramPoint(), " in ", functionId, ". This is okay for a recursive function invocation, but a bug otherwise.");
         return false;
       }
       SwitchPoint.invalidateAll(new SwitchPoint[]{optimisticAssumptions});

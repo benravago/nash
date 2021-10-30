@@ -2,7 +2,6 @@ package es.runtime.arrays;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.invoke.SwitchPoint;
 
 import jdk.dynalink.CallSiteDescriptor;
@@ -13,7 +12,6 @@ import es.codegen.types.Type;
 import es.lookup.Lookup;
 import es.runtime.ScriptObject;
 import es.runtime.linker.NashornCallSiteDescriptor;
-import es.runtime.logging.Logger;
 import static es.codegen.CompilerConstants.staticCall;
 import static es.lookup.Lookup.MH;
 import static es.runtime.JSType.getAccessorTypeIndex;
@@ -23,7 +21,6 @@ import static es.runtime.UnwarrantedOptimismException.isValid;
 /**
  * Interface implemented by all arrays that are directly accessible as underlying native arrays
  */
-@Logger(name = "arrays")
 public abstract class ContinuousArrayData extends ArrayData {
 
   /**

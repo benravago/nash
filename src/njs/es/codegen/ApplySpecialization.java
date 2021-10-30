@@ -19,10 +19,6 @@ import es.ir.IdentNode;
 import es.ir.Node;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.objects.Global;
-import es.runtime.Context;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import es.runtime.options.Options;
 import static es.codegen.CompilerConstants.*;
 
@@ -53,12 +49,9 @@ import static es.codegen.CompilerConstants.*;
  * new Color(17, 47, 11);
  * </pre>
  */
-@Logger(name = "apply2call")
-public final class ApplySpecialization extends SimpleNodeVisitor implements Loggable {
+public final class ApplySpecialization extends SimpleNodeVisitor {
 
   private static final boolean USE_APPLY2CALL = Options.getBooleanProperty("nashorn.apply2call", true);
-
-  private final DebugLogger log;
 
   private final Compiler compiler;
 
@@ -77,17 +70,6 @@ public final class ApplySpecialization extends SimpleNodeVisitor implements Logg
    */
   public ApplySpecialization(Compiler compiler) {
     this.compiler = compiler;
-    this.log = initLogger(compiler.getContext());
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
   }
 
   @SuppressWarnings("serial")
@@ -124,7 +106,6 @@ public final class ApplySpecialization extends SimpleNodeVisitor implements Logg
     } catch (AppliesFoundException e) {
       return true;
     }
-    log.fine("There are no applies in ", DebugLogger.quote(functionNode.getName()), " - nothing to do.");
     return false; // no applies
   }
 
@@ -210,9 +191,6 @@ public final class ApplySpecialization extends SimpleNodeVisitor implements Logg
       }
       changed.add(lc.getCurrentFunction().getId());
       var newCallNode = callNode.setArgs(newArgs).setIsApplyToCall();
-      if (log.isEnabled()) {
-        log.fine("Transformed ", callNode, " from apply to call => ", newCallNode, " in ", DebugLogger.quote(lc.getCurrentFunction().getName()));
-      }
       return newCallNode;
     }
     return callNode;
@@ -256,21 +234,16 @@ public final class ApplySpecialization extends SimpleNodeVisitor implements Logg
       return false;
     }
     if (!Global.isBuiltinFunctionPrototypeApply()) {
-      log.fine("Apply transform disabled: apply/call overridden");
       assert !Global.isBuiltinFunctionPrototypeCall() : "call and apply should have the same SwitchPoint";
       return false;
     }
     if (!hasApplies(functionNode)) {
       return false;
     }
-    if (log.isEnabled()) {
-      log.info("Trying to specialize apply to call in '", functionNode.getName(), "' params=", functionNode.getParameters(), " id=", functionNode.getId(), " source=", massageURL(functionNode.getSource().getURL()));
-    }
     try {
       checkValidTransform(functionNode);
       pushExplodedArgs(functionNode);
     } catch (TransformFailedException e) {
-      log.info("Failure: ", e.getMessage());
       return false;
     }
     return true;
@@ -286,9 +259,6 @@ public final class ApplySpecialization extends SimpleNodeVisitor implements Logg
     var functionName = newFunctionNode.getName();
     if (changed.contains(newFunctionNode.getId())) {
       newFunctionNode = newFunctionNode.clearFlag(lc, FunctionNode.USES_ARGUMENTS). setFlag(lc, FunctionNode.HAS_APPLY_TO_CALL_SPECIALIZATION). setParameters(lc, explodedArguments.peek());
-      if (log.isEnabled()) {
-        log.info("Success: ", massageURL(newFunctionNode.getSource().getURL()), '.', functionName, "' id=", newFunctionNode.getId(), " params=", callSiteTypes.peek());
-      }
     }
     callSiteTypes.pop();
     explodedArguments.pop();

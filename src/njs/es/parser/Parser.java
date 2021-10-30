@@ -57,7 +57,6 @@ import es.ir.UnaryNode;
 import es.ir.VarNode;
 import es.ir.WhileNode;
 import es.ir.visitor.NodeVisitor;
-import es.runtime.Context;
 import es.runtime.ErrorManager;
 import es.runtime.JSErrorType;
 import es.runtime.ParserException;
@@ -67,16 +66,12 @@ import es.runtime.ScriptFunctionData;
 import es.runtime.ScriptingFunctions;
 import es.runtime.Source;
 import es.runtime.linker.NameCodec;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import static es.parser.TokenType.*;
 
 /**
  * Builds the IR.
  */
-@Logger(name = "parser")
-public class Parser extends AbstractParser implements Loggable {
+public class Parser extends AbstractParser {
 
   private static final String ARGUMENTS_NAME = CompilerConstants.ARGUMENTS_VAR.symbolName();
   private static final String CONSTRUCTOR_NAME = "constructor";
@@ -97,8 +92,6 @@ public class Parser extends AbstractParser implements Loggable {
   // Namespace for function names where not explicitly given
   private final Namespace namespace;
 
-  private final DebugLogger log;
-
   // to receive line information from Lexer when scanning multine literals.
   final Lexer.LineInfoReceiver lineInfoReceiver;
 
@@ -112,19 +105,7 @@ public class Parser extends AbstractParser implements Loggable {
    * @param errors  error manager
    */
   public Parser(ScriptEnvironment env, Source source, ErrorManager errors) {
-    this(env, source, errors, null);
-  }
-
-  /**
-   * Constructor
-   *
-   * @param env     script environment
-   * @param source  source to parse
-   * @param errors  error manager
-   * @param log debug logger if one is needed
-   */
-  public Parser(ScriptEnvironment env, Source source, ErrorManager errors, DebugLogger log) {
-    this(env, source, errors, 0, log);
+    this(env, source, errors, 0);
   }
 
   /**
@@ -134,9 +115,8 @@ public class Parser extends AbstractParser implements Loggable {
    * @param source  source to parse
    * @param errors  error manager
    * @param lineOffset line offset to start counting lines from
-   * @param log debug logger if one is needed
    */
-  public Parser(ScriptEnvironment env, Source source, ErrorManager errors, int lineOffset, DebugLogger log) {
+  public Parser(ScriptEnvironment env, Source source, ErrorManager errors, int lineOffset) {
     super(source, errors, lineOffset);
     this.lc = new ParserContext();
     this.defaultNames = new ArrayDeque<>();
@@ -153,18 +133,6 @@ public class Parser extends AbstractParser implements Loggable {
       // non-scripting mode script can't have multi-line literals
       this.lineInfoReceiver = null;
     }
-
-    this.log = log == null ? DebugLogger.DISABLED_LOGGER : log;
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
   }
 
   /**
@@ -221,7 +189,7 @@ public class Parser extends AbstractParser implements Loggable {
    * @return function node resulting from successful parse
    */
   public FunctionNode parse(String scriptName, int startPos, int len, int reparseFlags) {
-    log.info(this, " begin for '", scriptName, "'");
+    // log.info(this, " begin for '", scriptName, "'");
     try {
       stream = new TokenStream();
       lexer = new Lexer(source, startPos, len, stream, scripting && !env._no_syntax_extensions, reparsedFunction != null);
@@ -233,9 +201,8 @@ public class Parser extends AbstractParser implements Loggable {
     } catch (Exception e) {
       handleParseException(e);
       return null;
-    } finally {
-      var end = this + " end '" + scriptName + "'";
-      log.info(end);
+    // } finally {
+    //   log.info(this + " end '" + scriptName + "'");
     }
   }
 

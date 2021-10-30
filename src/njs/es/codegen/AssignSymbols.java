@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,15 +31,10 @@ import es.ir.VarNode;
 import es.ir.WithNode;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.parser.TokenType;
-import es.runtime.Context;
 import es.runtime.ECMAErrors;
 import es.runtime.ErrorManager;
 import es.runtime.JSErrorType;
 import es.runtime.ParserException;
-import es.runtime.Source;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import static es.codegen.CompilerConstants.*;
 import static es.ir.Symbol.*;
 
@@ -51,11 +44,7 @@ import static es.ir.Symbol.*;
  * This visitor is also notable for what it doesn't do, most significantly it does no type calculations as in JavaScript variables can change types during runtime and as such symbols don't have types.
  * Calculation of expression types is performed by a separate visitor.
  */
-@Logger(name = "symbols")
-final class AssignSymbols extends SimpleNodeVisitor implements Loggable {
-
-  private final DebugLogger log;
-  private final boolean debug;
+final class AssignSymbols extends SimpleNodeVisitor{
 
   static boolean isParamOrVar(IdentNode identNode) {
     var symbol = identNode.getSymbol();
@@ -98,19 +87,7 @@ final class AssignSymbols extends SimpleNodeVisitor implements Loggable {
 
   public AssignSymbols(Compiler compiler) {
     this.compiler = compiler;
-    this.log = initLogger(compiler.getContext());
-    this.debug = log.isEnabled();
     this.isOnDemand = compiler.isOnDemandCompilation();
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
   }
 
   /**
@@ -328,27 +305,6 @@ final class AssignSymbols extends SimpleNodeVisitor implements Loggable {
   }
 
   <T extends Node> T end(T node, boolean printNode) {
-    if (debug) {
-      var sb = new StringBuilder();
-      sb.append("[LEAVE ")
-        .append(name(node))
-        .append("] ")
-        .append(printNode ? node.toString() : "")
-        .append(" in '")
-        .append(lc.getCurrentFunction().getName())
-        .append('\'');
-
-      if (node instanceof IdentNode i) {
-        var symbol = i.getSymbol();
-        if (symbol == null) {
-          sb.append(" <NO SYMBOL>");
-        } else {
-          sb.append(" <symbol=").append(symbol).append('>');
-        }
-      }
-      log.unindent();
-      log.info(sb);
-    }
     return node;
   }
 
@@ -656,7 +612,6 @@ final class AssignSymbols extends SimpleNodeVisitor implements Loggable {
     var symbol = findSymbol(block, name);
     //If an existing symbol with the name is found, use that otherwise, declare a new one
     if (symbol != null) {
-      log.info("Existing symbol = ", symbol);
       if (symbol.isFunctionSelf()) {
         var functionNode = lc.getDefiningFunction(symbol);
         assert functionNode != null;
@@ -666,7 +621,6 @@ final class AssignSymbols extends SimpleNodeVisitor implements Loggable {
       // if symbol is non-local or we're in a with block, we need to put symbol in scope (if it isn't already)
       maybeForceScope(symbol);
     } else {
-      log.info("No symbol exists. Declare as global: ", name);
       symbol = defineSymbol(block, name, origin, IS_GLOBAL | IS_SCOPE);
     }
     functionUsesSymbol(symbol);
@@ -728,18 +682,6 @@ final class AssignSymbols extends SimpleNodeVisitor implements Loggable {
   }
 
   boolean start(Node node, boolean printNode) {
-    if (debug) {
-      var sb = new StringBuilder();
-      sb.append("[ENTER ")
-        .append(name(node))
-        .append("] ")
-        .append(printNode ? node.toString() : "")
-        .append(" in '")
-        .append(lc.getCurrentFunction().getName())
-        .append("'");
-      log.info(sb);
-      log.indent();
-    }
     return true;
   }
 

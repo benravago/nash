@@ -18,9 +18,6 @@ import es.runtime.PropertyMap;
 import es.runtime.ScriptObject;
 import es.runtime.Undefined;
 import es.runtime.UnwarrantedOptimismException;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import static es.codegen.Compiler.SCRIPTS_PACKAGE;
 import static es.codegen.CompilerConstants.*;
 import static es.lookup.Lookup.MH;
@@ -30,8 +27,7 @@ import static es.runtime.UnwarrantedOptimismException.isValid;
 /**
  * Generates the ScriptObject subclass structure with fields for a user objects.
  */
-@Logger(name = "fields")
-public final class ObjectClassGenerator implements Loggable {
+public final class ObjectClassGenerator {
 
   // Type guard to make sure we don't unnecessarily explode field storages.
   // Rather unbox e.g. a java.lang.Number than blow up the field.
@@ -43,10 +39,6 @@ public final class ObjectClassGenerator implements Loggable {
 
   // Minimum number of extra fields in an object.
   static final int FIELD_PADDING = 4;
-
-  // Debug field logger
-  // Should we print debugging information for fields when they are generated and getters/setters are called?
-  private final DebugLogger log;
 
   // Field types for object-only fields
   private static final Type[] FIELD_TYPES_OBJECT = new Type[]{Type.OBJECT};
@@ -77,24 +69,13 @@ public final class ObjectClassGenerator implements Loggable {
     this.context = context;
     this.dualFields = dualFields; // TODO: required; remove this check
     assert context != null;
-    this.log = initLogger(context);
     if (!initialized) {
       initialized = true;
-      if (!dualFields) {
-        log.warning("Running with object fields only - this is a deprecated configuration.");
-      }
+      // TODO: review
+      // if (!dualFields) log.warning("Running with object fields only - this is a deprecated configuration.");
     }
   }
 
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context ctxt) {
-    return ctxt.getLogger(this.getClass());
-  }
 
   /**
    * Pack a number into a primitive long field

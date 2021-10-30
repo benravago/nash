@@ -14,19 +14,13 @@ import es.ir.Node;
 import es.ir.Symbol;
 import es.ir.WithNode;
 import es.ir.visitor.SimpleNodeVisitor;
-import es.runtime.Context;
 import es.runtime.RecompilableScriptFunctionData;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
-import static es.runtime.logging.DebugLogger.quote;
 
 /**
  * Establishes depth of scope for non local symbols at the start of method.
  * If this is a recompilation, the previous data from eager compilation is stored in the RecompilableScriptFunctionData and is transferred to the FunctionNode being compiled
  */
-@Logger(name = "scopedepths")
-final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
+final class FindScopeDepths extends SimpleNodeVisitor {
 
   private final Compiler compiler;
   private final Map<Integer, Map<Integer, RecompilableScriptFunctionData>> fnIdToNestedFunctions = new HashMap<>();
@@ -34,23 +28,10 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
   private final Map<Integer, Set<String>> internalSymbols = new HashMap<>();
   private final Set<Block> withBodies = new HashSet<>();
 
-  private final DebugLogger log;
-
   private int dynamicScopeCount;
 
   FindScopeDepths(Compiler compiler) {
     this.compiler = compiler;
-    this.log = initLogger(compiler.getContext());
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
   }
 
   static int findScopesToStart(LexicalContext lc, FunctionNode fn, Block block) {
@@ -141,7 +122,6 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
     if (compiler.isOnDemandCompilation()) {
       var data = compiler.getScriptFunctionData(newFunctionNode.getId());
       if (data.inDynamicContext()) {
-        log.fine("Reviving scriptfunction ", quote(name), " as defined in previous (now lost) dynamic scope.");
         newFunctionNode = newFunctionNode.setInDynamicContext(lc);
       }
       if (newFunctionNode == lc.getOutermostFunction() && !newFunctionNode.hasApplyToCallSpecialization()) {
@@ -150,7 +130,6 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
       return newFunctionNode;
     }
     if (inDynamicScope()) {
-      log.fine("Tagging ", quote(name), " as defined in dynamic scope");
       newFunctionNode = newFunctionNode.setInDynamicContext(lc);
     }
     // create recompilable scriptfunctiondata
@@ -177,17 +156,11 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
   void increaseDynamicScopeCount(Node node) {
     assert dynamicScopeCount >= 0;
     ++dynamicScopeCount;
-    if (log.isEnabled()) {
-      log.finest(quote(lc.getCurrentFunction().getName()), " ++dynamicScopeCount = ", dynamicScopeCount, " at: ", node, node.getClass());
-    }
   }
 
   void decreaseDynamicScopeCount(Node node) {
     --dynamicScopeCount;
     assert dynamicScopeCount >= 0;
-    if (log.isEnabled()) {
-      log.finest(quote(lc.getCurrentFunction().getName()), " --dynamicScopeCount = ", dynamicScopeCount, " at: ", node, node.getClass());
-    }
   }
 
   @Override
@@ -254,9 +227,6 @@ final class FindScopeDepths extends SimpleNodeVisitor implements Loggable {
       }
     }
     addInternalSymbols(fn, internals.keySet());
-    if (log.isEnabled()) {
-      log.info(fn.getName() + " internals=" + internals + " externals=" + externalSymbolDepths.get(fn.getId()));
-    }
     return true;
   }
 

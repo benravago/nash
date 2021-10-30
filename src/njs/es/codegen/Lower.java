@@ -56,9 +56,6 @@ import es.runtime.ECMAErrors;
 import es.runtime.ErrorManager;
 import es.runtime.JSType;
 import es.runtime.Source;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import static es.codegen.CompilerConstants.*;
 import static es.ir.Expression.isAlwaysTrue;
 
@@ -69,10 +66,8 @@ import static es.ir.Expression.isAlwaysTrue;
  *
  * We do things like code copying/inlining of finallies here, as it is much harder and context dependent to do any code copying after symbols have been finalized.
  */
-@Logger(name = "lower")
-final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Loggable {
+final class Lower extends NodeOperatorVisitor<BlockLexicalContext> {
 
-  private final DebugLogger log;
   private final Source source;
 
   // Conservative pattern to test if element names consist of characters valid for identifiers.
@@ -117,19 +112,7 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
         return block.setIsTerminal(this, false);
       }
     });
-
-    this.log = initLogger(compiler.getContext());
     this.source = compiler.getSource();
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
   }
 
   @Override
@@ -281,7 +264,6 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> implements Lo
 
   @Override
   public Node leaveFunctionNode(FunctionNode functionNode) {
-    log.info("END FunctionNode: ", functionNode.getName());
     return functionNode;
   }
 

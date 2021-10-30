@@ -503,7 +503,6 @@ public final class Options {
       case "timezone" -> new Option<>(TimeZone.getTimeZone(value)); // default value "TimeZone.getDefault()"
       case "locale" -> new Option<>(Locale.forLanguageTag(value));
       case "keyvalues" -> new KeyValueOption(value);
-      case "log" -> new LoggingOption(value);
       case "boolean" -> new Option<>(value != null && Boolean.parseBoolean(value));
 
       case "integer" -> {

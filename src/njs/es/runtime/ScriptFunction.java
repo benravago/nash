@@ -683,10 +683,6 @@ public class ScriptFunction extends ScriptObject {
       // if linklogic is null, we can always link with the standard mechanism, it's still a specialization
       var linkLogic = getLinkLogic(self, linkLogicClass);
       if (linkLogic != null && linkLogic.checkLinkable(self, desc, request)) {
-        var log = Context.getContextTrusted().getLogger(Compiler.class);
-        if (log.isEnabled()) {
-          log.info("Linking optimistic builtin function: '", name, "' args=", Arrays.toString(request.getArguments()), " desc=", desc);
-        }
         exceptionGuard = linkLogic.getRelinkException();
         break;
       }
@@ -857,7 +853,6 @@ public class ScriptFunction extends ScriptObject {
     if (isApplyToCall) {
       if (isFailedApplyToCall) {
         // take the real arguments that were passed to a call and force them into the apply instead
-        Context.getContextTrusted().getLogger(ApplySpecialization.class).info("Collection arguments to revert call to apply in " + appliedFn);
         inv = MH.asCollector(inv, Object[].class, realArgCount);
       } else {
         appliedInvocation = appliedInvocation.addSwitchPoint(applyToCallSwitchPoint);

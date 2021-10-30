@@ -1,8 +1,6 @@
 package es.runtime.events;
 
 import java.util.logging.Level;
-import es.runtime.Context;
-import es.runtime.RecompilableScriptFunctionData;
 import es.runtime.RewriteException;
 
 /**
@@ -26,8 +24,9 @@ public final class RecompilationEvent extends RuntimeEvent<RewriteException> {
    */
   public RecompilationEvent(Level level, RewriteException rewriteException, Object returnValue) {
     super(level, rewriteException);
-    assert Context.getContext().getLogger(RecompilableScriptFunctionData.class).isEnabled() :
-      "Unit test/instrumentation purpose only: RecompilationEvent instances should not be created without '--log=recompile', or we will leak memory in the general case";
+    // TODO: review this
+    // assert Context.getContext().getLogger(RecompilableScriptFunctionData.class).isEnabled() :
+    // "Unit test/instrumentation purpose only: RecompilationEvent instances should not be created without '--log=recompile', or we will leak memory in the general case";
     this.returnValue = returnValue;
   }
 

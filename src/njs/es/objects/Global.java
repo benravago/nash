@@ -34,7 +34,6 @@ import es.objects.annotations.Setter;
 import es.runtime.Context;
 import es.runtime.ECMAErrors;
 import es.runtime.FindProperty;
-import es.runtime.GlobalConstants;
 import es.runtime.GlobalFunctions;
 import es.runtime.JSType;
 import es.runtime.NativeJavaPackage;
@@ -2327,7 +2326,6 @@ public final class Global extends Scope {
 
   synchronized void invalidateLexicalSwitchPoint() {
     if (lexicalScopeSwitchPoint != null) {
-      context.getLogger(GlobalConstants.class).info("Invalidating non-constant globals on lexical scope update");
       SwitchPoint.invalidateAll(new SwitchPoint[]{lexicalScopeSwitchPoint});
     }
   }

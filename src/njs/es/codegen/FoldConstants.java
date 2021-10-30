@@ -24,37 +24,16 @@ import es.ir.visitor.SimpleNodeVisitor;
 import es.runtime.Context;
 import es.runtime.JSType;
 import es.runtime.ScriptRuntime;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 
 /**
  * Simple constant folding pass, executed before IR is starting to be lowered.
  */
-@Logger(name = "fold")
-final class FoldConstants extends SimpleNodeVisitor implements Loggable {
-
-  private final DebugLogger log;
-
-  FoldConstants(Compiler compiler) {
-    this.log = initLogger(compiler.getContext());
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context context) {
-    return context.getLogger(this.getClass());
-  }
+final class FoldConstants extends SimpleNodeVisitor {
 
   @Override
   public Node leaveUnaryNode(UnaryNode unaryNode) {
     var literalNode = new UnaryNodeConstantEvaluator(unaryNode).eval();
     if (literalNode != null) {
-      log.info("Unary constant folded ", unaryNode, " to ", literalNode);
       return literalNode;
     }
     return unaryNode;
@@ -64,7 +43,6 @@ final class FoldConstants extends SimpleNodeVisitor implements Loggable {
   public Node leaveBinaryNode(BinaryNode binaryNode) {
     var literalNode = new BinaryNodeConstantEvaluator(binaryNode).eval();
     if (literalNode != null) {
-      log.info("Binary constant folded ", binaryNode, " to ", literalNode);
       return literalNode;
     }
     return binaryNode;

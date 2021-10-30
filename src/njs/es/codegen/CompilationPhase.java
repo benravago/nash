@@ -13,7 +13,6 @@ import es.ir.Node;
 import es.ir.visitor.NodeVisitor;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.runtime.RecompilableScriptFunctionData;
-import static es.runtime.logging.DebugLogger.quote;
 
 /**
  * A compilation phase is a step in the processes of turning a JavaScript FunctionNode into bytecode.
@@ -24,7 +23,7 @@ abstract class CompilationPhase {
   static final class ConstantFoldingPhase extends CompilationPhase {
     @Override
     FunctionNode transform(Compiler compiler, CompilationPhases phases, FunctionNode fn) {
-      return transformFunction(fn, new FoldConstants(compiler));
+      return transformFunction(fn, new FoldConstants());
     }
     @Override
     public String toString() {
@@ -234,20 +233,15 @@ abstract class CompilationPhase {
       assert phases.isRestOfCompilation() : "reuse compile units currently only used for Rest-Of methods";
       var map = new HashMap<CompileUnit, CompileUnit>();
       var newUnits = CompileUnit.createCompileUnitSet();
-      var log = compiler.getLogger();
-      log.fine("Clearing bytecode cache");
       compiler.clearBytecode();
       for (var oldUnit : compiler.getCompileUnits()) {
         assert map.get(oldUnit) == null;
         var newUnit = createNewCompileUnit(compiler, phases);
-        log.fine("Creating new compile unit ", oldUnit, " => ", newUnit);
         map.put(oldUnit, newUnit);
         assert newUnit != null;
         newUnits.add(newUnit);
       }
-      log.fine("Replacing compile units in Compiler...");
       compiler.replaceCompileUnits(newUnits);
-      log.fine("Done");
       // replace old compile units in function nodes, if any are assigned, for example by running the splitter on this function node in a previous partial code generation
       var newFunctionNode = transformFunction(fn, new ReplaceCompileUnits() {
         @Override
@@ -317,7 +311,6 @@ abstract class CompilationPhase {
       var newFunctionNode = fn;
       // root class is special, as it is bootstrapped from createProgramFunction, thus it's skipped in CodeGeneration - the rest can be used as a working "is compile unit used" metric
       fn.getCompileUnit().setUsed();
-      compiler.getLogger().fine("Starting bytecode generation for ", quote(fn.getName()), " - restOf=", phases.isRestOfCompilation());
       var codegen = new CodeGenerator(compiler, phases.isRestOfCompilation() ? compiler.getContinuationEntryPoints() : null);
       try {
         // Explicitly set BYTECODE_GENERATED here; it can not be set in case of skipping codegen for :program in the lazy + optimistic world. See CodeGenerator.skipFunction().
@@ -333,7 +326,6 @@ abstract class CompilationPhase {
         var classEmitter = compileUnit.getClassEmitter();
         classEmitter.end();
         if (!compileUnit.isUsed()) {
-          compiler.getLogger().fine("Skipping unused compile unit ", compileUnit);
           continue;
         }
         var bytecode = classEmitter.toByteArray();
@@ -359,7 +351,6 @@ abstract class CompilationPhase {
   static final class InstallPhase extends CompilationPhase {
     @Override
     FunctionNode transform(Compiler compiler, CompilationPhases phases, FunctionNode fn) {
-      var log = compiler.getLogger();
       var installedClasses = new LinkedHashMap<String, Class<?>>();
       var first = true;
       Class<?> rootClass = null;
@@ -398,20 +389,6 @@ abstract class CompilationPhase {
         unit.setCode(installedClasses.get(unit.getUnitClassName()));
         unit.initializeFunctionsCode();
       }
-      if (log.isEnabled()) {
-        var sb = new StringBuilder();
-        sb.append("Installed class '")
-          .append(rootClass.getSimpleName())
-          .append('\'')
-          .append(" [")
-          .append(rootClass.getName())
-          .append(", size=")
-          .append(length)
-          .append(" bytes, ")
-          .append(compiler.getCompileUnits().size())
-          .append(" compile unit(s)]");
-        log.fine(sb.toString());
-      }
       return fn.setRootClass(null, rootClass);
     }
     @Override
@@ -432,7 +409,6 @@ abstract class CompilationPhase {
    * @return function node
    */
   protected FunctionNode begin(Compiler compiler, FunctionNode functionNode) {
-    compiler.getLogger().indent();
     return functionNode;
   }
 
@@ -443,7 +419,6 @@ abstract class CompilationPhase {
    * @return function node
    */
   protected FunctionNode end(Compiler compiler, FunctionNode functionNode) {
-    compiler.getLogger().unindent();
     isFinished = true;
     return functionNode;
   }

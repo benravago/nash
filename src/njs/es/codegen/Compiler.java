@@ -29,10 +29,6 @@ import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.Source;
 import es.runtime.linker.NameCodec;
-import es.runtime.logging.DebugLogger;
-import static es.runtime.logging.DebugLogger.quote;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import static es.codegen.CompilerConstants.*;
 
 /**
@@ -42,8 +38,7 @@ import static es.codegen.CompilerConstants.*;
  * The compiler may also install classes given some predefined Code installation policy, given to it at construction time.
  * @see CodeInstaller
  */
-@Logger(name = "compiler")
-public final class Compiler implements Loggable {
+public final class Compiler {
 
   /** Name of the scripts package */
   public static final String SCRIPTS_PACKAGE = "es/scripts";
@@ -68,9 +63,6 @@ public final class Compiler implements Loggable {
   private final ConstantData constantData;
 
   private final CodeInstaller installer;
-
-  // logger for compiler, trampolines and related code generation events that affect classes
-  private final DebugLogger log;
 
   private final Context context;
 
@@ -342,7 +334,6 @@ public final class Compiler implements Loggable {
     this.constantData = new ConstantData();
     this.compileUnits = CompileUnit.createCompileUnitSet();
     this.bytecode = new LinkedHashMap<>();
-    this.log = initLogger(context);
     this.source = source;
     this.errors = errors;
     this.sourceName = FunctionNode.getSourceName(source);
@@ -404,23 +395,6 @@ public final class Compiler implements Loggable {
   void setData(RecompilableScriptFunctionData data) {
     assert this.compiledFunction == null : data;
     this.compiledFunction = data;
-  }
-
-  @Override
-  public DebugLogger getLogger() {
-    return log;
-  }
-
-  @Override
-  public DebugLogger initLogger(Context ctxt) {
-    var optimisticTypes = env._optimistic_types;
-    var lazyCompilation = env._lazy_compilation;
-    return ctxt.getLogger(this.getClass(), (DebugLogger newLogger) -> {
-      if (!lazyCompilation) {
-        newLogger.warning("WARNING: Running with lazy compilation switched off. This is not a default setting.");
-      }
-      newLogger.warning("Optimistic types are ", optimisticTypes ? "ENABLED." : "DISABLED.");
-    });
   }
 
   ScriptEnvironment getScriptEnvironment() {
@@ -490,34 +464,20 @@ public final class Compiler implements Loggable {
    * @throws CompilationException if error occurs during compilation
    */
   public FunctionNode compile(FunctionNode functionNode, CompilationPhases phases) throws CompilationException {
-    if (log.isEnabled()) {
-      log.info(">> Starting compile job for ", DebugLogger.quote(functionNode.getName()), " phases=", quote(phases.getDesc()));
-      log.indent();
-    }
-    var name = DebugLogger.quote(functionNode.getName());
     var newFunctionNode = functionNode;
     for (var reservedName : RESERVED_NAMES) {
       newFunctionNode.uniqueName(reservedName);
     }
-    var info = log.isLoggable(Level.INFO);
     for (var phase : phases) {
-      log.fine(phase, " starting for ", name);
       try {
         newFunctionNode = phase.apply(this, phases, newFunctionNode);
       } catch (ParserException error) {
         errors.error(error);
         return null;
       }
-      log.fine(phase, " done for function ", quote(name));
     }
     if (typeInformationFile != null && !phases.isRestOfCompilation()) {
       OptimisticTypesPersistence.store(typeInformationFile, invalidatedProgramPoints);
-    }
-    log.unindent();
-    if (info) {
-      var sb = new StringBuilder("<< Finished compile job for ");
-      sb.append(newFunctionNode.getSource()).append(':').append(quote(newFunctionNode.getName()));
-      log.info(sb);
     }
     return newFunctionNode;
   }
@@ -579,7 +539,6 @@ public final class Compiler implements Loggable {
   CompileUnit addCompileUnit(long initialWeight) {
     var compileUnit = createCompileUnit(initialWeight);
     compileUnits.add(compileUnit);
-    log.fine("Added compile unit ", compileUnit);
     return compileUnit;
   }
 

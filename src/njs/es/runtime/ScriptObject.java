@@ -1703,7 +1703,6 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   }
 
   static GuardedInvocation findMegaMorphicGetMethod(CallSiteDescriptor desc, String name, boolean isMethod) {
-    Context.getContextTrusted().getLogger(ObjectClassGenerator.class).warning("Megamorphic getter: ", desc, " ", name + " ", isMethod);
     var invoker = MH.insertArguments(MEGAMORPHIC_GET, 1, name, isMethod, NashornCallSiteDescriptor.isScope(desc));
     var guard = getScriptObjectGuard(desc.getMethodType(), true);
     return new GuardedInvocation(invoker, guard);
@@ -1912,7 +1911,6 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   }
 
   static GuardedInvocation findMegaMorphicSetMethod(CallSiteDescriptor desc, String name) {
-    Context.getContextTrusted().getLogger(ObjectClassGenerator.class).warning("Megamorphic setter: ", desc, " ", name);
     var type = desc.getMethodType().insertParameterTypes(1, Object.class);
     // never bother with ClassCastExceptionGuard for megamorphic callsites
     var inv = findSetIndexMethod(desc, false, type);

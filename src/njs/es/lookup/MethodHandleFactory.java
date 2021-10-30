@@ -11,9 +11,6 @@ import java.util.List;
 
 import es.runtime.Context;
 import es.runtime.ScriptObject;
-import es.runtime.logging.DebugLogger;
-import es.runtime.logging.Loggable;
-import es.runtime.logging.Logger;
 import es.util.Hex;
 import static es.runtime.JSType.isString;
 
@@ -101,24 +98,7 @@ public final class MethodHandleFactory {
    * This exists only so that it can be subclassed and method handles created from Nashorn made possible to instrument.
    * All Nashorn classes should use the MethodHandleFactory for their method handle operations
    */
-  @Logger(name = "methodhandles")
-  static class StandardMethodHandleFunctionality implements MethodHandleFunctionality, Loggable {
-
-    // for bootstrapping reasons, because a lot of static fields use MH for lookups, we
-    // need to set the logger when the Global object is finished. This means that we don't
-    // get instrumentation for public static final MethodHandle SOMETHING = MH... in the builtin
-    // classes, but that doesn't matter, because this is usually not where we want it
-    private DebugLogger log = DebugLogger.DISABLED_LOGGER;
-
-    @Override
-    public DebugLogger initLogger(Context context) {
-      return this.log = context.getLogger(this.getClass());
-    }
-
-    @Override
-    public DebugLogger getLogger() {
-      return log;
-    }
+  static class StandardMethodHandleFunctionality implements MethodHandleFunctionality{
 
     protected static String describe(Object... data) {
       var sb = new StringBuilder();

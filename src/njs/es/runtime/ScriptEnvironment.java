@@ -2,15 +2,11 @@ package es.runtime;
 
 import java.io.PrintWriter;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 import es.codegen.Namespace;
-import es.runtime.options.LoggingOption;
-import es.runtime.options.LoggingOption.LoggerInfo;
 import es.runtime.options.Options;
 
 /**
@@ -123,9 +119,6 @@ public final class ScriptEnvironment {
   /** Local for error messages */
   public final Locale _locale;
 
-  /** Logging */
-  public final Map<String, LoggerInfo> _loggers;
-
   /**
    * Constructor
    *
@@ -194,8 +187,6 @@ public final class ScriptEnvironment {
     } else {
       this._locale = Locale.getDefault();
     }
-    var loggingOption = (LoggingOption) options.get("log");
-    this._loggers = loggingOption == null ? new HashMap<String, LoggerInfo>() : loggingOption.getLoggers();
   }
 
   /**
@@ -236,15 +227,6 @@ public final class ScriptEnvironment {
    */
   public List<String> getArguments() {
     return options.getArguments();
-  }
-
-  /**
-   * Check if there is a logger registered for a particular name: typically the "name" attribute of a Loggable annotation on a class
-   * @param name logger name
-   * @return true, if a logger exists for that name, false otherwise
-   */
-  public boolean hasLogger(String name) {
-    return _loggers.get(name) != null;
   }
 
 }
