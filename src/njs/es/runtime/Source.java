@@ -279,7 +279,6 @@ public final class Source {
       try (var in = url.openStream()) {
         // empty
       }
-      debug("permission checked for ", url);
     }
 
     protected void load() throws IOException {
@@ -289,7 +288,6 @@ public final class Source {
           array = cs == null ? readFully(in) : readFully(in, cs);
           length = array.length;
           lastModified = c.getLastModified();
-          debug("loaded content for ", url);
         }
       }
     }
@@ -301,7 +299,6 @@ public final class Source {
         try (var in = c.getInputStream()) {
           length = c.getContentLength();
           lastModified = c.getLastModified();
-          debug("loaded metadata for ", url);
         }
       }
     }
@@ -321,7 +318,6 @@ public final class Source {
       if (!file.canRead()) {
         throw new FileNotFoundException(file + " (Permission Denied)");
       }
-      debug("permission checked for ", file);
     }
 
     @Override
@@ -329,7 +325,6 @@ public final class Source {
       if (length == 0 && lastModified == 0) {
         length = (int) file.length();
         lastModified = file.lastModified();
-        debug("loaded metadata for ", file);
       }
     }
 
@@ -339,13 +334,8 @@ public final class Source {
         array = cs == null ? readFully(file) : readFully(file, cs);
         length = array.length;
         lastModified = file.lastModified();
-        debug("loaded content for ", file);
       }
     }
-  }
-
-  static void debug(Object... msg) {
-    // no-op
   }
 
   char[] data() {
@@ -896,16 +886,13 @@ public final class Source {
     var dirFile = new File(dir);
     var file = dumpFile(dirFile);
     if (!dirFile.exists() && !dirFile.mkdirs()) {
-      debug("Skipping source dump for " + name);
       return;
     }
     try (var fos = new FileOutputStream(file)) {
       var pw = new PrintWriter(fos);
       pw.print(data.toString());
       pw.flush();
-    } catch (IOException ioExp) {
-      debug("Skipping source dump for " + name + ": " + ECMAErrors.getMessage("io.error.cant.write", dir + " : " + ioExp.toString()));
-    }
+    } catch (IOException ignore) {}
   }
 
 }
