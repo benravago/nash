@@ -841,29 +841,9 @@ public final class Global extends Scope {
   @Property(name = "Packages", attributes = Attribute.NOT_ENUMERABLE)
   public volatile Object packages;
 
-  /** Nashorn extension: Java access - global.com */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object com;
-
-  /** Nashorn extension: Java access - global.edu */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object edu;
-
   /** Nashorn extension: Java access - global.java */
   @Property(attributes = Attribute.NOT_ENUMERABLE)
   public volatile Object java;
-
-  /** Nashorn extension: Java access - global.javafx */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object javafx;
-
-  /** Nashorn extension: Java access - global.javax */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object javax;
-
-  /** Nashorn extension: Java access - global.org */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object org;
 
   /**
    * Getter for the Nashorn extension: Java access - global.JavaImporter.
@@ -969,12 +949,7 @@ public final class Global extends Scope {
   private ScriptFunction builtinTypeError;
   private ScriptFunction builtinURIError;
   private ScriptObject builtinPackages;
-  private ScriptObject builtinCom;
-  private ScriptObject builtinEdu;
   private ScriptObject builtinJava;
-  private ScriptObject builtinJavafx;
-  private ScriptObject builtinJavax;
-  private ScriptObject builtinOrg;
   private ScriptFunction builtinJavaImporter;
   private ScriptObject builtinJavaApi;
   private ScriptFunction builtinArrayBuffer;
@@ -2407,12 +2382,7 @@ public final class Global extends Scope {
       this.delete("Java");
       this.delete("JavaImporter");
       this.delete("Packages");
-      this.delete("com");
-      this.delete("edu");
       this.delete("java");
-      this.delete("javafx");
-      this.delete("javax");
-      this.delete("org");
     }
     if (!env._no_typed_arrays) {
       this.arrayBuffer = LAZY_SENTINEL;
@@ -2488,12 +2458,7 @@ public final class Global extends Scope {
   void initJavaAccess() {
     var objectProto = getObjectPrototype();
     this.builtinPackages = new NativeJavaPackage("", objectProto);
-    this.builtinCom = new NativeJavaPackage("com", objectProto);
-    this.builtinEdu = new NativeJavaPackage("edu", objectProto);
     this.builtinJava = new NativeJavaPackage("java", objectProto);
-    this.builtinJavafx = new NativeJavaPackage("javafx", objectProto);
-    this.builtinJavax = new NativeJavaPackage("javax", objectProto);
-    this.builtinOrg = new NativeJavaPackage("org", objectProto);
   }
 
   void initScripting(ScriptEnvironment scriptEnv) {
@@ -2543,12 +2508,7 @@ public final class Global extends Scope {
     this._boolean = this.builtinBoolean;
     this.error = this.builtinError;
     this.function = this.builtinFunction;
-    this.com = this.builtinCom;
-    this.edu = this.builtinEdu;
     this.java = this.builtinJava;
-    this.javafx = this.builtinJavafx;
-    this.javax = this.builtinJavax;
-    this.org = this.builtinOrg;
     this.math = this.builtinMath;
     this.number = this.builtinNumber;
     this.object = this.builtinObject;

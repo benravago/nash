@@ -10,8 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,10 +46,8 @@ import nash.scripting.ScriptObjectMirror;
 import es.codegen.Compiler;
 import es.codegen.ObjectClassGenerator;
 import es.ir.FunctionNode;
-import es.lookup.MethodHandleFactory;
 import es.objects.Global;
 import es.parser.Parser;
-import es.runtime.events.RuntimeEvent;
 import es.runtime.linker.Bootstrap;
 import es.runtime.options.Options;
 import static es.codegen.CompilerConstants.*;
@@ -181,15 +177,6 @@ public final class Context {
   // A factory for linking global properties as constant method handles.
   // It is created when the first Global is created, and invalidated forever once the second global is created.
   private final AtomicReference<GlobalConstants> globalConstantsRef = new AtomicReference<>();
-
-  // Are java.sql, java.sql.rowset modules found in the system?
-  static final boolean javaSqlFound, javaSqlRowsetFound;
-
-  static /*<init>*/ {
-    var boot = ModuleLayer.boot();
-    javaSqlFound = boot.findModule("java.sql").isPresent();
-    javaSqlRowsetFound = boot.findModule("java.sql.rowset").isPresent();
-  }
 
   /**
    * Get the current global scope
