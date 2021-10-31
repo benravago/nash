@@ -847,16 +847,6 @@ public class Lexer extends Scanner {
       stringState.setLimit(position - 1);
       if (scripting && !stringState.isEmpty()) {
         switch (quote) {
-          case '`' -> {
-            // Mark the beginning of an exec string.
-            add(EXECSTRING, stringState.position, stringState.limit);
-            // Frame edit string with left brace.
-            add(LBRACE, stringState.position, stringState.position);
-            // Process edit string.
-            editString(type, stringState);
-            // Frame edit string with right brace.
-            add(RBRACE, stringState.limit, stringState.limit);
-          }
           case '"' -> { // Only edit double quoted strings.
             editString(type, stringState);
           }
@@ -1390,9 +1380,6 @@ public class Lexer extends Scanner {
       } else if (isTemplateDelimiter(ch0)) {
         // Scan and add template.
         scanTemplate();
-      } else if (isTemplateDelimiter(ch0) && scripting) {
-        // Scan and add an exec string ('`') in scripting mode.
-        scanString(true);
       } else {
         // Don't recognize this character.
         skip(1);

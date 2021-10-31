@@ -63,7 +63,6 @@ import es.runtime.ParserException;
 import es.runtime.RecompilableScriptFunctionData;
 import es.runtime.ScriptEnvironment;
 import es.runtime.ScriptFunctionData;
-import es.runtime.ScriptingFunctions;
 import es.runtime.Source;
 import es.runtime.linker.NameCodec;
 import static es.parser.TokenType.*;
@@ -2180,7 +2179,6 @@ public class Parser extends AbstractParser {
     return switch (type) {
       case STRING, ESCSTRING, DECIMAL, HEXADECIMAL, OCTAL, BINARY_NUMBER, FLOATING, REGEX -> getLiteral();
       case TEMPLATE, TEMPLATE_HEAD -> templateLiteral();
-      case EXECSTRING -> execString(primaryLine, primaryToken);
       case LBRACKET -> arrayLiteral();
       case LBRACE -> objectLiteral();
       case OCTAL_LEGACY -> throw error(AbstractParser.message("no.octal"), token);
@@ -2239,27 +2237,6 @@ public class Parser extends AbstractParser {
         yield null;
       }
     };
-  }
-
-  /**
-   * Convert execString to a call to $EXEC.
-   *
-   * @param primaryToken Original string token.
-   * @return callNode to $EXEC.
-   */
-  CallNode execString(int primaryLine, long primaryToken) {
-    // Synthesize an ident to call $EXEC.
-    var execIdent = new IdentNode(primaryToken, finish, ScriptingFunctions.EXEC_NAME);
-    // Skip over EXECSTRING.
-    NEXT();
-    // Set up argument list for call.
-    // Skip beginning of edit string expression.
-    expect(LBRACE);
-    // Add the following expression to arguments.
-    var arguments = List.of(expression());
-    // Skip ending of edit string expression.
-    expect(RBRACE);
-    return new CallNode(primaryLine, primaryToken, finish, execIdent, arguments, false);
   }
 
   /**

@@ -54,7 +54,7 @@ public class Token {
   public static long withDelimiter(long token) {
     var tokenType = Token.descType(token);
     switch (tokenType) {
-      case STRING, ESCSTRING, EXECSTRING, TEMPLATE, TEMPLATE_TAIL -> {
+      case STRING, ESCSTRING, TEMPLATE, TEMPLATE_TAIL -> {
         var start = Token.descPosition(token) - 1;
         var len = Token.descLength(token) + 2;
         return toDesc(tokenType, start, len);
