@@ -8,7 +8,6 @@ import es.runtime.JSErrorType;
 import es.runtime.JSType;
 import es.runtime.ParserException;
 import es.runtime.Source;
-import es.runtime.options.Options;
 import static es.parser.TokenType.*;
 
 /**
@@ -18,8 +17,6 @@ public class Lexer extends Scanner {
 
   private static final long MIN_INT_L = Integer.MIN_VALUE;
   private static final long MAX_INT_L = Integer.MAX_VALUE;
-
-  private static final boolean XML_LITERALS = Options.getBooleanProperty("nashorn.lexer.xmlliterals");
 
   // Content source.
   private final Source source;
@@ -483,7 +480,7 @@ public class Lexer extends Scanner {
    * @return true if token can start a literal.
    */
   public boolean canStartLiteral(TokenType token) {
-    return token.startsWith('/') || ((scripting || XML_LITERALS) && token.startsWith('<'));
+    return token.startsWith('/') || (scripting && token.startsWith('<'));
   }
 
   /**
@@ -526,8 +523,6 @@ public class Lexer extends Scanner {
     } else if (ch0 == '<') {
       if (ch1 == '<') {
         return scanHereString(lir, state);
-      } else if (Character.isJavaIdentifierStart(ch1)) {
-        return scanXMLLiteral();
       }
     }
     return false;
@@ -1041,73 +1036,6 @@ public class Lexer extends Scanner {
   }
 
   /**
-   * Convert a regex token to a token object.
-   *
-   * @param start  Position in source content.
-   * @param length Length of regex token.
-   * @return Regex token object.
-   */
-  XMLToken valueOfXML(int start, int length) {
-    return new XMLToken(source.getString(start, length));
-  }
-
-  /**
-   * Scan over a XML token.
-   *
-   * @return TRUE if is an XML literal.
-   */
-  boolean scanXMLLiteral() {
-    assert ch0 == '<' && Character.isJavaIdentifierStart(ch1);
-    if (XML_LITERALS) {
-      // Record beginning of xml expression.
-      var start = position;
-      var openCount = 0;
-      do {
-        if (ch0 == '<') {
-          if (ch1 == '/' && Character.isJavaIdentifierStart(ch2)) {
-            skip(3);
-            openCount--;
-          } else if (Character.isJavaIdentifierStart(ch1)) {
-            skip(2);
-            openCount++;
-          } else if (ch1 == '?') {
-            skip(2);
-          } else if (ch1 == '!' && ch2 == '-' && ch3 == '-') {
-            skip(4);
-          } else {
-            reset(start);
-            return false;
-          }
-          while (!atEOF() && ch0 != '>') {
-            if (ch0 == '/' && ch1 == '>') {
-              openCount--;
-              skip(1);
-              break;
-            } else if (ch0 == '\"' || ch0 == '\'') {
-              scanString(false);
-            } else {
-              skip(1);
-            }
-          }
-          if (ch0 != '>') {
-            reset(start);
-            return false;
-          }
-          skip(1);
-        } else if (atEOF()) {
-          reset(start);
-          return false;
-        } else {
-          skip(1);
-        }
-      } while (openCount > 0);
-      add(XML, start);
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Scan over identifier characters.
    *
    * @return Length of identifier or zero if none found.
@@ -1513,7 +1441,6 @@ public class Lexer extends Scanner {
       case IDENT -> valueOfIdent(start, len); // String
       case REGEX -> valueOfPattern(start, len); // RegexToken::LexerToken
       case TEMPLATE, TEMPLATE_HEAD, TEMPLATE_MIDDLE, TEMPLATE_TAIL -> valueOfString(start, len, true); // String
-      case XML -> valueOfXML(start, len); // XMLToken::LexerToken
       case DIRECTIVE_COMMENT -> source.getString(start, len);
 
       default -> null;
@@ -1641,20 +1568,6 @@ public class Lexer extends Scanner {
       return '/' + getExpression() + '/' + options;
     }
 
-    private static final long serialVersionUID = 1;
-  }
-
-  /**
-   * Temporary container for XML expression.
-   */
-  public static class XMLToken extends LexerToken {
-    /**
-     * Constructor.
-     * @param expression  XML expression
-     */
-    public XMLToken(String expression) {
-      super(expression);
-    }
     private static final long serialVersionUID = 1;
   }
 

@@ -146,7 +146,7 @@ public enum TokenType {
   EXECSTRING(LITERAL, null),
   IDENT(LITERAL, null),
   REGEX(LITERAL, null),
-  XML(LITERAL, null),
+  //  XML            (LITERAL, null),
   OBJECT(LITERAL, null),
   ARRAY(LITERAL, null),
   TEMPLATE(LITERAL, null),

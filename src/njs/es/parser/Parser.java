@@ -2178,7 +2178,7 @@ public class Parser extends AbstractParser {
     var primaryLine = line;
     var primaryToken = token;
     return switch (type) {
-      case STRING, ESCSTRING, DECIMAL, HEXADECIMAL, OCTAL, BINARY_NUMBER, FLOATING, REGEX, XML -> getLiteral();
+      case STRING, ESCSTRING, DECIMAL, HEXADECIMAL, OCTAL, BINARY_NUMBER, FLOATING, REGEX -> getLiteral();
       case TEMPLATE, TEMPLATE_HEAD -> templateLiteral();
       case EXECSTRING -> execString(primaryLine, primaryToken);
       case LBRACKET -> arrayLiteral();
