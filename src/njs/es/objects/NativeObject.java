@@ -740,7 +740,7 @@ public final class NativeObject {
     return new SimpleLinkRequest(new CallSiteDescriptor(MethodHandles.publicLookup(), operation, methodType), false, source);
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NativeObject.class, name, MH.type(rtype, types));
   }
 

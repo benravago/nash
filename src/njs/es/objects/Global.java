@@ -200,7 +200,7 @@ public final class Global extends Scope {
   /** ECMA 15.1.4.6 - Number constructor */
   @Property(name = "Number", attributes = Attribute.NOT_ENUMERABLE)
   public volatile Object number;
-
+  
   /**
    * Getter for ECMA 15.1.4.7 Date property
    * @param self self reference
@@ -1928,9 +1928,6 @@ public final class Global extends Scope {
   }
 
   synchronized ScriptFunction getBuiltinJavaImporter() {
-    if (getContext().getEnv()._no_java) {
-      throw new IllegalStateException();
-    }
     if (this.builtinJavaImporter == null) {
       this.builtinJavaImporter = initConstructor("JavaImporter", ScriptFunction.class);
     }
@@ -1938,9 +1935,6 @@ public final class Global extends Scope {
   }
 
   synchronized ScriptObject getBuiltinJavaApi() {
-    if (getContext().getEnv()._no_java) {
-      throw new IllegalStateException();
-    }
     if (this.builtinJavaApi == null) {
       this.builtinJavaApi = initConstructor("Java", ScriptObject.class);
       this.builtInJavaExtend = (ScriptFunction) builtinJavaApi.get("extend");
@@ -2372,18 +2366,11 @@ public final class Global extends Scope {
     this.weakSet = LAZY_SENTINEL;
     // Error stuff
     initErrorObjects();
-    // java access
-    if (!env._no_java) {
-      this.javaApi = LAZY_SENTINEL;
-      this.javaImporter = LAZY_SENTINEL;
-      initJavaAccess();
-    } else {
-      // delete nasgen-created global properties related to java access
-      this.delete("Java");
-      this.delete("JavaImporter");
-      this.delete("Packages");
-      this.delete("java");
-    }
+    // nasgen-created global properties related to java access
+    // "Java", "JavaImporter","Packages", "java"
+    this.javaApi = LAZY_SENTINEL;
+    this.javaImporter = LAZY_SENTINEL;
+    initJavaAccess();
     if (!env._no_typed_arrays) {
       this.arrayBuffer = LAZY_SENTINEL;
       this.dataView = LAZY_SENTINEL;
@@ -2684,7 +2671,7 @@ public final class Global extends Scope {
     tagBuiltinProperties("Function", anon);
   }
 
-  static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), Global.class, name, MH.type(rtype, types));
   }
 

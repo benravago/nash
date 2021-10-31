@@ -66,7 +66,7 @@ final class ShellFunctions {
     return Global.eval(self, input(self, endMarker, prompt));
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), ShellFunctions.class, name, MH.type(rtype, types));
   }
 

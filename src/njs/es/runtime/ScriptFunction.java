@@ -1035,11 +1035,11 @@ public class ScriptFunction extends ScriptObject {
     }
   }
 
-  static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), ScriptFunction.class, name, MH.type(rtype, types));
   }
 
-  static MethodHandle findOwnMH_V(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH_V(String name, Class<?> rtype, Class<?>... types) {
     return MH.findVirtual(MethodHandles.lookup(), ScriptFunction.class, name, MH.type(rtype, types));
   }
 

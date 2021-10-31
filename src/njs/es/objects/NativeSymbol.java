@@ -163,7 +163,7 @@ public final class NativeSymbol extends ScriptObject {
     return Global.instance().getSymbolPrototype();
   }
 
-  static MethodHandle findOwnMH(String name, MethodType type) {
+  private static MethodHandle findOwnMH(String name, MethodType type) {
     return MH.findStatic(MethodHandles.lookup(), NativeSymbol.class, name, type);
   }
 

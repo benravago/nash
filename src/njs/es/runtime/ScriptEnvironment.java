@@ -95,20 +95,11 @@ public final class ScriptEnvironment {
   /** --add-modules, if any */
   public final String _add_modules;
 
-  /** Do not support Java support extensions. */
-  public final boolean _no_java;
-
-  /** Do not support non-standard syntax extensions. */
-  public final boolean _no_syntax_extensions;
-
   /** Do not support typed arrays. */
   public final boolean _no_typed_arrays;
 
   /** Only parse the source code, do not compile */
   public final boolean _parse_only;
-
-  /** Print function will no print newline characters */
-  public final boolean _print_no_newline;
 
   /** is this environment in scripting mode? */
   public final boolean _scripting;
@@ -158,11 +149,8 @@ public final class ScriptEnvironment {
     _loader_per_compile = options.getBoolean("loader.per.compile");
     _module_path = options.getString("module.path");
     _add_modules = options.getString("add.modules");
-    _no_java = options.getBoolean("no.java");
-    _no_syntax_extensions = options.getBoolean("no.syntax.extensions");
     _no_typed_arrays = options.getBoolean("no.typed.arrays");
     _parse_only = options.getBoolean("parse.only");
-    _print_no_newline = options.getBoolean("print.no.newline");
     _scripting = options.getBoolean("scripting");
     var configuredUrt = options.getInteger("unstable.relink.threshold");
     // The default for this property is -1, so we can easily detect when it is not specified on command line.

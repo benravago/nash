@@ -81,6 +81,9 @@ public class Parser extends AbstractParser {
   // Current env.
   private final ScriptEnvironment env;
 
+  // syntax extension marker
+  private final static boolean _syntax_extension_ = true;
+
   // Is scripting mode.
   private final boolean scripting;
 
@@ -192,7 +195,7 @@ public class Parser extends AbstractParser {
     // log.info(this, " begin for '", scriptName, "'");
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, startPos, len, stream, scripting && !env._no_syntax_extensions, reparsedFunction != null);
+      lexer = new Lexer(source, startPos, len, stream, scripting && _syntax_extension_, reparsedFunction != null);
       lexer.line = lexer.pendingLine = lineOffset + 1;
       line = lineOffset;
       scanFirstToken();
@@ -219,7 +222,7 @@ public class Parser extends AbstractParser {
   public FunctionNode parseModule(String moduleName, int startPos, int len) {
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, startPos, len, stream, scripting && !env._no_syntax_extensions, reparsedFunction != null);
+      lexer = new Lexer(source, startPos, len, stream, scripting && _syntax_extension_, reparsedFunction != null);
       lexer.line = lexer.pendingLine = lineOffset + 1;
       line = lineOffset;
       scanFirstToken();
@@ -253,7 +256,7 @@ public class Parser extends AbstractParser {
   public List<IdentNode> parseFormalParameterList() {
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, stream, scripting && !env._no_syntax_extensions);
+      lexer = new Lexer(source, stream, scripting && _syntax_extension_);
       scanFirstToken();
       return formalParameterList(TokenType.EOF, false);
     } catch (Exception e) {
@@ -273,7 +276,7 @@ public class Parser extends AbstractParser {
   public FunctionNode parseFunctionBody() {
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, stream, scripting && !env._no_syntax_extensions);
+      lexer = new Lexer(source, stream, scripting && _syntax_extension_);
       var functionLine = line;
       scanFirstToken();
       // Make a fake token for the function.
@@ -1506,7 +1509,7 @@ public class Parser extends AbstractParser {
       NEXT();
       // Nashorn extension: for each expression.
       // iterate property values rather than property names.
-      if (!env._no_syntax_extensions && type == IDENT && "each".equals(getValue())) {
+      if (_syntax_extension_ && type == IDENT && "each".equals(getValue())) {
         flags |= ForNode.IS_FOR_EACH;
         NEXT();
       }
@@ -2088,7 +2091,7 @@ public class Parser extends AbstractParser {
         // Nashorn extension: catch clause can have optional condition.
         // So, a single try can have more than one catch clause each with it's own condition.
         Expression ifExpression;
-        if (!env._no_syntax_extensions && type == IF) {
+        if (_syntax_extension_ && type == IF) {
           NEXT();
           // Get the exception condition.
           ifExpression = expression();
@@ -2773,7 +2776,7 @@ public class Parser extends AbstractParser {
     //
     // The object literal following the "new Constructor()" expression
     // is passed as an additional (last) argument to the constructor.
-    if (!env._no_syntax_extensions && type == LBRACE) {
+    if (_syntax_extension_ && type == LBRACE) {
       arguments.add(objectLiteral());
     }
 
@@ -2984,7 +2987,7 @@ public class Parser extends AbstractParser {
       // Nashorn extension: anonymous function statements.
       // Do not allow anonymous function statement if extensions are now allowed.
       // But if we are reparsing then anon function statement is possible - because it was used as function expression in surrounding code.
-      if (env._no_syntax_extensions && reparsedFunction == null) {
+      if (!_syntax_extension_ && reparsedFunction == null) {
         expect(IDENT);
       }
     }
@@ -3311,7 +3314,7 @@ public class Parser extends AbstractParser {
       // Example:
       //   function square(x) x * x;
       //   print(square(3));
-      if ((!env._no_syntax_extensions || functionNode.getKind() == FunctionNode.Kind.ARROW) && type != LBRACE) {
+      if ((_syntax_extension_ || functionNode.getKind() == FunctionNode.Kind.ARROW) && type != LBRACE) {
         // just expression as function body
         var expr = assignmentExpression(false);
         lastToken = previousToken;
@@ -3422,7 +3425,7 @@ public class Parser extends AbstractParser {
       }
     }
     stream.reset();
-    lexer = parserState.createLexer(source, lexer, stream, scripting && !env._no_syntax_extensions);
+    lexer = parserState.createLexer(source, lexer, stream, scripting && _syntax_extension_);
     line = parserState.line;
     linePosition = parserState.linePosition;
     // Doesn't really matter, but it's safe to treat it as if there were a semicolon before the RBRACE.

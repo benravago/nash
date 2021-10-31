@@ -527,7 +527,7 @@ public final class NativeJSAdapter extends ScriptObject {
     return adaptee;
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NativeJSAdapter.class, name, MH.type(rtype, types));
   }
 

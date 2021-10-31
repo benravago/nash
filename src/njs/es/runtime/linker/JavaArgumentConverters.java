@@ -190,7 +190,7 @@ final class JavaArgumentConverters {
     return l == null ? 0L : l;
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), JavaArgumentConverters.class, name, MH.type(rtype, types));
   }
 

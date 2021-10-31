@@ -150,7 +150,7 @@ public final class NativeBoolean extends ScriptObject {
     return Global.instance().getBooleanPrototype();
   }
 
-  static MethodHandle findOwnMH(String name, MethodType type) {
+  private static MethodHandle findOwnMH(String name, MethodType type) {
     return MH.findStatic(MethodHandles.lookup(), NativeBoolean.class, name, type);
   }
 

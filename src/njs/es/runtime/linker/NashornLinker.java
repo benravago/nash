@@ -293,7 +293,7 @@ final class NashornLinker implements TypeBasedGuardingDynamicLinker, GuardingTyp
     return o instanceof ScriptFunction || (o instanceof ScriptObjectMirror som && som.isFunction());
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NashornLinker.class, name, MH.type(rtype, types));
   }
 

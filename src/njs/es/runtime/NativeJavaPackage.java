@@ -183,7 +183,7 @@ public final class NativeJavaPackage extends ScriptObject {
     return noSuchProperty(desc, request);
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NativeJavaPackage.class, name, MH.type(rtype, types));
   }
 

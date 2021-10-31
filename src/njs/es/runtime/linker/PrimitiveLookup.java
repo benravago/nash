@@ -129,7 +129,7 @@ public final class PrimitiveLookup {
     find.setValue(value);
   }
 
-  static MethodHandle findOwnMH(String name, MethodType type) {
+  private static MethodHandle findOwnMH(String name, MethodType type) {
     return MH.findStatic(MethodHandles.lookup(), PrimitiveLookup.class, name, type);
   }
 

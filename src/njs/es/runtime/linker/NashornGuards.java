@@ -190,7 +190,7 @@ public final class NashornGuards {
     return self instanceof ScriptFunction;
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NashornGuards.class, name, MH.type(rtype, types));
   }
 

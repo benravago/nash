@@ -238,11 +238,11 @@ final class JSObjectLinker implements TypeBasedGuardingDynamicLinker {
   private static final MethodHandle JSOBJECT_CALL_TO_APPLY = findOwnMH_S("callToApply", Object.class, MethodHandle.class, JSObject.class, Object.class, Object[].class);
   private static final MethodHandle JSOBJECT_NEW = findJSObjectMH_V("newObject", Object.class, Object[].class);
 
-  static MethodHandle findJSObjectMH_V(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findJSObjectMH_V(String name, Class<?> rtype, Class<?>... types) {
     return MH.findVirtual(MethodHandles.lookup(), JSObject.class, name, MH.type(rtype, types));
   }
 
-  static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH_S(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), JSObjectLinker.class, name, MH.type(rtype, types));
   }
 

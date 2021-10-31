@@ -576,7 +576,7 @@ public final class ObjectClassGenerator {
     return count / FIELD_PADDING * FIELD_PADDING + FIELD_PADDING;
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), ObjectClassGenerator.class, name, MH.type(rtype, types));
   }
 

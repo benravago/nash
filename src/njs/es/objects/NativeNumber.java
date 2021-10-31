@@ -224,7 +224,7 @@ public final class NativeNumber extends ScriptObject {
     return (fractionOffset < index || expPadding == 3) ? str.substring(0, fractionOffset) + str.substring(index, index + 2) + str.substring(index + expPadding) : str;
   }
 
-  static MethodHandle findOwnMH(String name, MethodType type) {
+  private static MethodHandle findOwnMH(String name, MethodType type) {
     return MH.findStatic(MethodHandles.lookup(), NativeNumber.class, name, type);
   }
 

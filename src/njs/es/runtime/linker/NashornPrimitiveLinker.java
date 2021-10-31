@@ -142,7 +142,7 @@ final class NashornPrimitiveLinker implements TypeBasedGuardingDynamicLinker, Gu
 
   private static final MethodHandle GUARD_PRIMITIVE = findOwnMH("isJavaScriptPrimitive", boolean.class, Object.class);
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), NashornPrimitiveLinker.class, name, MH.type(rtype, types));
   }
 

@@ -1108,7 +1108,7 @@ public final class NativeString extends ScriptObject implements OptimisticBuilti
     return key >= 0 && key < value.length();
   }
 
-  static MethodHandle findOwnMH(String name, MethodType type) {
+  private static MethodHandle findOwnMH(String name, MethodType type) {
     return MH.findStatic(MethodHandles.lookup(), NativeString.class, name, type);
   }
 

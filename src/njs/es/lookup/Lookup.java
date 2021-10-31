@@ -179,7 +179,7 @@ public final class Lookup {
     return MH.explicitCastArguments(mh, mh.type().changeReturnType(type));
   }
 
-  static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
+  private static MethodHandle findOwnMH(String name, Class<?> rtype, Class<?>... types) {
     return MH.findStatic(MethodHandles.lookup(), Lookup.class, name, MH.type(rtype, types));
   }
 
