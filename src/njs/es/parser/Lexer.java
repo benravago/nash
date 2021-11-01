@@ -520,10 +520,6 @@ public class Lexer extends Scanner {
 
     if (ch0 == '/') {
       return scanRegEx();
-    } else if (ch0 == '<') {
-      if (ch1 == '<') {
-        return scanHereString(lir, state);
-      }
     }
     return false;
   }
@@ -1203,113 +1199,6 @@ public class Lexer extends Scanner {
     lexer.lexify();
     // Need to keep lexer informed.
     last = stringType;
-  }
-
-  /**
-   * Scan over a here string.
-   *
-   * @return TRUE if is a here string.
-   */
-  boolean scanHereString(LineInfoReceiver lir, State oldState) {
-    assert ch0 == '<' && ch1 == '<';
-    if (scripting) {
-      // Record beginning of here string.
-      var saved = saveState();
-      // << or <<<
-      var excludeLastEOL = ch2 != '<';
-      if (excludeLastEOL) {
-        skip(2);
-      } else {
-        skip(3);
-      }
-      // Scan identifier. It might be quoted, indicating that no string editing should take place.
-      var quoteChar = ch0;
-      var noStringEditing = quoteChar == '"' || quoteChar == '\'';
-      if (noStringEditing) {
-        skip(1);
-      }
-      var identStart = position;
-      var identLength = scanIdentifier();
-      if (noStringEditing) {
-        if (ch0 != quoteChar) {
-          error(Lexer.message("here.non.matching.delimiter"), last, position, position);
-          restoreState(saved);
-          return false;
-        }
-        skip(1);
-      }
-      // Check for identifier.
-      if (identLength == 0) {
-        // Treat as shift.
-        restoreState(saved);
-        return false;
-      }
-      // Record rest of line.
-      var restState = saveState();
-      // keep line number updated
-      var lastLine = line;
-      skipLine(false);
-      lastLine++;
-      var lastLinePosition = position;
-      restState.setLimit(position);
-      if (oldState.position > position) {
-        restoreState(oldState);
-        skipLine(false);
-      }
-      // Record beginning of string.
-      var stringState = saveState();
-      var stringEnd = position;
-      // Hunt down marker.
-      while (!atEOF()) {
-        // Skip any whitespace.
-        skipWhitespace(false);
-        //handle trailing blank lines
-        lastLinePosition = position;
-        stringEnd = position;
-        if (hasHereMarker(identStart, identLength)) {
-          break;
-        }
-        skipLine(false);
-        lastLine++;
-        lastLinePosition = position;
-        stringEnd = position;
-      }
-      // notify last line information
-      lir.lineInfo(lastLine, lastLinePosition);
-      // Record end of string.
-      stringState.setLimit(stringEnd);
-      // If marker is missing.
-      if (stringState.isEmpty() || atEOF()) {
-        error(Lexer.message("here.missing.end.marker", source.getString(identStart, identLength)), last, position, position);
-        restoreState(saved);
-        return false;
-      }
-      // Remove last end of line if specified.
-      if (excludeLastEOL) {
-        // Handles \n.
-        if (content[stringEnd - 1] == '\n') {
-          stringEnd--;
-        }
-        // Handles \r and \r\n.
-        if (content[stringEnd - 1] == '\r') {
-          stringEnd--;
-        }
-        // Update end of string.
-        stringState.setLimit(stringEnd);
-      }
-      // Edit string if appropriate.
-      if (!noStringEditing && !stringState.isEmpty()) {
-        editString(STRING, stringState);
-      } else {
-        // Add here string.
-        add(STRING, stringState.position, stringState.limit);
-      }
-      // Scan rest of original line.
-      var restLexer = new Lexer(this, restState);
-      restLexer.lexify();
-      return true;
-    }
-    return false;
   }
 
   /**
