@@ -24,9 +24,6 @@ public class Lexer extends Scanner {
   // Buffered stream for tokens.
   private final TokenStream stream;
 
-  // True if here and edit strings are supported.
-  private final boolean scripting;
-
   // True if a nested scan. (scan to completion, no EOF.)
   private final boolean nested;
 
@@ -115,18 +112,7 @@ public class Lexer extends Scanner {
    * @param stream    the token stream to lex
    */
   public Lexer(Source source, TokenStream stream) {
-    this(source, stream, false);
-  }
-
-  /**
-   * Constructor
-   *
-   * @param source    the source
-   * @param stream    the token stream to lex
-   * @param scripting are we in scripting mode
-   */
-  public Lexer(Source source, TokenStream stream, boolean scripting) {
-    this(source, 0, source.getLength(), stream, scripting, false);
+    this(source, 0, source.getLength(), stream, false);
   }
 
   /**
@@ -136,15 +122,13 @@ public class Lexer extends Scanner {
    * @param start     start position in source from which to start lexing
    * @param len       length of source segment to lex
    * @param stream    token stream to lex
-   * @param scripting are we in scripting mode
    * @param pauseOnFunctionBody if true, lexer will return from {@link #lexify()} when it encounters a function body.
    *    This is used with the feature where the parser is skipping nested function bodies to avoid reading ahead unnecessarily when we skip the function bodies.
    */
-  public Lexer(Source source, int start, int len, TokenStream stream, boolean scripting, boolean pauseOnFunctionBody) {
+  public Lexer(Source source, int start, int len, TokenStream stream, boolean pauseOnFunctionBody) {
     super(source.getContent(), 1, start, len);
     this.source = source;
     this.stream = stream;
-    this.scripting = scripting;
     this.nested = false;
     this.pendingLine = 1;
     this.last = EOL;
@@ -157,7 +141,6 @@ public class Lexer extends Scanner {
 
     source = lexer.source;
     stream = lexer.stream;
-    scripting = lexer.scripting;
     nested = true;
 
     pendingLine = state.pendingLine;
@@ -411,8 +394,7 @@ public class Lexer extends Scanner {
         return true;
       }
     } else if (ch0 == '#') {
-      assert scripting;
-      // shell style comment
+      // scripting extension; shell style comment
       // Skip over #.
       skip(1);
       // Scan for EOL.
@@ -480,19 +462,7 @@ public class Lexer extends Scanner {
    * @return true if token can start a literal.
    */
   public boolean canStartLiteral(TokenType token) {
-    return token.startsWith('/') || (scripting && token.startsWith('<'));
-  }
-
-  /**
-   * interface to receive line information for multi-line literals.
-   */
-  interface LineInfoReceiver {
-    /**
-     * Receives line information
-     * @param line last line number
-     * @param linePosition position of last line
-     */
-    public void lineInfo(int line, int linePosition);
+    return token.startsWith('/'); // for RegEx
   }
 
   /**
@@ -504,7 +474,7 @@ public class Lexer extends Scanner {
    * @param lir LineInfoReceiver that receives line info for multi-line string literals.
    * @return True if a literal beginning with startToken was found and scanned.
    */
-  boolean scanLiteral(long token, TokenType startTokenType, LineInfoReceiver lir) {
+  boolean scanLiteral(long token, TokenType startTokenType) {
     // Check if it can be a literal.
     if (!canStartLiteral(startTokenType)) {
       return false;
@@ -513,11 +483,8 @@ public class Lexer extends Scanner {
     if (stream.get(stream.last()) != token) {
       return false;
     }
-    // Record current position in case multiple heredocs start on this line - see JDK-8073653
-    var state = saveState();
     // Rewind to token start position
     reset(Token.descPosition(token));
-
     if (ch0 == '/') {
       return scanRegEx();
     }
@@ -841,20 +808,7 @@ public class Lexer extends Scanner {
     if (add) {
       // Record end of string.
       stringState.setLimit(position - 1);
-      if (scripting && !stringState.isEmpty()) {
-        switch (quote) {
-          case '"' -> { // Only edit double quoted strings.
-            editString(type, stringState);
-          }
-          case '\'' -> { // Add string token without editing.
-            add(type, stringState.position, stringState.limit);
-          }
-          // default : no-op
-        }
-      } else {
-        /// Add string token without editing.
-        add(type, stringState.position, stringState.limit);
-      }
+      add(type, stringState.position, stringState.limit);
     }
   }
 
@@ -1079,19 +1033,6 @@ public class Lexer extends Scanner {
   }
 
   /**
-   * Detect if a line starts with a marker identifier.
-   *
-   * @param identStart  Start of identifier.
-   * @param identLength Length of identifier.
-   * @return True if detected.
-   */
-  boolean hasHereMarker(int identStart, int identLength) {
-    // Skip any whitespace.
-    skipWhitespace(false);
-    return identifierEqual(identStart, identLength, position, scanIdentifier());
-  }
-
-  /**
    * Lexer to service edit strings.
    */
   static class EditStringLexer extends Lexer {
@@ -1224,8 +1165,8 @@ public class Lexer extends Scanner {
       if (ch0 == '/' && skipComments()) {
         continue;
       }
-      if (scripting && ch0 == '#' && skipComments()) {
-        continue;
+      if (ch0 == '#' && skipComments()) {
+        continue; // scripting extension; shell style comment
       }
       // TokenType for lookup of delimiter or operator.
       TokenType type;

@@ -83,9 +83,6 @@ public class Parser extends AbstractParser {
   // syntax extension marker
   private final static boolean _syntax_extension_ = true;
 
-  // Is scripting mode.
-  private final boolean scripting;
-
   private List<Statement> functionDeclarations;
 
   private final ParserContext lc;
@@ -93,9 +90,6 @@ public class Parser extends AbstractParser {
 
   // Namespace for function names where not explicitly given
   private final Namespace namespace;
-
-  // to receive line information from Lexer when scanning multine literals.
-  final Lexer.LineInfoReceiver lineInfoReceiver;
 
   private RecompilableScriptFunctionData reparsedFunction;
 
@@ -124,17 +118,6 @@ public class Parser extends AbstractParser {
     this.defaultNames = new ArrayDeque<>();
     this.env = env;
     this.namespace = new Namespace(env.getNamespace());
-    this.scripting = env._scripting;
-    if (this.scripting) {
-      this.lineInfoReceiver = (receiverLine, receiverLinePosition) -> {
-        // update the parser maintained line information
-        Parser.this.line = receiverLine;
-        Parser.this.linePosition = receiverLinePosition;
-      };
-    } else {
-      // non-scripting mode script can't have multi-line literals
-      this.lineInfoReceiver = null;
-    }
   }
 
   /**
@@ -194,7 +177,7 @@ public class Parser extends AbstractParser {
     // log.info(this, " begin for '", scriptName, "'");
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, startPos, len, stream, scripting && _syntax_extension_, reparsedFunction != null);
+      lexer = new Lexer(source, startPos, len, stream, reparsedFunction != null);
       lexer.line = lexer.pendingLine = lineOffset + 1;
       line = lineOffset;
       scanFirstToken();
@@ -221,7 +204,7 @@ public class Parser extends AbstractParser {
   public FunctionNode parseModule(String moduleName, int startPos, int len) {
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, startPos, len, stream, scripting && _syntax_extension_, reparsedFunction != null);
+      lexer = new Lexer(source, startPos, len, stream, reparsedFunction != null);
       lexer.line = lexer.pendingLine = lineOffset + 1;
       line = lineOffset;
       scanFirstToken();
@@ -255,7 +238,7 @@ public class Parser extends AbstractParser {
   public List<IdentNode> parseFormalParameterList() {
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, stream, scripting && _syntax_extension_);
+      lexer = new Lexer(source, stream);
       scanFirstToken();
       return formalParameterList(TokenType.EOF, false);
     } catch (Exception e) {
@@ -275,7 +258,7 @@ public class Parser extends AbstractParser {
   public FunctionNode parseFunctionBody() {
     try {
       stream = new TokenStream();
-      lexer = new Lexer(source, stream, scripting && _syntax_extension_);
+      lexer = new Lexer(source, stream);
       var functionLine = line;
       scanFirstToken();
       // Make a fake token for the function.
@@ -2230,7 +2213,7 @@ public class Parser extends AbstractParser {
       }
       default -> {
         // In this context some operator tokens mark the start of a literal.
-        if (lexer.scanLiteral(primaryToken, type, lineInfoReceiver)) {
+        if (lexer.scanLiteral(primaryToken, type)) {
           NEXT();
           yield getLiteral();
         }
@@ -3402,7 +3385,7 @@ public class Parser extends AbstractParser {
       }
     }
     stream.reset();
-    lexer = parserState.createLexer(source, lexer, stream, scripting && _syntax_extension_);
+    lexer = parserState.createLexer(source, lexer, stream);
     line = parserState.line;
     linePosition = parserState.linePosition;
     // Doesn't really matter, but it's safe to treat it as if there were a semicolon before the RBRACE.
@@ -3426,8 +3409,8 @@ public class Parser extends AbstractParser {
       this.linePosition = linePosition;
     }
 
-    Lexer createLexer(Source source, Lexer lexer, TokenStream stream, boolean scripting) {
-      var newLexer = new Lexer(source, position, lexer.limit - position, stream, scripting, true);
+    Lexer createLexer(Source source, Lexer lexer, TokenStream stream) {
+      var newLexer = new Lexer(source, position, lexer.limit - position, stream, true);
       newLexer.restoreState(new Lexer.State(position, Integer.MAX_VALUE, line, -1, linePosition, SEMICOLON));
       return newLexer;
     }
