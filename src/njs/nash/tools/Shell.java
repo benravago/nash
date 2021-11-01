@@ -168,7 +168,7 @@ public class Shell {
         options.process(prepArgs);
       } catch (IllegalArgumentException e) {
         werr.println(bundle.getString("shell.usage"));
-        options.displayHelp(e);
+        // options.displayHelp(e);
         return null;
       }
     }

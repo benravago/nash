@@ -309,48 +309,6 @@ public final class Options {
   }
 
   /**
-   * Display context sensitive help
-   *
-   * @param e  exception that caused a parse error
-   */
-  public void displayHelp(IllegalArgumentException e) {
-    if (e instanceof IllegalOptionException ioe) {
-      var template = ioe.getTemplate();
-      if (template.isXHelp()) {
-        // display extended help information
-        displayHelp(true);
-      } else {
-        err.println(ioe.getTemplate());
-      }
-      return;
-    }
-
-    if (e != null && e.getMessage() != null) {
-      err.println(getMsg("option.error.invalid.option",
-        e.getMessage(), helpOptionTemplate.getShortName(), helpOptionTemplate.getName())
-      );
-      err.println();
-      return;
-    }
-
-    displayHelp(false);
-  }
-
-  /**
-   * Display full help
-   *
-   * @param extended show the extended help for all options, including undocumented ones
-   */
-  public void displayHelp(boolean extended) {
-    for (var t : Options.validOptions) {
-      if ((extended || !t.isUndocumented()) && t.getResource().equals(resource)) {
-        err.println(t);
-        err.println();
-      }
-    }
-  }
-
-  /**
    * Processes the arguments and stores their information. Throws
    * IllegalArgumentException on error. The message can be analyzed by the
    * displayHelp function to become more context sensitive
