@@ -1,7 +1,6 @@
 package es.objects;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +43,6 @@ import es.runtime.ScriptEnvironment;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
-import es.runtime.ScriptingFunctions;
 import es.runtime.Specialization;
 import es.runtime.Symbol;
 import es.runtime.arrays.ArrayData;
@@ -94,10 +92,6 @@ public final class Global extends Scope {
    * Naturally, checking for builtin classes like NativeFunction is cheaper, it's when you start adding property checks for said builtins you have problems with guard speed.
    */
 
-  /** Nashorn extension: arguments array */
-  @Property(attributes = Attribute.NOT_ENUMERABLE | Attribute.NOT_CONFIGURABLE)
-  public Object arguments;
-
   /** ECMA 15.1.2.2 parseInt (string , radix) */
   @Property(attributes = Attribute.NOT_ENUMERABLE)
   public Object parseInt;
@@ -138,13 +132,6 @@ public final class Global extends Scope {
   @Property(attributes = Attribute.NOT_ENUMERABLE)
   public Object unescape;
 
-  /** Nashorn extension: global.print */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public Object print;
-
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public Object warn;
-
   /** Nashorn extension: global.load */
   @Property(attributes = Attribute.NOT_ENUMERABLE)
   public Object load;
@@ -152,14 +139,6 @@ public final class Global extends Scope {
   /** Nashorn extension: global.loadWithNewGlobal */
   @Property(attributes = Attribute.NOT_ENUMERABLE)
   public Object loadWithNewGlobal;
-
-  /** Nashorn extension: global.exit */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public Object exit;
-
-  /** Nashorn extension: global.quit */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public Object quit;
 
   /** Value property NaN of the Global Object - ECMA 15.1.1.1 NaN */
   @Property(attributes = Attribute.NON_ENUMERABLE_CONSTANT)
@@ -985,11 +964,8 @@ public final class Global extends Scope {
 
   private static final MethodHandle EVAL = findOwnMH_S("eval", Object.class, Object.class, Object.class);
   private static final MethodHandle NO_SUCH_PROPERTY = findOwnMH_S(NO_SUCH_PROPERTY_NAME, Object.class, Object.class, Object.class);
-  private static final MethodHandle ERRORLN = findOwnMH_S("errorln", Object.class, Object.class, Object[].class);
-  private static final MethodHandle PRINTLN = findOwnMH_S("println", Object.class, Object.class, Object[].class);
   private static final MethodHandle LOAD = findOwnMH_S("load", Object.class, Object.class, Object.class);
   private static final MethodHandle LOAD_WITH_NEW_GLOBAL = findOwnMH_S("loadWithNewGlobal", Object.class, Object.class, Object[].class);
-  private static final MethodHandle EXIT = findOwnMH_S("exit", Object.class, Object.class, Object.class);
   private static final MethodHandle LEXICAL_SCOPE_FILTER = findOwnMH_S("lexicalScopeFilter", Object.class, Object.class);
 
   // initialized by nasgen
@@ -1039,7 +1015,7 @@ public final class Global extends Scope {
     this.initscontext = ctxt;
   }
 
-  ScriptContext currentContext() {
+  ScriptContext currentContext() { 
     var sc = scontext != null ? scontext.get() : null;
     if (sc != null) {
       return sc;
@@ -1050,7 +1026,7 @@ public final class Global extends Scope {
   }
 
   @Override
-  protected Context getContext() {
+  public Context getContext() {
     return context;
   }
 
@@ -1508,26 +1484,6 @@ public final class Global extends Scope {
   }
 
   /**
-   * Global warn implementation - Nashorn extension
-   * @param self    scope
-   * @param objects arguments to print
-   * @return result of warn (undefined)
-   */
-  public static Object errorln(Object self, Object... objects) {
-    return Global.instanceFrom(self).printImpl(false, objects);
-  }
-
-  /**
-   * Global println implementation - Nashorn extension
-   * @param self    scope
-   * @param objects arguments to print
-   * @return result of println (undefined)
-   */
-  public static Object println(Object self, Object... objects) {
-    return Global.instanceFrom(self).printImpl(true, objects);
-  }
-
-  /**
    * Global load implementation - Nashorn extension.
    * <p>
    * load builtin loads the given script.
@@ -1579,17 +1535,6 @@ public final class Global extends Scope {
     final Object[] arguments = hasArgs ? Arrays.copyOfRange(args, 1, length) : args;
 
     return global.getContext().loadWithNewGlobal(from, arguments);
-  }
-
-  /**
-   * Global exit and quit implementation - Nashorn extension: perform a {@code System.exit} call from the script
-   * @param self  self reference
-   * @param code  exit code
-   * @return undefined (will never be reached)
-   */
-  public static Object exit(Object self, Object code) {
-    System.exit(JSType.toInt32(code));
-    return UNDEFINED;
   }
 
   // builtin prototype accessors
@@ -2340,12 +2285,8 @@ public final class Global extends Scope {
     this.decodeURIComponent = ScriptFunction.createBuiltin("decodeURIComponent", GlobalFunctions.DECODE_URICOMPONENT);
     this.escape = ScriptFunction.createBuiltin("escape", GlobalFunctions.ESCAPE);
     this.unescape = ScriptFunction.createBuiltin("unescape", GlobalFunctions.UNESCAPE);
-    this.print = ScriptFunction.createBuiltin("print", PRINTLN);
-    this.warn = ScriptFunction.createBuiltin("warn", ERRORLN);
     this.load = ScriptFunction.createBuiltin("load", LOAD);
     this.loadWithNewGlobal = ScriptFunction.createBuiltin("loadWithNewGlobal", LOAD_WITH_NEW_GLOBAL);
-    this.exit = ScriptFunction.createBuiltin("exit", EXIT);
-    this.quit = ScriptFunction.createBuiltin("quit", EXIT);
     // built-in constructors
     this.builtinArray = initConstructorAndSwitchPoint("Array", ScriptFunction.class);
     this.builtinBoolean = initConstructorAndSwitchPoint("Boolean", ScriptFunction.class);
@@ -2384,16 +2325,7 @@ public final class Global extends Scope {
       this.float32Array = LAZY_SENTINEL;
       this.float64Array = LAZY_SENTINEL;
     }
-    if (env._scripting) {
-      initScripting(env);
-    }
     copyBuiltins();
-    // expose script (command line) arguments as "arguments" property of global
-    arguments = wrapAsObject(env.getArguments().toArray());
-    if (env._scripting) {
-      // synonym for "arguments" in scripting mode
-      addOwnProperty("$ARG", Attribute.NOT_ENUMERABLE, arguments);
-    }
     if (eng != null) {
       // default file name
       addOwnProperty(ScriptEngine.FILENAME, Attribute.NOT_ENUMERABLE, null);
@@ -2448,38 +2380,6 @@ public final class Global extends Scope {
     this.builtinJava = new NativeJavaPackage("java", objectProto);
   }
 
-  void initScripting(ScriptEnvironment scriptEnv) {
-    ScriptObject value;
-    value = ScriptFunction.createBuiltin("readLine", ScriptingFunctions.READLINE);
-    addOwnProperty("readLine", Attribute.NOT_ENUMERABLE, value);
-    value = ScriptFunction.createBuiltin("readFully", ScriptingFunctions.READFULLY);
-    addOwnProperty("readFully", Attribute.NOT_ENUMERABLE, value);
-    var execName = ScriptingFunctions.EXEC_NAME;
-    value = ScriptFunction.createBuiltin(execName, ScriptingFunctions.EXEC);
-    addOwnProperty(execName, Attribute.NOT_ENUMERABLE, value);
-    // Nashorn extension: global.echo (scripting-mode-only)
-    // alias for "print"
-    value = (ScriptObject) get("print");
-    addOwnProperty("echo", Attribute.NOT_ENUMERABLE, value);
-    // Nashorn extension: global.$OPTIONS (scripting-mode-only)
-    var options = newObject();
-    copyOptions(options, scriptEnv);
-    addOwnProperty("$OPTIONS", Attribute.NOT_ENUMERABLE, options);
-    // Nashorn extension: global.$ENV (scripting-mode-only)
-    var env = newObject();
-    // do not fill $ENV if we have a security manager around
-    // Retrieve current state of ENV variables.
-    env.putAll(System.getenv());
-    // Set the PWD variable to a value that is guaranteed to be understood
-    // by the underlying platform.
-    env.put(ScriptingFunctions.PWD_NAME, System.getProperty("user.dir"));
-    addOwnProperty(ScriptingFunctions.ENV_NAME, Attribute.NOT_ENUMERABLE, env);
-    // add other special properties for exec support
-    addOwnProperty(ScriptingFunctions.OUT_NAME, Attribute.NOT_ENUMERABLE, UNDEFINED);
-    addOwnProperty(ScriptingFunctions.ERR_NAME, Attribute.NOT_ENUMERABLE, UNDEFINED);
-    addOwnProperty(ScriptingFunctions.EXIT_NAME, Attribute.NOT_ENUMERABLE, UNDEFINED);
-  }
-
   static void copyOptions(ScriptObject options, ScriptEnvironment scriptEnv) {
     for (var f : scriptEnv.getClass().getFields()) {
       try {
@@ -2506,27 +2406,14 @@ public final class Global extends Scope {
     this.typeError = this.builtinTypeError;
   }
 
-  Object printImpl(boolean stdout, Object... objects) {
-    var sc = currentContext();
-    var out = stdout ? (sc != null ? sc.getWriter() : getContext().getEnv().getOut())
-                     : (sc != null ? sc.getErrorWriter() : getContext().getEnv().getErr());
-    var sb = new StringBuilder();
-    for (var obj : objects) {
-      if (sb.length() != 0) {
-        sb.append(' ');
-      }
-      sb.append(JSType.toString(obj));
-    }
-    // Print all at once to ensure thread friendly result.
-    try {
-      out.append(sb).append('\n');
-      out.flush();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-    return UNDEFINED;
+  public static Object printImpl(Object self, boolean stdout) {
+    var global = Global.instanceFrom(self);
+    var sc = global.currentContext();
+    return stdout
+      ? (sc != null ? sc.getWriter() : global.getContext().getEnv().getOut())
+      : (sc != null ? sc.getErrorWriter() : global.getContext().getEnv().getErr());
   }
-
+  
   <T extends ScriptObject> T initConstructor(String name, Class<T> type) {
     try {
       // Assuming class name pattern for built-in JS constructors.

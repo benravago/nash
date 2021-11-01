@@ -1,5 +1,6 @@
-package es.runtime;
+package nash.tools;
 
+import es.runtime.ECMAErrors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,8 +21,9 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.lang.ProcessBuilder.Redirect;
 
-import static es.runtime.CommandExecutor.RedirectType.*;
+import static nash.tools.CommandExecutor.RedirectType.*;
 import static es.runtime.ECMAErrors.rangeError;
+import es.runtime.ScriptRuntime;
 
 /**
  * The CommandExecutor class provides support for Nashorn's $EXEC builtin function.
@@ -591,7 +593,7 @@ class CommandExecutor {
     }
     // If we got a non-zero exit code then possibly throw an exception.
     if (exitCode != 0 && envVarBooleanValue("JJS_THROW_ON_EXIT")) {
-      throw rangeError("exec.returned.non.zero", ScriptRuntime.safeToString(exitCode));
+      throw ECMAErrors.rangeError("exec.returned.non.zero", ScriptRuntime.safeToString(exitCode));
     }
   }
 

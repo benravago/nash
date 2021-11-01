@@ -101,9 +101,6 @@ public final class ScriptEnvironment {
   /** Only parse the source code, do not compile */
   public final boolean _parse_only;
 
-  /** is this environment in scripting mode? */
-  public final boolean _scripting;
-
   /** time zone for this environment */
   public final TimeZone _timezone;
 
@@ -151,7 +148,6 @@ public final class ScriptEnvironment {
     _add_modules = options.getString("add.modules");
     _no_typed_arrays = options.getBoolean("no.typed.arrays");
     _parse_only = options.getBoolean("parse.only");
-    _scripting = options.getBoolean("scripting");
     var configuredUrt = options.getInteger("unstable.relink.threshold");
     // The default for this property is -1, so we can easily detect when it is not specified on command line.
     if (configuredUrt < 0) {

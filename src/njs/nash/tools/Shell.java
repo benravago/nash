@@ -361,8 +361,8 @@ public class Shell {
       if (globalChanged) {
         Context.setGlobal(global);
       }
+      addScriptingBuiltins(global);
       var errors = context.getErrorManager();
-
       // For each file on the command line.
       for (var fileName : files) {
         if ("-".equals(fileName)) {
@@ -466,9 +466,8 @@ public class Shell {
       if (globalChanged) {
         Context.setGlobal(global);
       }
-
+      addScriptingBuiltins(global);
       addShellBuiltins(global);
-
       for (;;) {
         err.print(prompt);
         err.flush();
@@ -557,10 +556,24 @@ public class Shell {
    * Adds njs shell interactive mode builtin functions to global scope.
    */
   void addShellBuiltins(Global global) {
-    var value = ScriptFunction.createBuiltin("input", ShellFunctions.INPUT);
+    ScriptFunction value;
+    System.out.println("addShellBuiltin "+global);
+    value = ScriptFunction.createBuiltin("input", ShellFunctions.INPUT);
     global.addOwnProperty("input", Attribute.NOT_ENUMERABLE, value);
     value = ScriptFunction.createBuiltin("evalinput", ShellFunctions.EVALINPUT);
     global.addOwnProperty("evalinput", Attribute.NOT_ENUMERABLE, value);
+  }
+
+  void addScriptingBuiltins(Global global) {
+    ScriptFunction value;
+    value = ScriptFunction.createBuiltin("print", ShellFunctions.PRINTLN);
+    global.addOwnProperty("print", Attribute.NOT_ENUMERABLE, value);
+    value = ScriptFunction.createBuiltin("warn", ShellFunctions.ERRORLN);
+    global.addOwnProperty("warn", Attribute.NOT_ENUMERABLE, value);
+    value = ScriptFunction.createBuiltin("exit", ShellFunctions.EXIT);
+    global.addOwnProperty("exit", Attribute.NOT_ENUMERABLE, value);
+    value = ScriptFunction.createBuiltin("quit", ShellFunctions.EXIT);
+    global.addOwnProperty("quit", Attribute.NOT_ENUMERABLE, value);
   }
 
 }
