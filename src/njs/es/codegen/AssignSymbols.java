@@ -28,7 +28,6 @@ import es.ir.Symbol;
 import es.ir.TryNode;
 import es.ir.UnaryNode;
 import es.ir.VarNode;
-import es.ir.WithNode;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.parser.TokenType;
 import es.runtime.ECMAErrors;
@@ -706,13 +705,6 @@ final class AssignSymbols extends SimpleNodeVisitor{
         // We reached the function boundary or a splitting boundary without seeing a definition for the symbol.
         // It needs to be in scope.
         return true;
-      } else if (node instanceof WithNode) {
-        if (previousWasBlock) {
-          // We reached a WithNode; the symbol must be scoped.
-          // Note that if the WithNode was not immediately preceded by a block, this means we're currently processing its expression, not its body, therefore it doesn't count.
-          return true;
-        }
-        previousWasBlock = false;
       } else if (node instanceof Block b) {
         if (b.getExistingSymbol(symbol.getName()) == symbol) {
           // We reached the block that defines the symbol without reaching either the function boundary, or a

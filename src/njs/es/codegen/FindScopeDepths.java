@@ -12,7 +12,6 @@ import es.ir.IdentNode;
 import es.ir.LexicalContext;
 import es.ir.Node;
 import es.ir.Symbol;
-import es.ir.WithNode;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.runtime.RecompilableScriptFunctionData;
 
@@ -161,12 +160,6 @@ final class FindScopeDepths extends SimpleNodeVisitor {
   void decreaseDynamicScopeCount(Node node) {
     --dynamicScopeCount;
     assert dynamicScopeCount >= 0;
-  }
-
-  @Override
-  public boolean enterWithNode(WithNode node) {
-    withBodies.add(node.getBody());
-    return true;
   }
 
   @Override

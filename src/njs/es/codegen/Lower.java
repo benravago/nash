@@ -46,12 +46,10 @@ import es.ir.TryNode;
 import es.ir.UnaryNode;
 import es.ir.VarNode;
 import es.ir.WhileNode;
-import es.ir.WithNode;
 import es.ir.visitor.NodeOperatorVisitor;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.parser.Token;
 import es.parser.TokenType;
-import es.runtime.Context;
 import es.runtime.ECMAErrors;
 import es.runtime.ErrorManager;
 import es.runtime.JSType;
@@ -578,11 +576,6 @@ final class Lower extends NodeOperatorVisitor<BlockLexicalContext> {
       return forNode;
     }
     return addStatement(checkEscape(whileNode));
-  }
-
-  @Override
-  public Node leaveWithNode(WithNode withNode) {
-    return addStatement(withNode);
   }
 
   @Override

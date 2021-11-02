@@ -41,7 +41,6 @@ import es.ir.TryNode;
 import es.ir.UnaryNode;
 import es.ir.VarNode;
 import es.ir.WhileNode;
-import es.ir.WithNode;
 
 /**
  * Visitor used to navigate the IR.
@@ -873,26 +872,6 @@ public abstract class NodeVisitor<T extends LexicalContext> {
    */
   public Node leaveWhileNode(WhileNode whileNode) {
     return leaveDefault(whileNode);
-  }
-
-  /**
-   * Callback for entering a WithNode
-   *
-   * @param  withNode  the node
-   * @return true if traversal should continue and node children be traversed, false otherwise
-   */
-  public boolean enterWithNode(WithNode withNode) {
-    return enterDefault(withNode);
-  }
-
-  /**
-   * Callback for leaving a WithNode
-   *
-   * @param  withNode  the node
-   * @return processed node, which will replace the original one, or the original node
-   */
-  public Node leaveWithNode(WithNode withNode) {
-    return leaveDefault(withNode);
   }
 
   /**

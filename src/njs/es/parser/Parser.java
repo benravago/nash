@@ -723,7 +723,6 @@ public class Parser extends AbstractParser {
       case CONTINUE -> continueStatement();
       case BREAK -> breakStatement();
       case RETURN -> returnStatement();
-      case WITH -> withStatement();
       case SWITCH -> switchStatement();
       case THROW -> throwStatement();
       case TRY -> tryStatement();
@@ -1871,19 +1870,6 @@ public class Parser extends AbstractParser {
 
   static UnaryNode newUndefinedLiteral(long token, int finish) {
     return new UnaryNode(Token.recast(token, VOID), LiteralNode.newInstance(token, finish, 0));
-  }
-
-  /**
-   * WithStatement :
-   *      with ( Expression ) Statement
-   *
-   * See 12.10
-   *
-   * Parse WITH statement.
-   */
-  void withStatement() {
-    // Capture WITH token.
-    throw error(AbstractParser.message("no.with"), token);
   }
 
   /**

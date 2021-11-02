@@ -70,7 +70,6 @@ import es.ir.TryNode;
 import es.ir.UnaryNode;
 import es.ir.VarNode;
 import es.ir.WhileNode;
-import es.ir.WithNode;
 import es.ir.visitor.NodeOperatorVisitor;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.objects.Global;
@@ -3049,67 +3048,6 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
       }
     }
     method.breakLabel(whileNode.getBreakLabel(), liveLocalsOnContinueOrBreak);
-  }
-
-  @Override
-  public boolean enterWithNode(WithNode withNode) {
-    if (!method.isReachable()) {
-      return false;
-    }
-    enterStatement(withNode);
-    var expression = withNode.getExpression();
-    var body = withNode.getBody();
-    // It is possible to have a "pathological" case where the with block does not reference *any* identifiers. It's pointless, but legal.
-    // In that case, if nothing else in the method forced the assignment of a slot to the scope object, its' possible that it won't have a slot assigned.
-    // In this case we'll only evaluate expression for its side effect and visit the body, and not bother opening and closing a WithObject.
-    var hasScope = method.hasScope();
-    if (hasScope) {
-      method.loadCompilerConstant(SCOPE);
-    }
-    loadExpressionAsObject(expression);
-    Label tryLabel;
-    if (hasScope) {
-      // Construct a WithObject if we have a scope
-      method.invoke(ScriptRuntime.OPEN_WITH);
-      method.storeCompilerConstant(SCOPE);
-      tryLabel = new Label("with_try");
-      method.label(tryLabel);
-    } else {
-      // We just loaded the expression for its side effect and to check for null or undefined value.
-      globalCheckObjectCoercible();
-      tryLabel = null;
-    }
-    // Always process body
-    body.accept(this);
-    if (hasScope) {
-      // Ensure we always close the WithObject
-      var endLabel = new Label("with_end");
-      var catchLabel = new Label("with_catch");
-      var exitLabel = new Label("with_exit");
-      method.label(endLabel);
-      // Somewhat conservatively presume that if the body is not empty, it can throw an exception.
-      // In any case, we must prevent trying to emit a try-catch for empty range, as it causes a verification error.
-      var bodyCanThrow = endLabel.isAfter(tryLabel);
-      if (bodyCanThrow) {
-        method.try_(tryLabel, endLabel, catchLabel);
-      }
-      var reachable = method.isReachable();
-      if (reachable) {
-        popScope();
-        if (bodyCanThrow) {
-          method.goto_(exitLabel);
-        }
-      }
-      if (bodyCanThrow) {
-        method.catch_(catchLabel);
-        popScopeException();
-        method.athrow();
-        if (reachable) {
-          method.label(exitLabel);
-        }
-      }
-    }
-    return false;
   }
 
   void loadADD(UnaryNode unaryNode, TypeBounds resultBounds) {

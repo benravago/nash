@@ -825,33 +825,6 @@ public final class Global extends Scope {
   public volatile Object java;
 
   /**
-   * Getter for the Nashorn extension: Java access - global.JavaImporter.
-   * @param self self reference
-   * @return the value of the JavaImporter property
-   */
-  @Getter(name = "JavaImporter", attributes = Attribute.NOT_ENUMERABLE)
-  public static Object getJavaImporter(Object self) {
-    var global = Global.instanceFrom(self);
-    if (global.javaImporter == LAZY_SENTINEL) {
-      global.javaImporter = global.getBuiltinJavaImporter();
-    }
-    return global.javaImporter;
-  }
-
-  /**
-   * Setter for the Nashorn extension: Java access - global.JavaImporter.
-   * @param self self reference
-   * @param value value of the JavaImporter property
-   */
-  @Setter(name = "JavaImporter", attributes = Attribute.NOT_ENUMERABLE)
-  public static void setJavaImporter(Object self, Object value) {
-    var global = Global.instanceFrom(self);
-    global.javaImporter = value;
-  }
-
-  private volatile Object javaImporter;
-
-  /**
    * Getter for the Nashorn extension: global.Java property.
    * @param self self reference
    * @return the value of the Java property
@@ -929,7 +902,6 @@ public final class Global extends Scope {
   private ScriptFunction builtinURIError;
   private ScriptObject builtinPackages;
   private ScriptObject builtinJava;
-  private ScriptFunction builtinJavaImporter;
   private ScriptObject builtinJavaApi;
   private ScriptFunction builtinArrayBuffer;
   private ScriptFunction builtinDataView;
@@ -1611,10 +1583,6 @@ public final class Global extends Scope {
     return ScriptFunction.getPrototype(getBuiltinURIError());
   }
 
-  ScriptObject getJavaImporterPrototype() {
-    return ScriptFunction.getPrototype(getBuiltinJavaImporter());
-  }
-
   ScriptObject getJSAdapterPrototype() {
     return ScriptFunction.getPrototype(getBuiltinJSAdapter());
   }
@@ -1870,13 +1838,6 @@ public final class Global extends Scope {
       this.builtinJSON = initConstructorAndSwitchPoint("JSON", ScriptObject.class);
     }
     return this.builtinJSON;
-  }
-
-  synchronized ScriptFunction getBuiltinJavaImporter() {
-    if (this.builtinJavaImporter == null) {
-      this.builtinJavaImporter = initConstructor("JavaImporter", ScriptFunction.class);
-    }
-    return this.builtinJavaImporter;
   }
 
   synchronized ScriptObject getBuiltinJavaApi() {
@@ -2310,7 +2271,6 @@ public final class Global extends Scope {
     // nasgen-created global properties related to java access
     // "Java", "JavaImporter","Packages", "java"
     this.javaApi = LAZY_SENTINEL;
-    this.javaImporter = LAZY_SENTINEL;
     initJavaAccess();
     if (!env._no_typed_arrays) {
       this.arrayBuffer = LAZY_SENTINEL;

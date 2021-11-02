@@ -54,7 +54,6 @@ import es.ir.TryNode;
 import es.ir.UnaryNode;
 import es.ir.VarNode;
 import es.ir.WhileNode;
-import es.ir.WithNode;
 import es.ir.visitor.NodeVisitor;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.parser.TokenType;
@@ -1036,15 +1035,6 @@ final class LocalVariableTypesCalculator extends SimpleNodeVisitor {
       enterDoWhileLoop(whileNode);
     } else {
       enterTestFirstLoop(whileNode, null, null, false);
-    }
-    return false;
-  }
-
-  @Override
-  public boolean enterWithNode(WithNode withNode) {
-    if (reachable) {
-      visitExpression(withNode.getExpression());
-      withNode.getBody().accept(this);
     }
     return false;
   }

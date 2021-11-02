@@ -1,6 +1,5 @@
 package es.codegen;
 
-import java.util.List;
 import java.util.Map;
 
 import es.ir.AccessNode;
@@ -26,14 +25,12 @@ import es.ir.PropertyNode;
 import es.ir.ReturnNode;
 import es.ir.RuntimeNode;
 import es.ir.SplitNode;
-import es.ir.Splittable;
 import es.ir.SwitchNode;
 import es.ir.ThrowNode;
 import es.ir.TryNode;
 import es.ir.UnaryNode;
 import es.ir.VarNode;
 import es.ir.WhileNode;
-import es.ir.WithNode;
 import es.ir.visitor.NodeOperatorVisitor;
 
 /**
@@ -62,7 +59,6 @@ final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
   static final long SWITCH_WEIGHT = 8;
   static final long THROW_WEIGHT = 2;
   static final long VAR_WEIGHT = 40;
-  static final long WITH_WEIGHT = 8;
   static final long OBJECT_WEIGHT = 16;
   static final long SETPROP_WEIGHT = 5;
 
@@ -270,12 +266,6 @@ final class WeighNodes extends NodeOperatorVisitor<LexicalContext> {
   public Node leaveWhileNode(WhileNode whileNode) {
     weight += LOOP_WEIGHT;
     return whileNode;
-  }
-
-  @Override
-  public Node leaveWithNode(WithNode withNode) {
-    weight += WITH_WEIGHT;
-    return withNode;
   }
 
   @Override

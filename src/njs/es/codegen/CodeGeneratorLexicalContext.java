@@ -16,7 +16,6 @@ import es.ir.LexicalContext;
 import es.ir.LexicalContextNode;
 import es.ir.Node;
 import es.ir.Symbol;
-import es.ir.WithNode;
 
 /**
  * A lexical context that also tracks if we have any dynamic scopes in the context.
@@ -51,15 +50,9 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
   // size of next free slot vector
   private int nextFreeSlotsSize;
 
-  private boolean isWithBoundary(Object node) {
-    return node instanceof Block && !isEmpty() && peek() instanceof WithNode;
-  }
-
   @Override
   public <T extends LexicalContextNode> T push(T node) {
-    if (isWithBoundary(node)) {
-      dynamicScopeCount++;
-    } else if (node instanceof FunctionNode fn) {
+    if (node instanceof FunctionNode fn) {
       if (fn.inDynamicContext()) {
         dynamicScopeCount++;
       }
@@ -81,10 +74,7 @@ final class CodeGeneratorLexicalContext extends LexicalContext {
   @Override
   public <T extends Node> T pop(T node) {
     var popped = super.pop(node);
-    if (isWithBoundary(node)) {
-      dynamicScopeCount--;
-      assert dynamicScopeCount >= 0;
-    } else if (node instanceof FunctionNode fn) {
+    if (node instanceof FunctionNode fn) {
       if (fn.inDynamicContext()) {
         dynamicScopeCount--;
         assert dynamicScopeCount >= 0;

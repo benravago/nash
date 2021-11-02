@@ -449,7 +449,7 @@ public class LexicalContext {
         break;
       }
       assert !(node instanceof FunctionNode); // Can't go outside current function
-      if (node instanceof WithNode || node instanceof Block && ((Block) node).needsScope()) {
+      if (node instanceof Block && ((Block) node).needsScope()) {
         n++;
       }
     }
