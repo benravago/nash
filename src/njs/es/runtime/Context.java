@@ -45,7 +45,6 @@ import nash.scripting.ScriptObjectMirror;
 
 import es.codegen.Compiler;
 import es.codegen.ObjectClassGenerator;
-import es.ir.FunctionNode;
 import es.objects.Global;
 import es.parser.Parser;
 import es.runtime.linker.Bootstrap;
@@ -948,33 +947,21 @@ public final class Context {
     if (script != null) {
       return script;
     }
-    FunctionNode functionNode = null;
-    // Don't use code store if optimistic types is enabled but lazy compilation is not. // TODO: review for how to remove code store
-    // This would store a full script compilation with many wrong optimistic assumptions that would do more harm than good on later runs with both optimistic types and lazy compilation enabled.
-
-      functionNode = new Parser(env, source, errMan).parse();
-      if (errMan.hasErrors()) {
-        return null;
-      }
-
-    if (env._parse_only) {
+    var functionNode = new Parser(env, source, errMan).parse();
+    if (errMan.hasErrors() || functionNode == null) {
       return null;
     }
     var url = source.getURL();
     var cs = new CodeSource(url, (CodeSigner[]) null);
-    CodeInstaller installer;
-
-      var loader = env._loader_per_compile ? createNewLoader() : scriptLoader;
-      installer = new NamedContextCodeInstaller(this, cs, loader);
-
-      var phases = Compiler.CompilationPhases.COMPILE_ALL;
-      var compiler = Compiler.forInitialCompilation(installer, source, errMan);
-      var compiledFunction = compiler.compile(functionNode, phases);
-      if (errMan.hasErrors()) {
-        return null;
-      }
-      script = compiledFunction.getRootClass();
-
+    var loader = env._loader_per_compile ? createNewLoader() : scriptLoader;
+    var installer = new NamedContextCodeInstaller(this, cs, loader);
+    var phases = Compiler.CompilationPhases.COMPILE_ALL;
+    var compiler = Compiler.forInitialCompilation(installer, source, errMan);
+    var compiledFunction = compiler.compile(functionNode, phases);
+    if (errMan.hasErrors()) {
+      return null;
+    }
+    script = compiledFunction.getRootClass();
     cacheClass(source, script);
     return script;
   }

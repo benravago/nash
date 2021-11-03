@@ -16,8 +16,6 @@ import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
 import jdk.dynalink.linker.support.Guards;
 
-import es.codegen.ApplySpecialization;
-import es.codegen.Compiler;
 import es.codegen.CompilerConstants.Call;
 import es.ir.FunctionNode;
 import es.objects.Global;
@@ -702,12 +700,6 @@ public class ScriptFunction extends ScriptObject {
         // It's already (callee, this, args...), just what we need
         boundHandle = callHandle;
       }
-    } else if (data.isBuiltin() && Global.isBuiltInJavaExtend(this)) {
-      // We're binding the current lookup as "self" so the function can do security-sensitive creation of adapter classes.
-      boundHandle = MH.dropArguments(MH.bindTo(callHandle, getLookupPrivileged(desc)), 0, type.parameterType(0), type.parameterType(1));
-    } else if (data.isBuiltin() && Global.isBuiltInJavaTo(this)) {
-      // We're binding the current call site descriptor as "self" so the function can do security-sensitive creation of adapter classes.
-      boundHandle = MH.dropArguments(MH.bindTo(callHandle, desc), 0, type.parameterType(0), type.parameterType(1));
     } else if (scopeCall && needsWrappedThis()) {
       // Make a handle that drops the passed "this" argument and substitutes either Global or Undefined (this, args...) => ([this], args...)
       boundHandle = MH.filterArguments(callHandle, 0, SCRIPTFUNCTION_GLOBALFILTER);

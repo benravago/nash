@@ -1,7 +1,5 @@
 package es.objects;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +33,6 @@ import es.runtime.ECMAErrors;
 import es.runtime.FindProperty;
 import es.runtime.GlobalFunctions;
 import es.runtime.JSType;
-import es.runtime.NativeJavaPackage;
 import es.runtime.PropertyDescriptor;
 import es.runtime.PropertyMap;
 import es.runtime.Scope;
@@ -131,14 +128,6 @@ public final class Global extends Scope {
   /** ECMA B.2.2 unescape (string) */
   @Property(attributes = Attribute.NOT_ENUMERABLE)
   public Object unescape;
-
-  /** Nashorn extension: global.load */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public Object load;
-
-  /** Nashorn extension: global.loadWithNewGlobal */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public Object loadWithNewGlobal;
 
   /** Value property NaN of the Global Object - ECMA 15.1.1.1 NaN */
   @Property(attributes = Attribute.NON_ENUMERABLE_CONSTANT)
@@ -816,41 +805,6 @@ public final class Global extends Scope {
 
   private volatile Object weakSet;
 
-  /** Nashorn extension: Java access - global.Packages */
-  @Property(name = "Packages", attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object packages;
-
-  /** Nashorn extension: Java access - global.java */
-  @Property(attributes = Attribute.NOT_ENUMERABLE)
-  public volatile Object java;
-
-  /**
-   * Getter for the Nashorn extension: global.Java property.
-   * @param self self reference
-   * @return the value of the Java property
-   */
-  @Getter(name = "Java", attributes = Attribute.NOT_ENUMERABLE)
-  public static Object getJavaApi(Object self) {
-    var global = Global.instanceFrom(self);
-    if (global.javaApi == LAZY_SENTINEL) {
-      global.javaApi = global.getBuiltinJavaApi();
-    }
-    return global.javaApi;
-  }
-
-  /**
-   * Setter for the Nashorn extension: global.Java property.
-   * @param self self reference
-   * @param value value of the Java property
-   */
-  @Setter(name = "Java", attributes = Attribute.NOT_ENUMERABLE)
-  public static void setJavaApi(Object self, Object value) {
-    var global = Global.instanceFrom(self);
-    global.javaApi = value;
-  }
-
-  private volatile Object javaApi;
-
   /** Nashorn extension: current script's file name */
   @Property(name = "__FILE__", attributes = Attribute.NON_ENUMERABLE_CONSTANT)
   public static final Object __FILE__ = LOCATION_PLACEHOLDER;
@@ -900,9 +854,6 @@ public final class Global extends Scope {
   private ScriptFunction builtinSyntaxError;
   private ScriptFunction builtinTypeError;
   private ScriptFunction builtinURIError;
-  private ScriptObject builtinPackages;
-  private ScriptObject builtinJava;
-  private ScriptObject builtinJavaApi;
   private ScriptFunction builtinArrayBuffer;
   private ScriptFunction builtinDataView;
   private ScriptFunction builtinInt8Array;
@@ -925,9 +876,6 @@ public final class Global extends Scope {
   private ScriptObject builtinArrayIteratorPrototype;
   private ScriptObject builtinStringIteratorPrototype;
 
-  private ScriptFunction builtInJavaExtend;
-  private ScriptFunction builtInJavaTo;
-
   // ECMA section 13.2.3 The [[ThrowTypeError]] Function Object
   private ScriptFunction typeErrorThrower;
 
@@ -936,8 +884,6 @@ public final class Global extends Scope {
 
   private static final MethodHandle EVAL = findOwnMH_S("eval", Object.class, Object.class, Object.class);
   private static final MethodHandle NO_SUCH_PROPERTY = findOwnMH_S(NO_SUCH_PROPERTY_NAME, Object.class, Object.class, Object.class);
-  private static final MethodHandle LOAD = findOwnMH_S("load", Object.class, Object.class, Object.class);
-  private static final MethodHandle LOAD_WITH_NEW_GLOBAL = findOwnMH_S("loadWithNewGlobal", Object.class, Object.class, Object[].class);
   private static final MethodHandle LEXICAL_SCOPE_FILTER = findOwnMH_S("lexicalScopeFilter", Object.class, Object.class);
 
   // initialized by nasgen
@@ -1455,60 +1401,6 @@ public final class Global extends Scope {
     return global.getContext().eval(scope, str.toString(), callThis, location, true);
   }
 
-  /**
-   * Global load implementation - Nashorn extension.
-   * <p>
-   * load builtin loads the given script.
-   * Script source can be a URL or a File or a script object with name and script properties.
-   * Evaluated code gets global object "this" and uses global object as scope for evaluation.
-   * <p>
-   * If self is undefined or null or global, then global object is used as scope as well as "this" for the evaluated code.
-   * If self is any other object, then it is indirect load call.
-   * With indirect load call, the properties of scope are available to evaluated script as variables.
-   * Also, global scope properties are accessible.
-   * Any var, function definition in evaluated script goes into an object that is not accessible to user scripts.
-   * <p>
-   * Thus the indirect load call is equivalent to the following:
-   * <pre>
-   * <code>
-   * (function (scope, source) {
-   *    with(scope) {
-   *        eval(&lt;script_from_source&gt;);
-   *    }
-   * })(self, source);
-   * </code>
-   * </pre>
-   * @param self    scope to use for the script evaluation
-   * @param source  script source
-   * @return result of load (may be undefined)
-   * @throws IOException if source could not be read
-   */
-  public static Object load(Object self, Object source) throws IOException {
-    var global = Global.instanceFrom(self);
-    return global.getContext().load(self, source);
-  }
-
-  /**
-   * Global loadWithNewGlobal implementation - Nashorn extension.
-   * <p>
-   * loadWithNewGlobal builtin loads the given script from a URL or a File or a script object with name and script properties.
-   * Evaluated code gets new global object "this" and uses that new global object as scope for evaluation.
-   * <p>
-   * @param self self This value is ignored by this function
-   * @param args optional arguments to be passed to the loaded script
-   * @return result of load (may be undefined)
-   * @throws IOException if source could not be read
-   */
-  public static Object loadWithNewGlobal(Object self, Object... args) throws IOException {
-    var global = Global.instanceFrom(self);
-    final int length = args.length;
-    final boolean hasArgs = 0 < length;
-    final Object from = hasArgs ? args[0] : UNDEFINED;
-    final Object[] arguments = hasArgs ? Arrays.copyOfRange(args, 1, length) : args;
-
-    return global.getContext().loadWithNewGlobal(from, arguments);
-  }
-
   // builtin prototype accessors
 
   /**
@@ -1838,41 +1730,6 @@ public final class Global extends Scope {
       this.builtinJSON = initConstructorAndSwitchPoint("JSON", ScriptObject.class);
     }
     return this.builtinJSON;
-  }
-
-  synchronized ScriptObject getBuiltinJavaApi() {
-    if (this.builtinJavaApi == null) {
-      this.builtinJavaApi = initConstructor("Java", ScriptObject.class);
-      this.builtInJavaExtend = (ScriptFunction) builtinJavaApi.get("extend");
-      this.builtInJavaTo = (ScriptFunction) builtinJavaApi.get("to");
-    }
-    return this.builtinJavaApi;
-  }
-
-  /**
-   * Returns true if the passed function is the built-in "Java.extend".
-   * @param fn the function in question
-   * @return true if the function is built-in "Java.extend"
-   */
-  public static boolean isBuiltInJavaExtend(ScriptFunction fn) {
-    if (!"extend".equals(fn.getName())) {
-      // Avoid hitting the thread local if the name doesn't match.
-      return false;
-    }
-    return fn == Context.getGlobal().builtInJavaExtend;
-  }
-
-  /**
-   * Returns true if the passed function is the built-in "Java.to".
-   * @param fn the function in question
-   * @return true if the function is built-in "Java.to"
-   */
-  public static boolean isBuiltInJavaTo(ScriptFunction fn) {
-    if (!"to".equals(fn.getName())) {
-      // Avoid hitting the thread local if the name doesn't match.
-      return false;
-    }
-    return fn == Context.getGlobal().builtInJavaTo;
   }
 
   synchronized ScriptFunction getBuiltinRangeError() {
@@ -2246,8 +2103,6 @@ public final class Global extends Scope {
     this.decodeURIComponent = ScriptFunction.createBuiltin("decodeURIComponent", GlobalFunctions.DECODE_URICOMPONENT);
     this.escape = ScriptFunction.createBuiltin("escape", GlobalFunctions.ESCAPE);
     this.unescape = ScriptFunction.createBuiltin("unescape", GlobalFunctions.UNESCAPE);
-    this.load = ScriptFunction.createBuiltin("load", LOAD);
-    this.loadWithNewGlobal = ScriptFunction.createBuiltin("loadWithNewGlobal", LOAD_WITH_NEW_GLOBAL);
     // built-in constructors
     this.builtinArray = initConstructorAndSwitchPoint("Array", ScriptFunction.class);
     this.builtinBoolean = initConstructorAndSwitchPoint("Boolean", ScriptFunction.class);
@@ -2270,8 +2125,6 @@ public final class Global extends Scope {
     initErrorObjects();
     // nasgen-created global properties related to java access
     // "Java", "JavaImporter","Packages", "java"
-    this.javaApi = LAZY_SENTINEL;
-    initJavaAccess();
     if (!env._no_typed_arrays) {
       this.arrayBuffer = LAZY_SENTINEL;
       this.dataView = LAZY_SENTINEL;
@@ -2334,12 +2187,6 @@ public final class Global extends Scope {
     return cons;
   }
 
-  void initJavaAccess() {
-    var objectProto = getObjectPrototype();
-    this.builtinPackages = new NativeJavaPackage("", objectProto);
-    this.builtinJava = new NativeJavaPackage("java", objectProto);
-  }
-
   static void copyOptions(ScriptObject options, ScriptEnvironment scriptEnv) {
     for (var f : scriptEnv.getClass().getFields()) {
       try {
@@ -2355,11 +2202,9 @@ public final class Global extends Scope {
     this._boolean = this.builtinBoolean;
     this.error = this.builtinError;
     this.function = this.builtinFunction;
-    this.java = this.builtinJava;
     this.math = this.builtinMath;
     this.number = this.builtinNumber;
     this.object = this.builtinObject;
-    this.packages = this.builtinPackages;
     this.referenceError = this.builtinReferenceError;
     this.string = this.builtinString;
     this.syntaxError = this.builtinSyntaxError;

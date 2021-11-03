@@ -182,7 +182,8 @@ public class Parser extends AbstractParser {
       line = lineOffset;
       scanFirstToken();
       // Begin parse.
-      return program(scriptName, reparseFlags);
+      var root = program(scriptName, reparseFlags);
+      return env._parse_only ? null : root;
     } catch (Exception e) {
       handleParseException(e);
       return null;
@@ -641,6 +642,7 @@ public class Parser extends AbstractParser {
         statement(true, functionFlags, false, false);
         functionFlags = 0;
         // check for directive prologues here
+        //   such as "use ..."
       } catch (Exception e) {
         var errorLine = line;
         var errorToken = token;
