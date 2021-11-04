@@ -1620,14 +1620,6 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
   }
 
   /**
-   * Test whether this object contains in its prototype chain or is itself a with-object.
-   * @return true if a with-object was found
-   */
-  boolean hasWithScope() {
-    return false;
-  }
-
-  /**
    * Add a filter to the first argument of {@code methodHandle} that calls its {@link #getProto()} method {@code depth} times.
    * @param methodHandle a method handle
    * @param depth        distance to target prototype
@@ -1661,7 +1653,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
         name = "call";
       }
     }
-    if (request.isCallSiteUnstable() || hasWithScope()) {
+    if (request.isCallSiteUnstable()) {
       return findMegaMorphicGetMethod(desc, name, NashornCallSiteDescriptor.isMethodFirstOperation(desc));
     }
     var find = findProperty(name, true, NashornCallSiteDescriptor.isScope(desc), this);
@@ -1841,7 +1833,7 @@ public abstract class ScriptObject implements PropertyAccess, Cloneable {
    */
   protected GuardedInvocation findSetMethod(CallSiteDescriptor desc, LinkRequest request) {
     var name = NashornCallSiteDescriptor.getOperand(desc);
-    if (request.isCallSiteUnstable() || hasWithScope()) {
+    if (request.isCallSiteUnstable()) {
       return findMegaMorphicSetMethod(desc, name);
     }
     var explicitInstanceOfCheck = explicitInstanceOfCheck(desc, request);

@@ -224,7 +224,6 @@ public final class FindProperty {
     assert self != null;
     var length = 0;
     for (var obj = self; obj != prototype; obj = obj.getProto()) {
-      assert !(obj instanceof WithObject);
       ++length;
     }
     return length;

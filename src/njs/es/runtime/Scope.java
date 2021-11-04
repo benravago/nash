@@ -52,16 +52,6 @@ public class Scope extends ScriptObject {
     return true;
   }
 
-  @Override
-  boolean hasWithScope() {
-    for (ScriptObject obj = this; obj != null; obj = obj.getProto()) {
-      if (obj instanceof WithObject) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
    * Get the scope's split method state.
    * @return current split state

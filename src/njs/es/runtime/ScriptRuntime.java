@@ -489,37 +489,6 @@ public final class ScriptRuntime {
   }
 
   /**
-   * Entering a {@code with} node requires new scope.
-   * This is the implementation. When exiting the with statement, use {@link ScriptObject#getProto()} on the scope.
-   * @param scope      existing scope
-   * @param expression expression in with
-   * @return {@link WithObject} that is the new scope
-   */
-  public static ScriptObject openWith(ScriptObject scope, Object expression) {
-    var global = Context.getGlobal();
-    if (expression == UNDEFINED) {
-      throw typeError(global, "cant.apply.with.to.undefined");
-    } else if (expression == null) {
-      throw typeError(global, "cant.apply.with.to.null");
-    }
-    if (expression instanceof ScriptObjectMirror som) {
-      var unwrapped = ScriptObjectMirror.unwrap(expression, global);
-      if (unwrapped instanceof ScriptObject so) {
-        return new WithObject(scope, so);
-      }
-      // foreign ScriptObjectMirror
-      var exprObj = global.newObject();
-      NativeObject.bindAllProperties(exprObj, som);
-      return new WithObject(scope, exprObj);
-    }
-    var wrappedExpr = JSType.toScriptObject(global, expression);
-    if (wrappedExpr instanceof ScriptObject so) {
-      return new WithObject(scope, so);
-    }
-    throw typeError(global, "cant.apply.with.to.non.scriptobject");
-  }
-
-  /**
    * ECMA 11.6.1 - The addition operator (+) - generic implementation
    * @param x  first term
    * @param y  second term
