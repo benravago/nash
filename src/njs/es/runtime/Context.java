@@ -14,12 +14,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.security.CodeSigner;
@@ -41,7 +39,6 @@ import jdk.dynalink.DynamicLinker;
 
 import javax.script.ScriptEngine;
 import nash.scripting.ClassFilter;
-import nash.scripting.ScriptObjectMirror;
 
 import es.codegen.Compiler;
 import es.codegen.ObjectClassGenerator;
@@ -50,7 +47,6 @@ import es.parser.Parser;
 import es.runtime.linker.Bootstrap;
 import es.runtime.options.Options;
 import static es.codegen.CompilerConstants.*;
-import static es.runtime.ECMAErrors.typeError;
 import static es.runtime.ScriptRuntime.UNDEFINED;
 import static es.runtime.Source.sourceFor;
 
@@ -58,12 +54,6 @@ import static es.runtime.Source.sourceFor;
  * This class manages the global state of execution. Context is immutable.
  */
 public final class Context {
-
-  // nashorn load psuedo URL prefixes
-
-  private static final String LOAD_CLASSPATH = "classpath:";
-  private static final String LOAD_FX = "fx:";
-  private static final String LOAD_NASHORN = "nashorn:";
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
   private static final MethodType CREATE_PROGRAM_FUNCTION_TYPE = MethodType.methodType(ScriptFunction.class, ScriptObject.class);
@@ -536,127 +526,6 @@ public final class Context {
     return new Scope(callerScope, PropertyMap.newMap(Scope.class));
   }
 
-  static Source loadInternal(String srcStr, String prefix, String resourcePath) {
-    if (srcStr.startsWith(prefix)) {
-      var resource = resourcePath + srcStr.substring(prefix.length());
-      // NOTE: even sandbox scripts should be able to load scripts in nashorn: scheme.
-      // These scripts are always available and are loaded from nashorn.jar's resources.
-      try {
-        var resStream = Context.class.getResourceAsStream(resource);
-        return resStream != null ? sourceFor(srcStr, Source.readFully(resStream)) : null;
-      } catch (IOException exp) {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Implementation of {@code load} Nashorn extension.
-   * Load a script file from a source expression
-   * @param scope  the scope
-   * @param from   source expression for script
-   * @return return value for load call (undefined)
-   * @throws IOException if source cannot be found or loaded
-   */
-  public Object load(Object scope, Object from) throws IOException {
-    var src = from instanceof ConsString ? from.toString() : from;
-    Source source = null;
-    // load accepts a String (which could be a URL or a file name), a File, a URL or a ScriptObject that has "name" and "source" (string valued) properties.
-    if (src instanceof String srcStr) {
-      if (srcStr.startsWith(LOAD_CLASSPATH)) {
-        var url = getResourceURL(srcStr.substring(LOAD_CLASSPATH.length()));
-        source = url != null ? sourceFor(url.toString(), url) : null;
-      } else {
-        var file = new File(srcStr);
-        if (srcStr.indexOf(':') != -1) {
-          if ((source = loadInternal(srcStr, LOAD_NASHORN, "resources/")) == null && (source = loadInternal(srcStr, LOAD_FX, "resources/fx/")) == null) {
-            URL url;
-            try {
-              //check for malformed url. if malformed, it may still be a valid file
-              url = new URL(srcStr);
-            } catch (MalformedURLException e) {
-              url = file.toURI().toURL();
-            }
-            source = sourceFor(url.toString(), url);
-          }
-        } else if (file.isFile()) {
-          source = sourceFor(srcStr, file);
-        }
-      }
-    } else if (src instanceof File file && ((File) src).isFile()) {
-      source = sourceFor(file.getName(), file);
-    } else if (src instanceof URL url) {
-      source = sourceFor(url.toString(), url);
-    } else if (src instanceof ScriptObject sobj) {
-      if (sobj.has("script") && sobj.has("name")) {
-        var script = JSType.toString(sobj.get("script"));
-        var name = JSType.toString(sobj.get("name"));
-        source = sourceFor(name, script);
-      }
-    } else if (src instanceof Map<?,?> map) {
-      if (map.containsKey("script") && map.containsKey("name")) {
-        var script = JSType.toString(map.get("script"));
-        var name = JSType.toString(map.get("name"));
-        source = sourceFor(name, script);
-      }
-    }
-    if (source != null) {
-      if (scope instanceof ScriptObject sobj && sobj.isScope()) {
-        // passed object is a script object.
-        // Global is the only user accessible scope ScriptObject
-        assert sobj.isGlobal() : "non-Global scope object!!";
-        return evaluateSource(source, sobj, sobj);
-      } else if (scope == null || scope == UNDEFINED) {
-        // undefined or null scope. Use current global instance.
-        var global = getGlobal();
-        return evaluateSource(source, global, global);
-      } else {
-        // Arbitrary object passed for scope.
-        // Indirect load that is equivalent to:
-        //   (function(scope, source) {
-        //      with (scope) {
-        //        eval(<script_from_source>);
-        //      }
-        //    })(scope, source);
-        var global = getGlobal();
-        // Create a new object.
-        // This is where all declarations (var, function) from the evaluated code go.
-        // make global to be its __proto__ so that global definitions are accessible to the evaluated code.
-        var evalScope = newScope(global);
-        // finally, make a WithObject around user supplied scope object so that it's properties are accessible as variables.
-        var withObj = ScriptRuntime.openWith(evalScope, scope);
-        // evaluate given source with 'withObj' as scope but use global object as "this".
-        return evaluateSource(source, withObj, global);
-      }
-    }
-    throw typeError("cant.load.script", ScriptRuntime.safeToString(from));
-  }
-
-  /**
-   * Implementation of {@code loadWithNewGlobal} Nashorn extension.
-   * Load a script file from a source expression, after creating a new global scope.
-   * @param from source expression for script
-   * @param args (optional) arguments to be passed to the loaded script
-   * @return return value for load call (undefined)
-   * @throws IOException if source cannot be found or loaded
-   */
-  public Object loadWithNewGlobal(Object from, Object... args) throws IOException {
-    var oldGlobal = getGlobal();
-    var newGlobal = newGlobal();
-    // initialize newly created Global instance
-    initGlobal(newGlobal);
-    setGlobal(newGlobal);
-    var wrapped = args == null ? ScriptRuntime.EMPTY_ARRAY : ScriptObjectMirror.wrapArray(args, oldGlobal);
-    newGlobal.put("arguments", newGlobal.wrapAsObject(wrapped));
-    try {
-      // wrap objects from newGlobal's world as mirrors - but if result is from oldGlobal's world, unwrap it!
-      return ScriptObjectMirror.unwrap(ScriptObjectMirror.wrap(load(newGlobal, from), newGlobal), oldGlobal);
-    } finally {
-      setGlobal(oldGlobal);
-    }
-  }
-
   /**
    * Load or get a structure class.
    * Structure class names are based on the number of parameter fields and {@link AccessorProperty} fields in them.
@@ -898,20 +767,6 @@ public final class Context {
       return sl.getContext();
     }
     return Context.getContextTrusted();
-  }
-
-  URL getResourceURL(String resName) {
-    return (appLoader != null) ? appLoader.getResource(resName) : ClassLoader.getSystemResource(resName);
-  }
-
-  Object evaluateSource(Source source, ScriptObject scope, ScriptObject thiz) {
-    ScriptFunction script = null;
-    try {
-      script = compileScript(source, scope, new Context.ThrowErrorManager());
-    } catch (ParserException e) {
-      e.throwAsEcmaException();
-    }
-    return ScriptRuntime.apply(script, thiz);
   }
 
   static ScriptFunction getProgramFunction(Class<?> script, ScriptObject scope) {
