@@ -8,10 +8,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.LongAdder;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -25,7 +23,6 @@ import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
 
 import es.codegen.CompilerConstants.Call;
-import es.codegen.ObjectClassGenerator;
 import es.codegen.types.Type;
 import es.lookup.Lookup;
 import es.objects.AccessorPropertyDescriptor;

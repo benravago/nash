@@ -19,13 +19,11 @@ import jdk.dynalink.beans.StaticClass;
 import nash.scripting.JSObject;
 import nash.scripting.ScriptObjectMirror;
 
-import es.codegen.ApplySpecialization;
 import es.codegen.CompilerConstants;
 import es.codegen.CompilerConstants.Call;
 import es.objects.AbstractIterator;
 import es.objects.Global;
-import es.objects.NativeObject;
-import es.objects.NativeJava;
+import es.objects.NativeArray;
 import es.parser.Lexer;
 import es.runtime.arrays.ArrayIndex;
 import es.runtime.linker.Bootstrap;
@@ -315,7 +313,7 @@ public final class ScriptRuntime {
           public Object next() {
             var next = (Map.Entry) iter.next();
             var keyvalue = new Object[]{ next.getKey(), next.getValue() };
-            var array = NativeJava.from(null, keyvalue);
+            var array = NativeArray.from(null, keyvalue);
             return array;
           }
           @Override

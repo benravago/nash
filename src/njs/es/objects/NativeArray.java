@@ -49,6 +49,8 @@ import static es.runtime.PropertyDescriptor.WRITABLE;
 import static es.runtime.arrays.ArrayIndex.isValidArrayIndex;
 import static es.runtime.arrays.ArrayLikeIterator.arrayLikeIterator;
 import static es.runtime.arrays.ArrayLikeIterator.reverseArrayLikeIterator;
+import java.util.Collection;
+import nash.scripting.ScriptUtils;
 
 /**
  * Runtime representation of a JavaScript array.
@@ -1446,6 +1448,82 @@ public final class NativeArray extends ScriptObject implements OptimisticBuiltin
   @Function(attributes = Attribute.NOT_ENUMERABLE, name = "@@iterator")
   public static Object getIterator(Object self) {
     return ArrayIterator.newArrayValueIterator(self);
+  }
+
+  // from es.object.NativeJava
+  
+  /**
+   * Given a Java array or {@link Collection}, returns a JavaScript array with a shallow copy of its contents.
+   * Note that in most cases, you can use Java arrays and lists natively in Nashorn; in cases where for some reason you need to have an actual JavaScript native array (e.g. to work with the array comprehensions functions), you will want to use this method.
+   * Example:
+   * <pre>
+   * var File = Java.type("java.io.File")
+   * var listHomeDir = new File("~").listFiles()
+   * var jsListHome = Java.from(listHomeDir)
+   * var jpegModifiedDates = jsListHome
+   *     .filter(function(val) { return val.getName().endsWith(".jpg") })
+   *     .map(function(val) { return val.lastModified() })
+   * </pre>
+   * @param self not used
+   * @param objArray the java array or collection. Can be null.
+   * @return a JavaScript array with the copy of Java array's or collection's contents. Returns null if objArray is null.
+   */
+  @Function(attributes = Attribute.NOT_ENUMERABLE, where = Where.CONSTRUCTOR)
+  public static NativeArray from(Object self, Object objArray) {
+    if (objArray == null) {
+      return null;
+    } else if (objArray instanceof Collection<?> c) {
+      return new NativeArray(ScriptUtils.unwrapArray(c.toArray()));
+    } else if (objArray instanceof Object[] o) {
+      return new NativeArray(ScriptUtils.unwrapArray(o.clone()));
+    } else if (objArray instanceof int[] i) {
+      return new NativeArray(i.clone());
+    } else if (objArray instanceof double[] d) {
+      return new NativeArray(d.clone());
+    } else if (objArray instanceof long[] l) {
+      return new NativeArray(l.clone());
+    } else if (objArray instanceof byte[] b) {
+      return new NativeArray(copyArray(b));
+    } else if (objArray instanceof short[] s) {
+      return new NativeArray(copyArray(s));
+    } else if (objArray instanceof char[] c) {
+      return new NativeArray(copyArray(c));
+    } else if (objArray instanceof float[] f) {
+      return new NativeArray(copyArray(f));
+    } else if (objArray instanceof boolean[] b) {
+      return new NativeArray(copyArray(b));
+    }
+    throw typeError("cant.convert.to.javascript.array", objArray.getClass().getName());
+  }
+  
+  static int[] copyArray(byte[] in) {
+    var out = new int[in.length];
+    for (var i = 0; i < in.length; ++i) out[i] = in[i];
+    return out;
+  }
+
+  static int[] copyArray(short[] in) {
+    var out = new int[in.length];
+    for (var i = 0; i < in.length; ++i) out[i] = in[i];
+    return out;
+  }
+
+  static int[] copyArray(char[] in) {
+    var out = new int[in.length];
+    for (var i = 0; i < in.length; ++i) out[i] = in[i];
+    return out;
+  }
+
+  static double[] copyArray(float[] in) {
+    var out = new double[in.length];
+    for (int i = 0; i < in.length; ++i) out[i] = in[i];
+    return out;
+  }
+
+  static Object[] copyArray(boolean[] in) {
+    var out = new Object[in.length];
+    for (var i = 0; i < in.length; ++i) out[i] = in[i];
+    return out;
   }
 
   /**
