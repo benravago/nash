@@ -1,7 +1,7 @@
 package es.codegen.types;
 
-import org.objectweb.asm.MethodVisitor;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.MethodVisitor;
+import static es.codegen.asm.Opcodes.*;
 
 import es.runtime.JSType;
 import es.codegen.CompilerConstants;

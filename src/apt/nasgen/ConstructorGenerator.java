@@ -2,8 +2,8 @@ package nasgen;
 
 import java.util.List;
 
-import org.objectweb.asm.Handle;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.Handle;
+import static es.codegen.asm.Opcodes.*;
 
 import static nasgen.StringConstants.*;
 
@@ -29,7 +29,7 @@ public class ConstructorGenerator extends ClassGenerator {
   byte[] getClassBytes() {
     // new class extending from ScriptObject
     var superClass = (constructor != null) ? SCRIPTFUNCTION_TYPE : SCRIPTOBJECT_TYPE;
-    cw.visit(V1_7, ACC_FINAL, className, null, superClass, null);
+    cw.visit(ACC_FINAL, className, null, superClass, null);
     if (memberCount > 0) {
       // add fields
       emitFields();

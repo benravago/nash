@@ -6,12 +6,12 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Type;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.ClassReader;
+import es.codegen.asm.ClassVisitor;
+import es.codegen.asm.ClassWriter;
+import es.codegen.asm.Handle;
+import es.codegen.asm.Type;
+import static es.codegen.asm.Opcodes.*;
 
 import nasgen.MemberInfo.Kind;
 import static nasgen.StringConstants.*;
@@ -290,7 +290,7 @@ public class ClassGenerator {
 
   static ScriptClassInfo getScriptClassInfo(String fileName) throws IOException {
     try (var bis = new BufferedInputStream(new FileInputStream(fileName))) {
-      return getScriptClassInfo(new ClassReader(bis));
+      return getScriptClassInfo(new ClassReader(bis.readAllBytes()));
     }
   }
 

@@ -1,6 +1,6 @@
 package es.codegen.types;
 
-import org.objectweb.asm.MethodVisitor;
+import es.codegen.asm.MethodVisitor;
 
 /**
  * Numeric operations, not supported by all types

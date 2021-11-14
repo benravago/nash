@@ -1,6 +1,6 @@
 package nasgen;
 
-import static org.objectweb.asm.Opcodes.*;
+import static es.codegen.asm.Opcodes.*;
 import static nasgen.StringConstants.*;
 
 /**
@@ -20,7 +20,7 @@ public class PrototypeGenerator extends ClassGenerator {
 
   byte[] getClassBytes() {
     // new class extending from ScriptObject
-    cw.visit(V1_7, ACC_FINAL | ACC_SUPER, className, null, PROTOTYPEOBJECT_TYPE, null);
+    cw.visit(ACC_FINAL | ACC_SUPER, className, null, PROTOTYPEOBJECT_TYPE, null);
     if (memberCount > 0) {
       // add fields
       emitFields();

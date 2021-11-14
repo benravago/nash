@@ -5,9 +5,9 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.ClassWriter;
+import es.codegen.asm.MethodVisitor;
+import static es.codegen.asm.Opcodes.*;
 
 import es.codegen.types.Type;
 import es.ir.FunctionNode;
@@ -103,7 +103,7 @@ public class ClassEmitter {
    */
   ClassEmitter(Context context, String className, String superClassName, String... interfaceNames) {
     this(context, new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS));
-    cw.visit(V1_7, ACC_PUBLIC | ACC_SUPER, className, null, superClassName, interfaceNames);
+    cw.visit(ACC_PUBLIC | ACC_SUPER, className, null, superClassName, interfaceNames);
   }
 
   /**
@@ -129,7 +129,7 @@ public class ClassEmitter {
     });
     this.unitClassName = unitClassName;
     this.constantMethodNeeded = new HashSet<>();
-    cw.visit(V1_7, ACC_PUBLIC | ACC_SUPER, unitClassName, null, pathName(es.scripts.JS.class.getName()), null);
+    cw.visit(ACC_PUBLIC | ACC_SUPER, unitClassName, null, pathName(es.scripts.JS.class.getName()), null);
     cw.visitSource(sourceName, null);
     defineCommonStatics();
   }

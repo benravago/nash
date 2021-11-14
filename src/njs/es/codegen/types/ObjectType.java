@@ -1,8 +1,8 @@
 package es.codegen.types;
 
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.Handle;
+import es.codegen.asm.MethodVisitor;
+import static es.codegen.asm.Opcodes.*;
 
 import java.lang.invoke.MethodHandle;
 

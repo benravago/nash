@@ -7,7 +7,7 @@ import java.util.List;
 
 import java.lang.invoke.MethodHandle;
 
-import org.objectweb.asm.Type;
+import es.codegen.asm.Type;
 
 /**
  * String constants used for code generation/instrumentation.

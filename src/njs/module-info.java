@@ -117,9 +117,6 @@ ScriptEngine nashornEngine = new ScriptEngineManager().getEngineByName("nashorn"
  */
 module njs {
 
-    requires org.objectweb.asm;
-    requires org.objectweb.asm.commons;
-
     requires java.logging;
     requires jdk.dynalink;
 

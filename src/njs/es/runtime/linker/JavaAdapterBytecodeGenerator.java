@@ -14,13 +14,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.ClassWriter;
+import es.codegen.asm.Handle;
+import es.codegen.asm.Label;
+import es.codegen.asm.Opcodes;
+import es.codegen.asm.Type;
+import es.codegen.asm.InstructionAdapter;
+import static es.codegen.asm.Opcodes.*;
 
 import nash.scripting.ScriptObjectMirror;
 import nash.scripting.ScriptUtils;
@@ -213,7 +213,7 @@ final class JavaAdapterBytecodeGenerator {
     };
     superClassName = Type.getInternalName(superClass);
     generatedClassName = getGeneratedClassName(superClass, interfaces);
-    cw.visit(Opcodes.V1_8, ACC_PUBLIC | ACC_SUPER, generatedClassName, null, superClassName, getInternalTypeNames(interfaces));
+    cw.visit(ACC_PUBLIC | ACC_SUPER, generatedClassName, null, superClassName, getInternalTypeNames(interfaces));
     generateField(GLOBAL_FIELD_NAME, SCRIPT_OBJECT_TYPE_DESCRIPTOR);
     generateField(DELEGATE_FIELD_NAME, SCRIPT_OBJECT_TYPE_DESCRIPTOR);
     gatherMethods(superClass);

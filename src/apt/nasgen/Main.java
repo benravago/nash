@@ -5,16 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
+import es.codegen.asm.ClassReader;
 
 /**
  * Main class for the "nasgen" tool.
  */
 public class Main {
-
-  /** ASM version to be used by nasgen tool. */
-  public static final int ASM_VERSION = Opcodes.ASM7;
 
   private interface ErrorReporter {
     public void error(String msg);

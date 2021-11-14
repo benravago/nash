@@ -1,9 +1,9 @@
 package nasgen;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
+import es.codegen.asm.AnnotationVisitor;
+import es.codegen.asm.ClassVisitor;
+import es.codegen.asm.FieldVisitor;
+import es.codegen.asm.MethodVisitor;
 
 /**
  * A visitor that does nothing on visitXXX calls.
@@ -11,12 +11,12 @@ import org.objectweb.asm.MethodVisitor;
 public class NullVisitor extends ClassVisitor {
 
   NullVisitor() {
-    super(Main.ASM_VERSION);
+    super(null);
   }
 
   @Override
   public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-    return new MethodVisitor(Main.ASM_VERSION) {
+    return new MethodVisitor(null) {
       @Override
       public AnnotationVisitor visitAnnotationDefault() {
         return new NullAnnotationVisitor();
@@ -30,7 +30,7 @@ public class NullVisitor extends ClassVisitor {
 
   @Override
   public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-    return new FieldVisitor(Main.ASM_VERSION) {
+    return new FieldVisitor(null) {
       @Override
       public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
         return new NullAnnotationVisitor();
@@ -44,9 +44,7 @@ public class NullVisitor extends ClassVisitor {
   }
 
   static class NullAnnotationVisitor extends AnnotationVisitor {
-    NullAnnotationVisitor() {
-      super(Main.ASM_VERSION);
-    }
+    NullAnnotationVisitor() { super(null); }
   }
 
 }

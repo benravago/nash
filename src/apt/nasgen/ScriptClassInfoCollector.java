@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import es.codegen.asm.AnnotationVisitor;
+import es.codegen.asm.ClassVisitor;
+import es.codegen.asm.FieldVisitor;
+import es.codegen.asm.MethodVisitor;
+import es.codegen.asm.Opcodes;
+import es.codegen.asm.Type;
 
 import nasgen.MemberInfo.Kind;
 import static nasgen.ScriptClassInfo.*;
@@ -25,7 +25,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   private String javaClassName;
 
   ScriptClassInfoCollector(ClassVisitor visitor) {
-    super(Main.ASM_VERSION, visitor);
+    super(visitor);
   }
 
   ScriptClassInfoCollector() {
@@ -40,8 +40,8 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   }
 
   @Override
-  public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-    super.visit(version, access, name, signature, superName, interfaces);
+  public void visit(int access, String name, String signature, String superName, String[] interfaces) {
+    super.visit(access, name, signature, superName, interfaces);
     javaClassName = name;
   }
 
@@ -49,7 +49,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
     var delegateAV = super.visitAnnotation(desc, visible);
     if (SCRIPT_CLASS_ANNO_DESC.equals(desc)) {
-      return new AnnotationVisitor(Main.ASM_VERSION, delegateAV) {
+      return new AnnotationVisitor(delegateAV) {
         @Override
         public void visit(String name, Object value) {
           if ("value".equals(name)) {
@@ -65,7 +65,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   @Override
   public FieldVisitor visitField(int fieldAccess, String fieldName, String fieldDesc, String signature, Object value) {
     var delegateFV = super.visitField(fieldAccess, fieldName, fieldDesc, signature, value);
-    return new FieldVisitor(Main.ASM_VERSION, delegateFV) {
+    return new FieldVisitor(delegateFV) {
       @Override
       public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
         var delegateAV = super.visitAnnotation(descriptor, visible);
@@ -79,7 +79,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
             memInfo.setValue(value);
           }
           addScriptMember(memInfo);
-          return new AnnotationVisitor(Main.ASM_VERSION, delegateAV) {
+          return new AnnotationVisitor(delegateAV) {
 
             // These could be "null" if values are not supplied, in which case we have to use the default values.
             private String name;
@@ -129,7 +129,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
   @Override
   public MethodVisitor visitMethod(int methodAccess, String methodName, String methodDesc, String signature, String[] exceptions) {
     var delegateMV = super.visitMethod(methodAccess, methodName, methodDesc, signature, exceptions);
-    return new MethodVisitor(Main.ASM_VERSION, delegateMV) {
+    return new MethodVisitor(delegateMV) {
 
       @Override
       public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
@@ -146,7 +146,7 @@ public class ScriptClassInfoCollector extends ClassVisitor {
           memInfo.setJavaDesc(methodDesc);
           memInfo.setJavaAccess(methodAccess);
           addScriptMember(memInfo);
-          return new AnnotationVisitor(Main.ASM_VERSION, delegateAV) {
+          return new AnnotationVisitor(delegateAV) {
             // These could be "null" if values are not supplied, in which case we have to use the default values.
             private String name;
             private Integer attributes;

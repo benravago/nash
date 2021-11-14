@@ -9,10 +9,10 @@ import java.util.Map;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes; // NEW, RETURN
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.Handle;
+import es.codegen.asm.MethodVisitor;
+import es.codegen.asm.Opcodes; // NEW, RETURN
+import static es.codegen.asm.Opcodes.*;
 
 import es.util.Hex;
 import es.codegen.ClassEmitter.Flag;
@@ -625,7 +625,7 @@ public class MethodEmitter {
    * @return the method emitter
    */
   MethodEmitter loadType(String className) {
-    method.visitLdcInsn(org.objectweb.asm.Type.getObjectType(className));
+    method.visitLdcInsn(es.codegen.asm.Type.getObjectType(className));
     pushType(Type.OBJECT);
     return this;
   }
@@ -889,12 +889,12 @@ public class MethodEmitter {
   static class LocalVariableDef {
 
     // The start label from where this definition lives.
-    private final org.objectweb.asm.Label label;
+    private final es.codegen.asm.Label label;
 
     // The currently live type of the local variable.
     private final Type type;
 
-    LocalVariableDef(org.objectweb.asm.Label label, Type type) {
+    LocalVariableDef(es.codegen.asm.Label label, Type type) {
       this.label = label;
       this.type = type;
     }
@@ -920,7 +920,7 @@ public class MethodEmitter {
     stack.markDeadLocalVariables(firstSlot, slotCount);
   }
 
-  void endLocalValueDef(Symbol symbol, LocalVariableDef def, org.objectweb.asm.Label label) {
+  void endLocalValueDef(Symbol symbol, LocalVariableDef def, es.codegen.asm.Label label) {
     var name = symbol.getName();
     if (name.equals(THIS.symbolName())) {
       name = THIS_DEBUGGER.symbolName();
@@ -947,7 +947,7 @@ public class MethodEmitter {
       var isLiveType = symbol.hasSlotFor(type);
       var existingDef = localVariableDefs.get(symbol);
       if (existingDef == null || existingDef.type != type) {
-        var here = new org.objectweb.asm.Label();
+        var here = new es.codegen.asm.Label();
         if (isLiveType) {
           var newDef = new LocalVariableDef(here, type);
           localVariableDefs.put(symbol, newDef);
@@ -1251,8 +1251,8 @@ public class MethodEmitter {
     return invoke(INVOKEINTERFACE, className, methodName, methodDescriptor, true);
   }
 
-  static org.objectweb.asm.Label[] getLabels(Label... table) {
-    var internalLabels = new org.objectweb.asm.Label[table.length];
+  static es.codegen.asm.Label[] getLabels(Label... table) {
+    var internalLabels = new es.codegen.asm.Label[table.length];
     for (var i = 0; i < table.length; i++) {
       internalLabels[i] = table[i].getLabel();
     }

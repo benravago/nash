@@ -2,8 +2,8 @@ package nasgen;
 
 import static nasgen.StringConstants.*;
 
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import es.codegen.asm.Opcodes;
+import es.codegen.asm.Type;
 
 /**
  * Details about a Java method or field annotated with any of the field/method annotations from the jdk.nashorn.internal.objects.annotations package.

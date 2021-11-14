@@ -9,8 +9,8 @@ import static es.lookup.Lookup.MH;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import es.codegen.asm.MethodVisitor;
+import es.codegen.asm.Opcodes;
 
 import es.codegen.types.Type;
 import es.runtime.ScriptFunction;

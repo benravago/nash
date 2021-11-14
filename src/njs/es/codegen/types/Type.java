@@ -1,7 +1,7 @@
 package es.codegen.types;
 
-import org.objectweb.asm.MethodVisitor;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.MethodVisitor;
+import static es.codegen.asm.Opcodes.*;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -50,11 +50,11 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
   private final Class<?> typeClass;
 
   // Cache for internal types - this is a query that requires complex stringbuilding inside ASM and it saves startup time to cache the type mappings
-  private static final Map<Class<?>, org.objectweb.asm.Type> INTERNAL_TYPE_CACHE = // TODO: review this
+  private static final Map<Class<?>, es.codegen.asm.Type> INTERNAL_TYPE_CACHE = // TODO: review this
     Collections.synchronizedMap(new WeakHashMap<>());
 
   // Internal ASM type for this Type - computed once at construction
-  private transient final org.objectweb.asm.Type internalType;
+  private transient final es.codegen.asm.Type internalType;
 
   // Weights are used to decide which types are "wider" than other types
   protected static final int MIN_WEIGHT = -1;
@@ -72,7 +72,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
   Type(String name, Class<?> type, int weight, int slots) {
     this.name = name;
     this.typeClass = type;
-    this.descriptor = org.objectweb.asm.Type.getDescriptor(type);
+    this.descriptor = es.codegen.asm.Type.getDescriptor(type);
     this.weight = weight;
     assert weight >= MIN_WEIGHT && weight <= MAX_WEIGHT : "illegal type weight: " + weight;
     this.slots = slots;
@@ -137,11 +137,11 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @return a descriptor string
    */
   public static String getMethodDescriptor(Type returnType, Type... types) {
-    var itypes = new org.objectweb.asm.Type[types.length];
+    var itypes = new es.codegen.asm.Type[types.length];
     for (var i = 0; i < types.length; i++) {
       itypes[i] = types[i].getInternalType();
     }
-    return org.objectweb.asm.Type.getMethodDescriptor(returnType.getInternalType(), itypes);
+    return es.codegen.asm.Type.getMethodDescriptor(returnType.getInternalType(), itypes);
   }
 
   /**
@@ -152,11 +152,11 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @return a descriptor string
    */
   public static String getMethodDescriptor(Class<?> returnType, Class<?>... types) {
-    var itypes = new org.objectweb.asm.Type[types.length];
+    var itypes = new es.codegen.asm.Type[types.length];
     for (var i = 0; i < types.length; i++) {
       itypes[i] = getInternalType(types[i]);
     }
-    return org.objectweb.asm.Type.getMethodDescriptor(getInternalType(returnType), itypes);
+    return es.codegen.asm.Type.getMethodDescriptor(getInternalType(returnType), itypes);
   }
 
   /**
@@ -176,17 +176,17 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @param itype internal type
    * @return Nashorn type
    */
-  static Type typeFor(org.objectweb.asm.Type itype) {
+  static Type typeFor(es.codegen.asm.Type itype) {
     return switch (itype.getSort()) {
 
-      case org.objectweb.asm.Type.BOOLEAN -> Type.BOOLEAN;
-      case org.objectweb.asm.Type.INT -> Type.INT;
-      case org.objectweb.asm.Type.LONG -> Type.LONG;
-      case org.objectweb.asm.Type.DOUBLE -> Type.NUMBER;
+      case es.codegen.asm.Type.BOOLEAN -> Type.BOOLEAN;
+      case es.codegen.asm.Type.INT -> Type.INT;
+      case es.codegen.asm.Type.LONG -> Type.LONG;
+      case es.codegen.asm.Type.DOUBLE -> Type.NUMBER;
 
-      case org.objectweb.asm.Type.VOID -> null;
+      case es.codegen.asm.Type.VOID -> null;
 
-      case org.objectweb.asm.Type.OBJECT -> {
+      case es.codegen.asm.Type.OBJECT -> {
         var cn = itype.getClassName();
         yield (Context.isStructureClass(cn))
           ? SCRIPT_OBJECT
@@ -195,12 +195,12 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
               catch (ClassNotFoundException e) { throw new AssertionError(e); }
             });
       }
-      case org.objectweb.asm.Type.ARRAY -> {
+      case es.codegen.asm.Type.ARRAY -> {
         yield switch (itype.getElementType().getSort()) {
-          case org.objectweb.asm.Type.DOUBLE -> NUMBER_ARRAY;
-          case org.objectweb.asm.Type.INT -> INT_ARRAY;
-          case org.objectweb.asm.Type.LONG -> LONG_ARRAY;
-          case org.objectweb.asm.Type.OBJECT -> OBJECT_ARRAY;
+          case es.codegen.asm.Type.DOUBLE -> NUMBER_ARRAY;
+          case es.codegen.asm.Type.INT -> INT_ARRAY;
+          case es.codegen.asm.Type.LONG -> LONG_ARRAY;
+          case es.codegen.asm.Type.OBJECT -> OBJECT_ARRAY;
           default -> { throw new AssertionError(unknown(itype)); }
         };
       }
@@ -208,7 +208,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
     };
   }
 
-  static String unknown(org.objectweb.asm.Type itype) {
+  static String unknown(es.codegen.asm.Type itype) {
     return "Unknown itype : " + itype + " sort " + itype.getSort();
   }
 
@@ -219,7 +219,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @return return type
    */
   public static Type getMethodReturnType(String methodDescriptor) {
-    return Type.typeFor(org.objectweb.asm.Type.getReturnType(methodDescriptor));
+    return Type.typeFor(es.codegen.asm.Type.getReturnType(methodDescriptor));
   }
 
   /**
@@ -229,7 +229,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @return parameter type array
    */
   public static Type[] getMethodArguments(String methodDescriptor) {
-    var itypes = org.objectweb.asm.Type.getArgumentTypes(methodDescriptor);
+    var itypes = es.codegen.asm.Type.getArgumentTypes(methodDescriptor);
     var types = new Type[itypes.length];
     for (var i = 0; i < itypes.length; i++) {
       types[i] = Type.typeFor(itypes[i]);
@@ -295,26 +295,26 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
     return map;
   }
 
-  static org.objectweb.asm.Type getInternalType(String className) {
-    return org.objectweb.asm.Type.getType(className);
+  static es.codegen.asm.Type getInternalType(String className) {
+    return es.codegen.asm.Type.getType(className);
   }
 
-  org.objectweb.asm.Type getInternalType() {
+  es.codegen.asm.Type getInternalType() {
     return internalType;
   }
 
-  static org.objectweb.asm.Type lookupInternalType(Class<?> type) {
+  static es.codegen.asm.Type lookupInternalType(Class<?> type) {
     var c = INTERNAL_TYPE_CACHE;
     var itype = c.get(type);
     if (itype != null) {
       return itype;
     }
-    itype = org.objectweb.asm.Type.getType(type);
+    itype = es.codegen.asm.Type.getType(type);
     c.put(type, itype);
     return itype;
   }
 
-  static org.objectweb.asm.Type getInternalType(Class<?> type) {
+  static es.codegen.asm.Type getInternalType(Class<?> type) {
     return lookupInternalType(type);
   }
 
@@ -328,7 +328,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @return the internal name
    */
   public String getInternalName() {
-    return org.objectweb.asm.Type.getInternalName(getTypeClass());
+    return es.codegen.asm.Type.getInternalName(getTypeClass());
   }
 
   /**
@@ -338,7 +338,7 @@ public abstract class Type implements Comparable<Type>, BytecodeOps, Serializabl
    * @return the internal name
    */
   public static String getInternalName(Class<?> type) {
-    return org.objectweb.asm.Type.getInternalName(type);
+    return es.codegen.asm.Type.getInternalName(type);
   }
 
   /**

@@ -1,12 +1,7 @@
 package es.codegen.types;
 
-import static org.objectweb.asm.Opcodes.AALOAD;
-import static org.objectweb.asm.Opcodes.AASTORE;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ANEWARRAY;
-import static org.objectweb.asm.Opcodes.ARRAYLENGTH;
-
-import org.objectweb.asm.MethodVisitor;
+import es.codegen.asm.MethodVisitor;
+import static es.codegen.asm.Opcodes.*;
 
 /**
  * This is an array type, i.e. OBJECT_ARRAY, NUMBER_ARRAY.

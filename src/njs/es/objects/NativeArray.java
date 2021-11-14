@@ -2,11 +2,9 @@ package es.objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 import java.lang.invoke.MethodHandle;
 import jdk.dynalink.CallSiteDescriptor;
@@ -14,6 +12,7 @@ import jdk.dynalink.linker.GuardedInvocation;
 import jdk.dynalink.linker.LinkRequest;
 
 import nash.scripting.JSObject;
+import nash.scripting.ScriptUtils;
 
 import es.util.Hex;
 import es.objects.annotations.Attribute;
@@ -49,8 +48,6 @@ import static es.runtime.PropertyDescriptor.WRITABLE;
 import static es.runtime.arrays.ArrayIndex.isValidArrayIndex;
 import static es.runtime.arrays.ArrayLikeIterator.arrayLikeIterator;
 import static es.runtime.arrays.ArrayLikeIterator.reverseArrayLikeIterator;
-import java.util.Collection;
-import nash.scripting.ScriptUtils;
 
 /**
  * Runtime representation of a JavaScript array.

@@ -16,11 +16,11 @@ import java.security.Permissions;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.ClassWriter;
+import es.codegen.asm.Opcodes;
+import es.codegen.asm.Type;
+import es.codegen.asm.InstructionAdapter;
+import static es.codegen.asm.Opcodes.*;
 
 import nash.scripting.ScriptObjectMirror;
 
@@ -171,7 +171,7 @@ public final class JavaAdapterServices {
   static MethodHandle createNoPermissionsInvoker() {
     var className = "NoPermissionsInvoker";
     var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-    cw.visit(Opcodes.V1_7, ACC_PUBLIC | ACC_SUPER | ACC_FINAL, className, null, "java/lang/Object", null);
+    cw.visit(ACC_PUBLIC | ACC_SUPER | ACC_FINAL, className, null, "java/lang/Object", null);
     var objectType = Type.getType(Object.class);
     var methodHandleType = Type.getType(MethodHandle.class);
     var mv = new InstructionAdapter(cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "invoke", Type.getMethodDescriptor(Type.VOID_TYPE, methodHandleType, objectType), null, null));

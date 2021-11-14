@@ -1,16 +1,16 @@
 package es.codegen.types;
 
-import static org.objectweb.asm.Opcodes.I2D;
-import static org.objectweb.asm.Opcodes.I2L;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_1;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.IRETURN;
-import static org.objectweb.asm.Opcodes.ISTORE;
+import static es.codegen.asm.Opcodes.I2D;
+import static es.codegen.asm.Opcodes.I2L;
+import static es.codegen.asm.Opcodes.ICONST_0;
+import static es.codegen.asm.Opcodes.ICONST_1;
+import static es.codegen.asm.Opcodes.ILOAD;
+import static es.codegen.asm.Opcodes.IRETURN;
+import static es.codegen.asm.Opcodes.ISTORE;
 import static es.codegen.CompilerConstants.staticCallNoLookup;
 import static es.runtime.JSType.UNDEFINED_INT;
 
-import org.objectweb.asm.MethodVisitor;
+import es.codegen.asm.MethodVisitor;
 import es.codegen.CompilerConstants;
 
 /**

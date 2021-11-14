@@ -1,6 +1,6 @@
 package es.codegen;
 
-import static org.objectweb.asm.Opcodes.*;
+import static es.codegen.asm.Opcodes.*;
 
 /**
  * Condition enum used for all kinds of jumps, regardless of type

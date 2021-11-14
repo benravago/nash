@@ -1,6 +1,6 @@
 package es.codegen.types;
 
-import org.objectweb.asm.MethodVisitor;
+import es.codegen.asm.MethodVisitor;
 
 /**
  * Interface for byte code generation for all runtime types.

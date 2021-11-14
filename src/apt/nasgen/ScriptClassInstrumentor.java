@@ -1,11 +1,11 @@
 package nasgen;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.AnnotationVisitor;
+import es.codegen.asm.Attribute;
+import es.codegen.asm.ClassVisitor;
+import es.codegen.asm.FieldVisitor;
+import es.codegen.asm.MethodVisitor;
+import static es.codegen.asm.Opcodes.*;
 
 import nasgen.MemberInfo.Kind;
 import static nasgen.StringConstants.*;
@@ -26,7 +26,7 @@ public class ScriptClassInstrumentor extends ClassVisitor {
   private boolean staticInitFound;
 
   ScriptClassInstrumentor(ClassVisitor visitor, ScriptClassInfo sci) {
-    super(Main.ASM_VERSION, visitor);
+    super(visitor);
     if (sci == null) {
       throw new IllegalArgumentException("Null ScriptClassInfo, is the class annotated?");
     }
@@ -51,7 +51,7 @@ public class ScriptClassInstrumentor extends ClassVisitor {
       return null;
     }
     var delegateFV = super.visitField(fieldAccess, fieldName, fieldDesc, signature, value);
-    return new FieldVisitor(Main.ASM_VERSION, delegateFV) {
+    return new FieldVisitor(delegateFV) {
       @Override
       public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         if (ScriptClassInfo.annotations.containsKey(desc)) {
@@ -79,7 +79,7 @@ public class ScriptClassInstrumentor extends ClassVisitor {
       staticInitFound = true;
     }
     var delegateMV = new MethodGenerator(super.visitMethod(methodAccess, methodName, methodDesc, signature, exceptions), methodAccess, methodName, methodDesc);
-    return new MethodVisitor(Main.ASM_VERSION, delegateMV) {
+    return new MethodVisitor(delegateMV) {
       @Override
       public void visitInsn(int opcode) {
         // call $clinit$ just before return from <clinit>

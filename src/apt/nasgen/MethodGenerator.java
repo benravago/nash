@@ -2,10 +2,10 @@ package nasgen;
 
 import java.util.List;
 
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
-import static org.objectweb.asm.Opcodes.*;
+import es.codegen.asm.Handle;
+import es.codegen.asm.MethodVisitor;
+import es.codegen.asm.Type;
+import static es.codegen.asm.Opcodes.*;
 
 import static nasgen.StringConstants.*;
 
@@ -23,7 +23,7 @@ public class MethodGenerator extends MethodVisitor {
   static final Type EMPTY_LINK_LOGIC_TYPE = Type.getType("L" + OBJ_ANNO_PKG + "SpecializedFunction$LinkLogic$Empty;");
 
   MethodGenerator(MethodVisitor mv, int access, String name, String descriptor) {
-    super(Main.ASM_VERSION, mv);
+    super(mv);
     this.access = access;
     this.name = name;
     this.descriptor = descriptor;
