@@ -1,7 +1,6 @@
 package nasgen;
 
 import es.codegen.asm.AnnotationVisitor;
-import es.codegen.asm.Attribute;
 import es.codegen.asm.ClassVisitor;
 import es.codegen.asm.FieldVisitor;
 import es.codegen.asm.MethodVisitor;
@@ -59,10 +58,6 @@ public class ScriptClassInstrumentor extends ClassVisitor {
           return null;
         }
         return fv.visitAnnotation(desc, visible);
-      }
-      @Override
-      public void visitAttribute(Attribute attr) {
-        fv.visitAttribute(attr);
       }
       @Override
       public void visitEnd() {

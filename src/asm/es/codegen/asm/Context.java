@@ -2,7 +2,6 @@ package es.codegen.asm;
 
 class Context {
 
-  Attribute[] attributePrototypes;
   int parsingOptions;
   char[] charBuffer;
 

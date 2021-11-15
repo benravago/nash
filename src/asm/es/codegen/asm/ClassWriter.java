@@ -16,17 +16,8 @@ public class ClassWriter extends ClassVisitor {
   FieldWriter lastField;
   MethodWriter firstMethod;
   MethodWriter lastMethod;
-  int numberOfInnerClasses;
-  ByteVector innerClasses;
-  int enclosingClassIndex;
-  int enclosingMethodIndex;
   int signatureIndex;
   int sourceFileIndex;
-  ByteVector debugExtension;
-  int nestHostClassIndex;
-  int numberOfNestMemberClasses;
-  ByteVector nestMemberClasses;
-  Attribute firstAttribute;
   int compute;
 
   public ClassWriter(int flags) {
@@ -74,72 +65,11 @@ public class ClassWriter extends ClassVisitor {
     if (file != null) {
       sourceFileIndex = symbolTable.addConstantUtf8(file);
     }
-    if (debug != null) {
-      debugExtension = new ByteVector().encodeUtf8(debug, 0, Integer.MAX_VALUE);
-    }
-  }
-
-  @Override
-  void visitNestHost(String nestHost) {
-    nestHostClassIndex = symbolTable.addConstantClass(nestHost).index;
-  }
-
-  @Override
-  void visitOuterClass(String owner, String name, String descriptor) {
-    enclosingClassIndex = symbolTable.addConstantClass(owner).index;
-    if (name != null && descriptor != null) {
-      enclosingMethodIndex = symbolTable.addConstantNameAndType(name, descriptor);
-    }
   }
 
   @Override
   public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  void visitAttribute(Attribute attribute) {
-    // Store the attributes in the <i>reverse</i> order of their visit by this method.
-    attribute.nextAttribute = firstAttribute;
-    firstAttribute = attribute;
-  }
-
-  @Override
-  void visitNestMember(String nestMember) {
-    if (nestMemberClasses == null) {
-      nestMemberClasses = new ByteVector();
-    }
-    ++numberOfNestMemberClasses;
-    nestMemberClasses.putShort(symbolTable.addConstantClass(nestMember).index);
-  }
-
-  @Override
-  void visitInnerClass(String name, String outerName, String innerName, int access) {
-    if (innerClasses == null) {
-      innerClasses = new ByteVector();
-    }
-    // Section 4.7.6 of the JVMS states "Every CONSTANT_Class_info entry in the constant_pool table
-    // which represents a class or interface C that is not a package member must have exactly one
-    // corresponding entry in the classes array". To avoid duplicates we keep track in the info
-    // field of the Symbol of each CONSTANT_Class_info entry C whether an inner class entry has
-    // already been added for C. If so, we store the index of this inner class entry (plus one) in
-    // the info field. This trick allows duplicate detection in O(1) time.
-    Symbol nameSymbol = symbolTable.addConstantClass(name);
-    if (nameSymbol.info == 0) {
-      ++numberOfInnerClasses;
-      innerClasses.putShort(nameSymbol.index);
-      innerClasses.putShort(outerName == null ? 0 : symbolTable.addConstantClass(outerName).index);
-      innerClasses.putShort(innerName == null ? 0 : symbolTable.addConstantUtf8(innerName));
-      innerClasses.putShort(access);
-      nameSymbol.info = numberOfInnerClasses;
-    }
-    // Else, compare the inner classes entry nameSymbol.info - 1 with the arguments of this method
-    // and throw an exception if there is a difference?
   }
 
   @Override
@@ -191,16 +121,6 @@ public class ClassWriter extends ClassVisitor {
     }
     // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     int attributesCount = 0;
-    if (innerClasses != null) {
-      ++attributesCount;
-      size += 8 + innerClasses.length;
-      symbolTable.addConstantUtf8(Constants.INNER_CLASSES);
-    }
-    if (enclosingClassIndex != 0) {
-      ++attributesCount;
-      size += 10;
-      symbolTable.addConstantUtf8(Constants.ENCLOSING_METHOD);
-    }
     if (signatureIndex != 0) {
       ++attributesCount;
       size += 8;
@@ -211,33 +131,9 @@ public class ClassWriter extends ClassVisitor {
       size += 8;
       symbolTable.addConstantUtf8(Constants.SOURCE_FILE);
     }
-    if (debugExtension != null) {
-      ++attributesCount;
-      size += 6 + debugExtension.length;
-      symbolTable.addConstantUtf8(Constants.SOURCE_DEBUG_EXTENSION);
-    }
-    if ((accessFlags & Opcodes.ACC_DEPRECATED) != 0) {
-      ++attributesCount;
-      size += 6;
-      symbolTable.addConstantUtf8(Constants.DEPRECATED);
-    }
     if (symbolTable.computeBootstrapMethodsSize() > 0) {
       ++attributesCount;
       size += symbolTable.computeBootstrapMethodsSize();
-    }
-    if (nestHostClassIndex != 0) {
-      ++attributesCount;
-      size += 8;
-      symbolTable.addConstantUtf8(Constants.NEST_HOST);
-    }
-    if (nestMemberClasses != null) {
-      ++attributesCount;
-      size += 8 + nestMemberClasses.length;
-      symbolTable.addConstantUtf8(Constants.NEST_MEMBERS);
-    }
-    if (firstAttribute != null) {
-      attributesCount += firstAttribute.getAttributeCount();
-      size += firstAttribute.computeAttributesSize(symbolTable);
     }
     // IMPORTANT: this must be the last part of the ClassFile size computation, because the previous
     // statements can add attribute names to the constant pool, thereby changing its size!
@@ -276,39 +172,13 @@ public class ClassWriter extends ClassVisitor {
     }
     // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     result.putShort(attributesCount);
-    if (innerClasses != null) {
-      result.putShort(symbolTable.addConstantUtf8(Constants.INNER_CLASSES)).putInt(innerClasses.length + 2)
-              .putShort(numberOfInnerClasses).putByteArray(innerClasses.data, 0, innerClasses.length);
-    }
-    if (enclosingClassIndex != 0) {
-      result.putShort(symbolTable.addConstantUtf8(Constants.ENCLOSING_METHOD)).putInt(4).putShort(enclosingClassIndex)
-              .putShort(enclosingMethodIndex);
-    }
     if (signatureIndex != 0) {
       result.putShort(symbolTable.addConstantUtf8(Constants.SIGNATURE)).putInt(2).putShort(signatureIndex);
     }
     if (sourceFileIndex != 0) {
       result.putShort(symbolTable.addConstantUtf8(Constants.SOURCE_FILE)).putInt(2).putShort(sourceFileIndex);
     }
-    if (debugExtension != null) {
-      int length = debugExtension.length;
-      result.putShort(symbolTable.addConstantUtf8(Constants.SOURCE_DEBUG_EXTENSION)).putInt(length)
-              .putByteArray(debugExtension.data, 0, length);
-    }
-    if ((accessFlags & Opcodes.ACC_DEPRECATED) != 0) {
-      result.putShort(symbolTable.addConstantUtf8(Constants.DEPRECATED)).putInt(0);
-    }
     symbolTable.putBootstrapMethods(result);
-    if (nestHostClassIndex != 0) {
-      result.putShort(symbolTable.addConstantUtf8(Constants.NEST_HOST)).putInt(2).putShort(nestHostClassIndex);
-    }
-    if (nestMemberClasses != null) {
-      result.putShort(symbolTable.addConstantUtf8(Constants.NEST_MEMBERS)).putInt(nestMemberClasses.length + 2)
-              .putShort(numberOfNestMemberClasses).putByteArray(nestMemberClasses.data, 0, nestMemberClasses.length);
-    }
-    if (firstAttribute != null) {
-      firstAttribute.putAttributes(symbolTable, result);
-    }
 
     // Third step: replace the ASM specific instructions, if any.
     if (hasAsmInstructions) {
@@ -319,35 +189,13 @@ public class ClassWriter extends ClassVisitor {
   }
 
   byte[] replaceAsmInstructions(byte[] classFile, boolean hasFrames) {
-    Attribute[] attributes = getAttributePrototypes();
     firstField = null;
     lastField = null;
     firstMethod = null;
     lastMethod = null;
-    nestHostClassIndex = 0;
-    numberOfNestMemberClasses = 0;
-    nestMemberClasses = null;
-    firstAttribute = null;
     compute = hasFrames ? MethodWriter.COMPUTE_INSERTED_FRAMES : MethodWriter.COMPUTE_NOTHING;
-    new ClassReader(classFile, 0, false).accept(this, attributes,
-            (hasFrames ? ClassReader.EXPAND_FRAMES : 0) | ClassReader.EXPAND_ASM_INSNS);
+    new ClassReader(classFile, 0, false).accept(this, (hasFrames ? ClassReader.EXPAND_FRAMES : 0) | ClassReader.EXPAND_ASM_INSNS);
     return toByteArray();
-  }
-
-  Attribute[] getAttributePrototypes() {
-    Attribute.Set attributePrototypes = new Attribute.Set();
-    attributePrototypes.addAttributes(firstAttribute);
-    FieldWriter fieldWriter = firstField;
-    while (fieldWriter != null) {
-      fieldWriter.collectAttributePrototypes(attributePrototypes);
-      fieldWriter = (FieldWriter) fieldWriter.fv;
-    }
-    MethodWriter methodWriter = firstMethod;
-    while (methodWriter != null) {
-      methodWriter.collectAttributePrototypes(attributePrototypes);
-      methodWriter = (MethodWriter) methodWriter.mv;
-    }
-    return attributePrototypes.toArray();
   }
 
   int newConst(Object value) {

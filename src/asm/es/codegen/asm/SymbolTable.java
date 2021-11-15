@@ -278,12 +278,12 @@ class SymbolTable {
     return addConstantMemberReference(Symbol.CONSTANT_FIELDREF_TAG, owner, name, descriptor);
   }
 
-  Symbol addConstantMethodref(String owner, String name, String descriptor, final boolean isInterface) {
+  Symbol addConstantMethodref(String owner, String name, String descriptor, boolean isInterface) {
     int tag = isInterface ? Symbol.CONSTANT_INTERFACE_METHODREF_TAG : Symbol.CONSTANT_METHODREF_TAG;
     return addConstantMemberReference(tag, owner, name, descriptor);
   }
 
-  Entry addConstantMemberReference(int tag, String owner, String name, final String descriptor) {
+  Entry addConstantMemberReference(int tag, String owner, String name, String descriptor) {
     int hashCode = hash(tag, owner, name, descriptor);
     Entry entry = get(hashCode);
     while (entry != null) {
@@ -297,7 +297,7 @@ class SymbolTable {
     return put(new Entry(constantPoolCount++, tag, owner, name, descriptor, 0, hashCode));
   }
 
-  void addConstantMemberReference(int index, int tag, String owner, String name, final String descriptor) {
+  void addConstantMemberReference(int index, int tag, String owner, String name, String descriptor) {
     add(new Entry(index, tag, owner, name, descriptor, 0, hash(tag, owner, name, descriptor)));
   }
 
@@ -358,7 +358,7 @@ class SymbolTable {
   }
 
   int addConstantNameAndType(String name, String descriptor) {
-    final int tag = Symbol.CONSTANT_NAME_AND_TYPE_TAG;
+    int tag = Symbol.CONSTANT_NAME_AND_TYPE_TAG;
     int hashCode = hash(tag, name, descriptor);
     Entry entry = get(hashCode);
     while (entry != null) {
@@ -372,7 +372,7 @@ class SymbolTable {
   }
 
   void addConstantNameAndType(int index, String name, String descriptor) {
-    final int tag = Symbol.CONSTANT_NAME_AND_TYPE_TAG;
+    int tag = Symbol.CONSTANT_NAME_AND_TYPE_TAG;
     add(new Entry(index, tag, name, descriptor, hash(tag, name, descriptor)));
   }
 
@@ -393,9 +393,9 @@ class SymbolTable {
     add(new Entry(index, Symbol.CONSTANT_UTF8_TAG, value, hash(Symbol.CONSTANT_UTF8_TAG, value)));
   }
 
-  Symbol addConstantMethodHandle(int referenceKind, String owner, String name, final String descriptor,
+  Symbol addConstantMethodHandle(int referenceKind, String owner, String name, String descriptor,
           boolean isInterface) {
-    final int tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
+    int tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
     // Note that we don't need to include isInterface in the hash computation, because it is
     // redundant with owner (we can't have the same owner with different isInterface values).
     int hashCode = hash(tag, owner, name, descriptor, referenceKind);
@@ -415,9 +415,8 @@ class SymbolTable {
     return put(new Entry(constantPoolCount++, tag, owner, name, descriptor, referenceKind, hashCode));
   }
 
-  void addConstantMethodHandle(int index, int referenceKind, String owner, String name,
-          final String descriptor) {
-    final int tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
+  void addConstantMethodHandle(int index, int referenceKind, String owner, String name, String descriptor) {
+    int tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
     int hashCode = hash(tag, owner, name, descriptor, referenceKind);
     add(new Entry(index, tag, owner, name, descriptor, referenceKind, hashCode));
   }
@@ -426,22 +425,19 @@ class SymbolTable {
     return addConstantUtf8Reference(Symbol.CONSTANT_METHOD_TYPE_TAG, methodDescriptor);
   }
 
-  Symbol addConstantDynamic(String name, String descriptor, Handle bootstrapMethodHandle,
-          final Object... bootstrapMethodArguments) {
+  Symbol addConstantDynamic(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
     Symbol bootstrapMethod = addBootstrapMethod(bootstrapMethodHandle, bootstrapMethodArguments);
     return addConstantDynamicOrInvokeDynamicReference(Symbol.CONSTANT_DYNAMIC_TAG, name, descriptor,
             bootstrapMethod.index);
   }
 
-  Symbol addConstantInvokeDynamic(String name, String descriptor, Handle bootstrapMethodHandle,
-          final Object... bootstrapMethodArguments) {
+  Symbol addConstantInvokeDynamic(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
     Symbol bootstrapMethod = addBootstrapMethod(bootstrapMethodHandle, bootstrapMethodArguments);
     return addConstantDynamicOrInvokeDynamicReference(Symbol.CONSTANT_INVOKE_DYNAMIC_TAG, name, descriptor,
             bootstrapMethod.index);
   }
 
-  Symbol addConstantDynamicOrInvokeDynamicReference(int tag, String name, String descriptor,
-          final int bootstrapMethodIndex) {
+  Symbol addConstantDynamicOrInvokeDynamicReference(int tag, String name, String descriptor, int bootstrapMethodIndex) {
     int hashCode = hash(tag, name, descriptor, bootstrapMethodIndex);
     Entry entry = get(hashCode);
     while (entry != null) {
@@ -455,8 +451,7 @@ class SymbolTable {
     return put(new Entry(constantPoolCount++, tag, null, name, descriptor, bootstrapMethodIndex, hashCode));
   }
 
-  void addConstantDynamicOrInvokeDynamicReference(int tag, int index, String name, final String descriptor,
-          int bootstrapMethodIndex) {
+  void addConstantDynamicOrInvokeDynamicReference(int tag, int index, String name, String descriptor, int bootstrapMethodIndex) {
     int hashCode = hash(tag, name, descriptor, bootstrapMethodIndex);
     add(new Entry(index, tag, null, name, descriptor, bootstrapMethodIndex, hashCode));
   }
@@ -526,7 +521,7 @@ class SymbolTable {
   }
 
   Symbol addBootstrapMethod(int offset, int length, int hashCode) {
-    final byte[] bootstrapMethodsData = bootstrapMethods.data;
+    byte[] bootstrapMethodsData = bootstrapMethods.data;
     Entry entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == Symbol.BOOTSTRAP_METHOD_TAG && entry.hashCode == hashCode) {
@@ -636,17 +631,17 @@ class SymbolTable {
     return 0x7FFFFFFF & (tag + value1.hashCode() * value2.hashCode() * value3.hashCode());
   }
 
-  static int hash(int tag, String value1, String value2, String value3, final int value4) {
+  static int hash(int tag, String value1, String value2, String value3, int value4) {
     return 0x7FFFFFFF & (tag + value1.hashCode() * value2.hashCode() * value3.hashCode() * value4);
   }
 
   static class Entry extends Symbol {
 
-    final int hashCode;
+    int hashCode;
 
     Entry next;
 
-    Entry(int index, int tag, String owner, String name, String value, long data, final int hashCode) {
+    Entry(int index, int tag, String owner, String name, String value, long data, int hashCode) {
       super(index, tag, owner, name, value, data);
       this.hashCode = hashCode;
     }

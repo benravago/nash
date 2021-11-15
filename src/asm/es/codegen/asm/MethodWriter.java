@@ -232,7 +232,6 @@ class MethodWriter extends MethodVisitor {
   ByteVector localVariableTypeTable;
   int stackMapTableNumberOfEntries;
   ByteVector stackMapTableEntries;
-  Attribute firstCodeAttribute;
   final int numberOfExceptions;
   final int[] exceptionIndexTable;
   final int signatureIndex;
@@ -241,7 +240,6 @@ class MethodWriter extends MethodVisitor {
   ByteVector defaultValue;
   int parametersCount;
   ByteVector parameters;
-  Attribute firstAttribute;
   final int compute;
   Label firstBasicBlock;
   Label lastBasicBlock;
@@ -301,53 +299,8 @@ class MethodWriter extends MethodVisitor {
   }
 
   @Override
-  void visitParameter(String name, int access) {
-    if (parameters == null) {
-      parameters = new ByteVector();
-    }
-    ++parametersCount;
-    parameters.putShort((name == null) ? 0 : symbolTable.addConstantUtf8(name)).putShort(access);
-  }
-
-  @Override
-  public AnnotationVisitor visitAnnotationDefault() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  void visitAnnotableParameterCount(int parameterCount, boolean visible) {
-    if (visible) {
-      visibleAnnotableParameterCount = parameterCount;
-    } else {
-      invisibleAnnotableParameterCount = parameterCount;
-    }
-  }
-
-  @Override
-  AnnotationVisitor visitParameterAnnotation(int parameter, String annotationDescriptor, boolean visible) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void visitAttribute(Attribute attribute) {
-    // Store the attributes in the <i>reverse</i> order of their visit by this method.
-    if (attribute.isCodeAttribute()) {
-      attribute.nextAttribute = firstCodeAttribute;
-      firstCodeAttribute = attribute;
-    } else {
-      attribute.nextAttribute = firstAttribute;
-      firstAttribute = attribute;
-    }
   }
 
   @Override
@@ -995,11 +948,6 @@ class MethodWriter extends MethodVisitor {
   }
 
   @Override
-  AnnotationVisitor visitInsnAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
     Handler newHandler = new Handler(start, end, handler, type != null ? symbolTable.addConstantClass(type).index : 0,
             type);
@@ -1009,11 +957,6 @@ class MethodWriter extends MethodVisitor {
       lastHandler.nextHandler = newHandler;
     }
     lastHandler = newHandler;
-  }
-
-  @Override
-  AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -1039,11 +982,6 @@ class MethodWriter extends MethodVisitor {
         maxLocals = currentMaxLocals;
       }
     }
-  }
-
-  @Override
-  AnnotationVisitor visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String descriptor, boolean visible) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -1419,8 +1357,7 @@ class MethodWriter extends MethodVisitor {
     // worth the additional complexity, because these cases should be rare -- if a transform changes
     // a method descriptor, most of the time it needs to change the method's code too).
     if (source != symbolTable.getSource() || descriptorIndex != this.descriptorIndex
-            || signatureIndex != this.signatureIndex
-            || hasDeprecatedAttribute != ((accessFlags & Opcodes.ACC_DEPRECATED) != 0)) {
+            || signatureIndex != this.signatureIndex) {
       return false;
     }
     if (hasSyntheticAttribute != false) {
@@ -1484,9 +1421,6 @@ class MethodWriter extends MethodVisitor {
         // 6 header bytes and 2 bytes for local_variable_type_table_length.
         size += 8 + localVariableTypeTable.length;
       }
-      if (firstCodeAttribute != null) {
-        size += firstCodeAttribute.computeAttributesSize(symbolTable, code.data, code.length, maxStack, maxLocals);
-      }
     }
     if (numberOfExceptions > 0) {
       symbolTable.addConstantUtf8(Constants.EXCEPTIONS);
@@ -1496,10 +1430,6 @@ class MethodWriter extends MethodVisitor {
       symbolTable.addConstantUtf8(Constants.SIGNATURE);
       size += 8;
     }
-    if ((accessFlags & Opcodes.ACC_DEPRECATED) != 0) {
-      symbolTable.addConstantUtf8(Constants.DEPRECATED);
-      size += 6;
-    }
     if (defaultValue != null) {
       symbolTable.addConstantUtf8(Constants.ANNOTATION_DEFAULT);
       size += 6 + defaultValue.length;
@@ -1508,9 +1438,6 @@ class MethodWriter extends MethodVisitor {
       symbolTable.addConstantUtf8(Constants.METHOD_PARAMETERS);
       // 6 header bytes and 1 byte for parameters_count.
       size += 7 + parameters.length;
-    }
-    if (firstAttribute != null) {
-      size += firstAttribute.computeAttributesSize(symbolTable);
     }
     return size;
   }
@@ -1534,17 +1461,11 @@ class MethodWriter extends MethodVisitor {
     if (signatureIndex != 0) {
       ++attributeCount;
     }
-    if ((accessFlags & Opcodes.ACC_DEPRECATED) != 0) {
-      ++attributeCount;
-    }
     if (defaultValue != null) {
       ++attributeCount;
     }
     if (parameters != null) {
       ++attributeCount;
-    }
-    if (firstAttribute != null) {
-      attributeCount += firstAttribute.getAttributeCount();
     }
     // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     output.putShort(attributeCount);
@@ -1573,10 +1494,6 @@ class MethodWriter extends MethodVisitor {
         size += 8 + localVariableTypeTable.length;
         ++codeAttributeCount;
       }
-      if (firstCodeAttribute != null) {
-        size += firstCodeAttribute.computeAttributesSize(symbolTable, code.data, code.length, maxStack, maxLocals);
-        codeAttributeCount += firstCodeAttribute.getAttributeCount();
-      }
       output.putShort(symbolTable.addConstantUtf8(Constants.CODE)).putInt(size).putShort(maxStack).putShort(maxLocals)
               .putInt(code.length).putByteArray(code.data, 0, code.length);
       Handler.putExceptionTable(firstHandler, output);
@@ -1600,9 +1517,6 @@ class MethodWriter extends MethodVisitor {
                 .putInt(2 + localVariableTypeTable.length).putShort(localVariableTypeTableLength)
                 .putByteArray(localVariableTypeTable.data, 0, localVariableTypeTable.length);
       }
-      if (firstCodeAttribute != null) {
-        firstCodeAttribute.putAttributes(symbolTable, code.data, code.length, maxStack, maxLocals, output);
-      }
     }
     if (numberOfExceptions > 0) {
       output.putShort(symbolTable.addConstantUtf8(Constants.EXCEPTIONS)).putInt(2 + 2 * numberOfExceptions)
@@ -1614,9 +1528,6 @@ class MethodWriter extends MethodVisitor {
     if (signatureIndex != 0) {
       output.putShort(symbolTable.addConstantUtf8(Constants.SIGNATURE)).putInt(2).putShort(signatureIndex);
     }
-    if ((accessFlags & Opcodes.ACC_DEPRECATED) != 0) {
-      output.putShort(symbolTable.addConstantUtf8(Constants.DEPRECATED)).putInt(0);
-    }
     if (defaultValue != null) {
       output.putShort(symbolTable.addConstantUtf8(Constants.ANNOTATION_DEFAULT)).putInt(defaultValue.length)
               .putByteArray(defaultValue.data, 0, defaultValue.length);
@@ -1625,13 +1536,5 @@ class MethodWriter extends MethodVisitor {
       output.putShort(symbolTable.addConstantUtf8(Constants.METHOD_PARAMETERS)).putInt(1 + parameters.length)
               .putByte(parametersCount).putByteArray(parameters.data, 0, parameters.length);
     }
-    if (firstAttribute != null) {
-      firstAttribute.putAttributes(symbolTable, output);
-    }
-  }
-
-  void collectAttributePrototypes(Attribute.Set attributePrototypes) {
-    attributePrototypes.addAttributes(firstAttribute);
-    attributePrototypes.addAttributes(firstCodeAttribute);
   }
 }

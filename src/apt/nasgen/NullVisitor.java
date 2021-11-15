@@ -18,10 +18,6 @@ public class NullVisitor extends ClassVisitor {
   public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
     return new MethodVisitor(null) {
       @Override
-      public AnnotationVisitor visitAnnotationDefault() {
-        return new NullAnnotationVisitor();
-      }
-      @Override
       public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
         return new NullAnnotationVisitor();
       }

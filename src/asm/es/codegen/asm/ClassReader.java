@@ -134,12 +134,7 @@ public class ClassReader {
   }
 
   public void accept(ClassVisitor classVisitor, int parsingOptions) {
-    accept(classVisitor, new Attribute[0], parsingOptions);
-  }
-
-  void accept(ClassVisitor classVisitor, Attribute[] attributePrototypes, int parsingOptions) {
     Context context = new Context();
-    context.attributePrototypes = attributePrototypes;
     context.parsingOptions = parsingOptions;
     context.charBuffer = new char[maxStringLength];
 
@@ -158,10 +153,6 @@ public class ClassReader {
 
     // Read the class attributes (the variables are ordered as in Section 4.7 of the JVMS).
     // Attribute offsets exclude the attribute_name_index and attribute_length fields.
-    // - The offset of the InnerClasses attribute, or 0.
-    int innerClassesOffset = 0;
-    // - The offset of the EnclosingMethod attribute, or 0.
-    int enclosingMethodOffset = 0;
     // - The string corresponding to the Signature attribute, or null.
     String signature = null;
     // - The string corresponding to the SourceFile attribute, or null.
@@ -170,71 +161,31 @@ public class ClassReader {
     String sourceDebugExtension = null;
     // - The offset of the RuntimeVisibleAnnotations attribute, or 0.
     int runtimeVisibleAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleAnnotations attribute, or 0.
-    int runtimeInvisibleAnnotationsOffset = 0;
-    // - The offset of the RuntimeVisibleTypeAnnotations attribute, or 0.
-    int runtimeVisibleTypeAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleTypeAnnotations attribute, or 0.
-    int runtimeInvisibleTypeAnnotationsOffset = 0;
-    // - The offset of the Module attribute, or 0.
-    int moduleOffset = 0;
-    // - The offset of the ModulePackages attribute, or 0.
-    int modulePackagesOffset = 0;
-    // - The string corresponding to the ModuleMainClass attribute, or null.
-    String moduleMainClass = null;
-    // - The string corresponding to the NestHost attribute, or null.
-    String nestHostClass = null;
-    // - The offset of the NestMembers attribute, or 0.
-    int nestMembersOffset = 0;
-    // - The non standard attributes (linked with their {@link Attribute#nextAttribute} field).
-    //   This list in the <i>reverse order</i> or their order in the ClassFile structure.
-    Attribute attributes = null;
 
     int currentAttributeOffset = getFirstAttributeOffset();
     for (int i = readUnsignedShort(currentAttributeOffset - 2); i > 0; --i) {
       // Read the attribute_info's attribute_name and attribute_length fields.
       String attributeName = readUTF8(currentAttributeOffset, charBuffer);
       int attributeLength = readInt(currentAttributeOffset + 2);
-      currentAttributeOffset += 6;
-      // The tests are sorted in decreasing frequency order (based on frequencies observed on
-      // typical classes).
+      currentAttributeOffset += 6;      
       if (Constants.SOURCE_FILE.equals(attributeName)) {
         sourceFile = readUTF8(currentAttributeOffset, charBuffer);
       } else if (Constants.INNER_CLASSES.equals(attributeName)) {
-        innerClassesOffset = currentAttributeOffset;
+        // ignore
       } else if (Constants.ENCLOSING_METHOD.equals(attributeName)) {
-        enclosingMethodOffset = currentAttributeOffset;
+        // ignore
       } else if (Constants.NEST_HOST.equals(attributeName)) {
-        nestHostClass = readClass(currentAttributeOffset, charBuffer);
+        // ignore
       } else if (Constants.NEST_MEMBERS.equals(attributeName)) {
-        nestMembersOffset = currentAttributeOffset;
+        // ignore
       } else if (Constants.SIGNATURE.equals(attributeName)) {
         signature = readUTF8(currentAttributeOffset, charBuffer);
       } else if (Constants.RUNTIME_VISIBLE_ANNOTATIONS.equals(attributeName)) {
         runtimeVisibleAnnotationsOffset = currentAttributeOffset;
-      } else if (Constants.RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        runtimeVisibleTypeAnnotationsOffset = currentAttributeOffset;
-      } else if (Constants.DEPRECATED.equals(attributeName)) {
-        accessFlags |= Opcodes.ACC_DEPRECATED;
-      } else if (Constants.SYNTHETIC.equals(attributeName)) {
-        accessFlags |= Opcodes.ACC_SYNTHETIC;
-      } else if (Constants.SOURCE_DEBUG_EXTENSION.equals(attributeName)) {
-        sourceDebugExtension = readUtf(currentAttributeOffset, attributeLength, new char[attributeLength]);
-      } else if (Constants.RUNTIME_INVISIBLE_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleAnnotationsOffset = currentAttributeOffset;
-      } else if (Constants.RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleTypeAnnotationsOffset = currentAttributeOffset;
-      } else if (Constants.MODULE.equals(attributeName)) {
-        moduleOffset = currentAttributeOffset;
-      } else if (Constants.MODULE_MAIN_CLASS.equals(attributeName)) {
-        moduleMainClass = readClass(currentAttributeOffset, charBuffer);
-      } else if (Constants.MODULE_PACKAGES.equals(attributeName)) {
-        modulePackagesOffset = currentAttributeOffset;
-      } else if (!Constants.BOOTSTRAP_METHODS.equals(attributeName)) {
-        // The BootstrapMethods attribute is read in the constructor.
-        Attribute attribute = readAttribute(attributePrototypes, attributeName, currentAttributeOffset, attributeLength, charBuffer, -1, null);
-        attribute.nextAttribute = attributes;
-        attributes = attribute;
+      } else if (Constants.BOOTSTRAP_METHODS.equals(attributeName)) {
+        // ignore
+      } else {
+        System.out.println("cr1 attributeName "+attributeName);
       }
       currentAttributeOffset += attributeLength;
     }
@@ -248,25 +199,6 @@ public class ClassReader {
       classVisitor.visitSource(sourceFile, sourceDebugExtension);
     }
 
-    // Visit the Module, ModulePackages and ModuleMainClass attributes.
-    if (moduleOffset != 0) {
-      readModuleAttributes(classVisitor, context, moduleOffset, modulePackagesOffset, moduleMainClass);
-    }
-
-    // Visit the NestHost attribute.
-    if (nestHostClass != null) {
-      classVisitor.visitNestHost(nestHostClass);
-    }
-
-    // Visit the EnclosingMethod attribute.
-    if (enclosingMethodOffset != 0) {
-      String className = readClass(enclosingMethodOffset, charBuffer);
-      int methodIndex = readUnsignedShort(enclosingMethodOffset + 2);
-      String name = methodIndex == 0 ? null : readUTF8(cpInfoOffsets[methodIndex], charBuffer);
-      String type = methodIndex == 0 ? null : readUTF8(cpInfoOffsets[methodIndex] + 2, charBuffer);
-      classVisitor.visitOuterClass(className, name, type);
-    }
-
     // Visit the RuntimeVisibleAnnotations attribute.
     if (runtimeVisibleAnnotationsOffset != 0) {
       int numAnnotations = readUnsignedShort(runtimeVisibleAnnotationsOffset);
@@ -276,89 +208,7 @@ public class ClassReader {
         String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
         currentAnnotationOffset += 2;
         // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(classVisitor.visitAnnotation(annotationDescriptor, true),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeInvisibleAnnotations attribute.
-    if (runtimeInvisibleAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeInvisibleAnnotationsOffset);
-      int currentAnnotationOffset = runtimeInvisibleAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(classVisitor.visitAnnotation(annotationDescriptor, false),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeVisibleTypeAnnotations attribute.
-    if (runtimeVisibleTypeAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeVisibleTypeAnnotationsOffset);
-      int currentAnnotationOffset = runtimeVisibleTypeAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the target_type, target_info and target_path fields.
-        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(
-                classVisitor.visitTypeAnnotation(context.currentTypeAnnotationTarget,
-                        context.currentTypeAnnotationTargetPath, annotationDescriptor, true),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeInvisibleTypeAnnotations attribute.
-    if (runtimeInvisibleTypeAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeInvisibleTypeAnnotationsOffset);
-      int currentAnnotationOffset = runtimeInvisibleTypeAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the target_type, target_info and target_path fields.
-        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(
-                classVisitor.visitTypeAnnotation(context.currentTypeAnnotationTarget,
-                        context.currentTypeAnnotationTargetPath, annotationDescriptor, false),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the non standard attributes.
-    while (attributes != null) {
-      // Copy and reset the nextAttribute field so that it can also be used in ClassWriter.
-      Attribute nextAttribute = attributes.nextAttribute;
-      attributes.nextAttribute = null;
-      classVisitor.visitAttribute(attributes);
-      attributes = nextAttribute;
-    }
-
-    // Visit the NestedMembers attribute.
-    if (nestMembersOffset != 0) {
-      int numberOfNestMembers = readUnsignedShort(nestMembersOffset);
-      int currentNestMemberOffset = nestMembersOffset + 2;
-      while (numberOfNestMembers-- > 0) {
-        classVisitor.visitNestMember(readClass(currentNestMemberOffset, charBuffer));
-        currentNestMemberOffset += 2;
-      }
-    }
-
-    // Visit the InnerClasses attribute.
-    if (innerClassesOffset != 0) {
-      int numberOfClasses = readUnsignedShort(innerClassesOffset);
-      int currentClassesOffset = innerClassesOffset + 2;
-      while (numberOfClasses-- > 0) {
-        classVisitor.visitInnerClass(readClass(currentClassesOffset, charBuffer),
-                readClass(currentClassesOffset + 2, charBuffer), readUTF8(currentClassesOffset + 4, charBuffer),
-                readUnsignedShort(currentClassesOffset + 6));
-        currentClassesOffset += 8;
+        currentAnnotationOffset = readElementValues(classVisitor.visitAnnotation(annotationDescriptor, true), currentAnnotationOffset, true, charBuffer);
       }
     }
 
@@ -376,18 +226,6 @@ public class ClassReader {
 
     // Visit the end of the class.
     classVisitor.visitEnd();
-  }
-
-  void readModuleAttributes(ClassVisitor classVisitor, Context context, int moduleOffset, int modulePackagesOffset, String moduleMainClass) {
-    char[] buffer = context.charBuffer;
-
-    // Read the module_name_index, module_flags and module_version_index fields and visit them.
-    int currentOffset = moduleOffset;
-    String moduleName = readModule(currentOffset, buffer);
-    int moduleFlags = readUnsignedShort(currentOffset + 2);
-    String moduleVersion = readUTF8(currentOffset + 4, buffer);
-    currentOffset += 6;
-    return;
   }
 
   int readField(ClassVisitor classVisitor, Context context, int fieldInfoOffset) {
@@ -408,15 +246,6 @@ public class ClassReader {
     String signature = null;
     // - The offset of the RuntimeVisibleAnnotations attribute, or 0.
     int runtimeVisibleAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleAnnotations attribute, or 0.
-    int runtimeInvisibleAnnotationsOffset = 0;
-    // - The offset of the RuntimeVisibleTypeAnnotations attribute, or 0.
-    int runtimeVisibleTypeAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleTypeAnnotations attribute, or 0.
-    int runtimeInvisibleTypeAnnotationsOffset = 0;
-    // - The non standard attributes (linked with their {@link Attribute#nextAttribute} field).
-    //   This list in the <i>reverse order</i> or their order in the ClassFile structure.
-    Attribute attributes = null;
 
     int attributesCount = readUnsignedShort(currentOffset);
     currentOffset += 2;
@@ -425,30 +254,15 @@ public class ClassReader {
       String attributeName = readUTF8(currentOffset, charBuffer);
       int attributeLength = readInt(currentOffset + 2);
       currentOffset += 6;
-      // The tests are sorted in decreasing frequency order (based on frequencies observed on
-      // typical classes).
       if (Constants.CONSTANT_VALUE.equals(attributeName)) {
         int constantvalueIndex = readUnsignedShort(currentOffset);
         constantValue = constantvalueIndex == 0 ? null : readConst(constantvalueIndex, charBuffer);
       } else if (Constants.SIGNATURE.equals(attributeName)) {
         signature = readUTF8(currentOffset, charBuffer);
-      } else if (Constants.DEPRECATED.equals(attributeName)) {
-        accessFlags |= Opcodes.ACC_DEPRECATED;
-      } else if (Constants.SYNTHETIC.equals(attributeName)) {
-        accessFlags |= Opcodes.ACC_SYNTHETIC;
       } else if (Constants.RUNTIME_VISIBLE_ANNOTATIONS.equals(attributeName)) {
         runtimeVisibleAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        runtimeVisibleTypeAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_INVISIBLE_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleTypeAnnotationsOffset = currentOffset;
       } else {
-        Attribute attribute = readAttribute(context.attributePrototypes, attributeName, currentOffset, attributeLength,
-                charBuffer, -1, null);
-        attribute.nextAttribute = attributes;
-        attributes = attribute;
+        System.out.println("cr2 attributeName "+attributeName);
       }
       currentOffset += attributeLength;
     }
@@ -471,65 +285,6 @@ public class ClassReader {
         currentAnnotationOffset = readElementValues(fieldVisitor.visitAnnotation(annotationDescriptor, true),
                 currentAnnotationOffset, true, charBuffer);
       }
-    }
-
-    // Visit the RuntimeInvisibleAnnotations attribute.
-    if (runtimeInvisibleAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeInvisibleAnnotationsOffset);
-      int currentAnnotationOffset = runtimeInvisibleAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(fieldVisitor.visitAnnotation(annotationDescriptor, false),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeVisibleTypeAnnotations attribute.
-    if (runtimeVisibleTypeAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeVisibleTypeAnnotationsOffset);
-      int currentAnnotationOffset = runtimeVisibleTypeAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the target_type, target_info and target_path fields.
-        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(
-                fieldVisitor.visitTypeAnnotation(context.currentTypeAnnotationTarget,
-                        context.currentTypeAnnotationTargetPath, annotationDescriptor, true),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeInvisibleTypeAnnotations attribute.
-    if (runtimeInvisibleTypeAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeInvisibleTypeAnnotationsOffset);
-      int currentAnnotationOffset = runtimeInvisibleTypeAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the target_type, target_info and target_path fields.
-        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(
-                fieldVisitor.visitTypeAnnotation(context.currentTypeAnnotationTarget,
-                        context.currentTypeAnnotationTargetPath, annotationDescriptor, false),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the non standard attributes.
-    while (attributes != null) {
-      // Copy and reset the nextAttribute field so that it can also be used in FieldWriter.
-      Attribute nextAttribute = attributes.nextAttribute;
-      attributes.nextAttribute = null;
-      fieldVisitor.visitAttribute(attributes);
-      attributes = nextAttribute;
     }
 
     // Visit the end of the field.
@@ -561,23 +316,6 @@ public class ClassReader {
     int signatureIndex = 0;
     // - The offset of the RuntimeVisibleAnnotations attribute, or 0.
     int runtimeVisibleAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleAnnotations attribute, or 0.
-    int runtimeInvisibleAnnotationsOffset = 0;
-    // - The offset of the RuntimeVisibleParameterAnnotations attribute, or 0.
-    int runtimeVisibleParameterAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleParameterAnnotations attribute, or 0.
-    int runtimeInvisibleParameterAnnotationsOffset = 0;
-    // - The offset of the RuntimeVisibleTypeAnnotations attribute, or 0.
-    int runtimeVisibleTypeAnnotationsOffset = 0;
-    // - The offset of the RuntimeInvisibleTypeAnnotations attribute, or 0.
-    int runtimeInvisibleTypeAnnotationsOffset = 0;
-    // - The offset of the AnnotationDefault attribute, or 0.
-    int annotationDefaultOffset = 0;
-    // - The offset of the MethodParameters attribute, or 0.
-    int methodParametersOffset = 0;
-    // - The non standard attributes (linked with their {@link Attribute#nextAttribute} field).
-    //   This list in the <i>reverse order</i> or their order in the ClassFile structure.
-    Attribute attributes = null;
 
     int attributesCount = readUnsignedShort(currentOffset);
     currentOffset += 2;
@@ -586,8 +324,6 @@ public class ClassReader {
       String attributeName = readUTF8(currentOffset, charBuffer);
       int attributeLength = readInt(currentOffset + 2);
       currentOffset += 6;
-      // The tests are sorted in decreasing frequency order (based on frequencies observed on
-      // typical classes).
       if (Constants.CODE.equals(attributeName)) {
         if ((context.parsingOptions & SKIP_CODE) == 0) {
           codeOffset = currentOffset;
@@ -602,32 +338,10 @@ public class ClassReader {
         }
       } else if (Constants.SIGNATURE.equals(attributeName)) {
         signatureIndex = readUnsignedShort(currentOffset);
-      } else if (Constants.DEPRECATED.equals(attributeName)) {
-        context.currentMethodAccessFlags |= Opcodes.ACC_DEPRECATED;
       } else if (Constants.RUNTIME_VISIBLE_ANNOTATIONS.equals(attributeName)) {
         runtimeVisibleAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        runtimeVisibleTypeAnnotationsOffset = currentOffset;
-      } else if (Constants.ANNOTATION_DEFAULT.equals(attributeName)) {
-        annotationDefaultOffset = currentOffset;
-      } else if (Constants.SYNTHETIC.equals(attributeName)) {
-        synthetic = true;
-        context.currentMethodAccessFlags |= Opcodes.ACC_SYNTHETIC;
-      } else if (Constants.RUNTIME_INVISIBLE_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleTypeAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS.equals(attributeName)) {
-        runtimeVisibleParameterAnnotationsOffset = currentOffset;
-      } else if (Constants.RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS.equals(attributeName)) {
-        runtimeInvisibleParameterAnnotationsOffset = currentOffset;
-      } else if (Constants.METHOD_PARAMETERS.equals(attributeName)) {
-        methodParametersOffset = currentOffset;
       } else {
-        Attribute attribute = readAttribute(context.attributePrototypes, attributeName, currentOffset, attributeLength,
-                charBuffer, -1, null);
-        attribute.nextAttribute = attributes;
-        attributes = attribute;
+        System.out.println("cr3 attributeName "+attributeName);
       }
       currentOffset += attributeLength;
     }
@@ -646,30 +360,9 @@ public class ClassReader {
     if (methodVisitor instanceof MethodWriter) {
       MethodWriter methodWriter = (MethodWriter) methodVisitor;
       if (methodWriter.canCopyMethodAttributes(this, methodInfoOffset, currentOffset - methodInfoOffset, synthetic,
-              (context.currentMethodAccessFlags & Opcodes.ACC_DEPRECATED) != 0, readUnsignedShort(methodInfoOffset + 4),
+              false, readUnsignedShort(methodInfoOffset + 4),
               signatureIndex, exceptionsOffset)) {
         return currentOffset;
-      }
-    }
-
-    // Visit the MethodParameters attribute.
-    if (methodParametersOffset != 0) {
-      int parametersCount = readByte(methodParametersOffset);
-      int currentParameterOffset = methodParametersOffset + 1;
-      while (parametersCount-- > 0) {
-        // Read the name_index and access_flags fields and visit them.
-        methodVisitor.visitParameter(readUTF8(currentParameterOffset, charBuffer),
-                readUnsignedShort(currentParameterOffset + 2));
-        currentParameterOffset += 4;
-      }
-    }
-
-    // Visit the AnnotationDefault attribute.
-    if (annotationDefaultOffset != 0) {
-      AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotationDefault();
-      readElementValue(annotationVisitor, annotationDefaultOffset, null, charBuffer);
-      if (annotationVisitor != null) {
-        annotationVisitor.visitEnd();
       }
     }
 
@@ -685,75 +378,6 @@ public class ClassReader {
         currentAnnotationOffset = readElementValues(methodVisitor.visitAnnotation(annotationDescriptor, true),
                 currentAnnotationOffset, true, charBuffer);
       }
-    }
-
-    // Visit the RuntimeInvisibleAnnotations attribute.
-    if (runtimeInvisibleAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeInvisibleAnnotationsOffset);
-      int currentAnnotationOffset = runtimeInvisibleAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(methodVisitor.visitAnnotation(annotationDescriptor, false),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeVisibleTypeAnnotations attribute.
-    if (runtimeVisibleTypeAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeVisibleTypeAnnotationsOffset);
-      int currentAnnotationOffset = runtimeVisibleTypeAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the target_type, target_info and target_path fields.
-        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(
-                methodVisitor.visitTypeAnnotation(context.currentTypeAnnotationTarget,
-                        context.currentTypeAnnotationTargetPath, annotationDescriptor, true),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeInvisibleTypeAnnotations attribute.
-    if (runtimeInvisibleTypeAnnotationsOffset != 0) {
-      int numAnnotations = readUnsignedShort(runtimeInvisibleTypeAnnotationsOffset);
-      int currentAnnotationOffset = runtimeInvisibleTypeAnnotationsOffset + 2;
-      while (numAnnotations-- > 0) {
-        // Parse the target_type, target_info and target_path fields.
-        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-        currentAnnotationOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentAnnotationOffset = readElementValues(
-                methodVisitor.visitTypeAnnotation(context.currentTypeAnnotationTarget,
-                        context.currentTypeAnnotationTargetPath, annotationDescriptor, false),
-                currentAnnotationOffset, true, charBuffer);
-      }
-    }
-
-    // Visit the RuntimeVisibleParameterAnnotations attribute.
-    if (runtimeVisibleParameterAnnotationsOffset != 0) {
-      readParameterAnnotations(methodVisitor, context, runtimeVisibleParameterAnnotationsOffset, true);
-    }
-
-    // Visit the RuntimeInvisibleParameterAnnotations attribute.
-    if (runtimeInvisibleParameterAnnotationsOffset != 0) {
-      readParameterAnnotations(methodVisitor, context, runtimeInvisibleParameterAnnotationsOffset, false);
-    }
-
-    // Visit the non standard attributes.
-    while (attributes != null) {
-      // Copy and reset the nextAttribute field so that it can also be used in MethodWriter.
-      Attribute nextAttribute = attributes.nextAttribute;
-      attributes.nextAttribute = null;
-      methodVisitor.visitAttribute(attributes);
-      attributes = nextAttribute;
     }
 
     // Visit the Code attribute.
@@ -1104,15 +728,6 @@ public class ClassReader {
     int localVariableTableOffset = 0;
     // - The offset of the LocalVariableTypeTable attribute, or 0.
     int localVariableTypeTableOffset = 0;
-    // - The offset of each 'type_annotation' entry in the RuntimeVisibleTypeAnnotations
-    // attribute, or null.
-    int[] visibleTypeAnnotationOffsets = null;
-    // - The offset of each 'type_annotation' entry in the RuntimeInvisibleTypeAnnotations
-    // attribute, or null.
-    int[] invisibleTypeAnnotationOffsets = null;
-    // - The non standard attributes (linked with their {@link Attribute#nextAttribute} field).
-    //   This list in the <i>reverse order</i> or their order in the ClassFile structure.
-    Attribute attributes = null;
 
     int attributesCount = readUnsignedShort(currentOffset);
     currentOffset += 2;
@@ -1155,17 +770,6 @@ public class ClassReader {
             labels[startPc].addLineNumber(lineNumber);
           }
         }
-      } else if (Constants.RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        visibleTypeAnnotationOffsets = readTypeAnnotations(methodVisitor, context, currentOffset, true);
-        // Here we do not extract the labels corresponding to the attribute content. This would
-        // require a full parsing of the attribute, which would need to be repeated when parsing
-        // the bytecode instructions (see below). Instead, the content of the attribute is read one
-        // type annotation at a time (i.e. after a type annotation has been visited, the next type
-        // annotation is read), and the labels it contains are also extracted one annotation at a
-        // time. This assumes that type annotations are ordered by increasing bytecode offset.
-      } else if (Constants.RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
-        invisibleTypeAnnotationOffsets = readTypeAnnotations(methodVisitor, context, currentOffset, false);
-        // Same comment as above for the RuntimeVisibleTypeAnnotations attribute.
       } else if (Constants.STACK_MAP_TABLE.equals(attributeName)) {
         if ((context.parsingOptions & SKIP_FRAMES) == 0) {
           stackMapFrameOffset = currentOffset + 2;
@@ -1191,10 +795,7 @@ public class ClassReader {
         // extraction of the labels corresponding to this attribute (see the comment above for the
         // StackMapTable attribute).
       } else {
-        Attribute attribute = readAttribute(context.attributePrototypes, attributeName, currentOffset, attributeLength,
-                charBuffer, codeOffset, labels);
-        attribute.nextAttribute = attributes;
-        attributes = attribute;
+        System.out.println("cr4 attributeName "+attributeName);
       }
       currentOffset += attributeLength;
     }
@@ -1243,19 +844,7 @@ public class ClassReader {
       methodVisitor.visitFrame(Opcodes.F_NEW, maxLocals, null, 0, null);
     }
 
-    // Visit the bytecode instructions. First, introduce state variables for the incremental parsing
-    // of the type annotations.
-    // Index of the next runtime visible type annotation to read (in the
-    // visibleTypeAnnotationOffsets array).
-    int currentVisibleTypeAnnotationIndex = 0;
-    // The bytecode offset of the next runtime visible type annotation to read, or -1.
-    int currentVisibleTypeAnnotationBytecodeOffset = getTypeAnnotationBytecodeOffset(visibleTypeAnnotationOffsets, 0);
-    // Index of the next runtime invisible type annotation to read (in the
-    // invisibleTypeAnnotationOffsets array).
-    int currentInvisibleTypeAnnotationIndex = 0;
-    // The bytecode offset of the next runtime invisible type annotation to read, or -1.
-    int currentInvisibleTypeAnnotationBytecodeOffset = getTypeAnnotationBytecodeOffset(invisibleTypeAnnotationOffsets,
-            0);
+    // Visit the bytecode instructions.
 
     // Whether a F_INSERT stack map frame must be inserted before the current instruction.
     boolean insertFrame = false;
@@ -1689,48 +1278,6 @@ public class ClassReader {
         default:
           throw new AssertionError();
       }
-
-      // Visit the runtime visible instruction annotations, if any.
-      while (visibleTypeAnnotationOffsets != null
-              && currentVisibleTypeAnnotationIndex < visibleTypeAnnotationOffsets.length
-              && currentVisibleTypeAnnotationBytecodeOffset <= currentBytecodeOffset) {
-        if (currentVisibleTypeAnnotationBytecodeOffset == currentBytecodeOffset) {
-          // Parse the target_type, target_info and target_path fields.
-          int currentAnnotationOffset = readTypeAnnotationTarget(context,
-                  visibleTypeAnnotationOffsets[currentVisibleTypeAnnotationIndex]);
-          // Parse the type_index field.
-          String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-          currentAnnotationOffset += 2;
-          // Parse num_element_value_pairs and element_value_pairs and visit these values.
-          readElementValues(
-                  methodVisitor.visitInsnAnnotation(context.currentTypeAnnotationTarget,
-                          context.currentTypeAnnotationTargetPath, annotationDescriptor, true),
-                  currentAnnotationOffset, true, charBuffer);
-        }
-        currentVisibleTypeAnnotationBytecodeOffset = getTypeAnnotationBytecodeOffset(visibleTypeAnnotationOffsets,
-                ++currentVisibleTypeAnnotationIndex);
-      }
-
-      // Visit the runtime invisible instruction annotations, if any.
-      while (invisibleTypeAnnotationOffsets != null
-              && currentInvisibleTypeAnnotationIndex < invisibleTypeAnnotationOffsets.length
-              && currentInvisibleTypeAnnotationBytecodeOffset <= currentBytecodeOffset) {
-        if (currentInvisibleTypeAnnotationBytecodeOffset == currentBytecodeOffset) {
-          // Parse the target_type, target_info and target_path fields.
-          int currentAnnotationOffset = readTypeAnnotationTarget(context,
-                  invisibleTypeAnnotationOffsets[currentInvisibleTypeAnnotationIndex]);
-          // Parse the type_index field.
-          String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
-          currentAnnotationOffset += 2;
-          // Parse num_element_value_pairs and element_value_pairs and visit these values.
-          readElementValues(
-                  methodVisitor.visitInsnAnnotation(context.currentTypeAnnotationTarget,
-                          context.currentTypeAnnotationTargetPath, annotationDescriptor, false),
-                  currentAnnotationOffset, true, charBuffer);
-        }
-        currentInvisibleTypeAnnotationBytecodeOffset = getTypeAnnotationBytecodeOffset(invisibleTypeAnnotationOffsets,
-                ++currentInvisibleTypeAnnotationIndex);
-      }
     }
     if (labels[codeLength] != null) {
       methodVisitor.visitLabel(labels[codeLength]);
@@ -1774,53 +1321,6 @@ public class ClassReader {
       }
     }
 
-    // Visit the local variable type annotations of the RuntimeVisibleTypeAnnotations attribute.
-    if (visibleTypeAnnotationOffsets != null) {
-      for (int typeAnnotationOffset : visibleTypeAnnotationOffsets) {
-        int targetType = readByte(typeAnnotationOffset);
-        if (targetType == TypeReference.LOCAL_VARIABLE || targetType == TypeReference.RESOURCE_VARIABLE) {
-          // Parse the target_type, target_info and target_path fields.
-          currentOffset = readTypeAnnotationTarget(context, typeAnnotationOffset);
-          // Parse the type_index field.
-          String annotationDescriptor = readUTF8(currentOffset, charBuffer);
-          currentOffset += 2;
-          // Parse num_element_value_pairs and element_value_pairs and visit these values.
-          readElementValues(methodVisitor.visitLocalVariableAnnotation(context.currentTypeAnnotationTarget,
-                  context.currentTypeAnnotationTargetPath, context.currentLocalVariableAnnotationRangeStarts,
-                  context.currentLocalVariableAnnotationRangeEnds, context.currentLocalVariableAnnotationRangeIndices,
-                  annotationDescriptor, true), currentOffset, true, charBuffer);
-        }
-      }
-    }
-
-    // Visit the local variable type annotations of the RuntimeInvisibleTypeAnnotations attribute.
-    if (invisibleTypeAnnotationOffsets != null) {
-      for (int typeAnnotationOffset : invisibleTypeAnnotationOffsets) {
-        int targetType = readByte(typeAnnotationOffset);
-        if (targetType == TypeReference.LOCAL_VARIABLE || targetType == TypeReference.RESOURCE_VARIABLE) {
-          // Parse the target_type, target_info and target_path fields.
-          currentOffset = readTypeAnnotationTarget(context, typeAnnotationOffset);
-          // Parse the type_index field.
-          String annotationDescriptor = readUTF8(currentOffset, charBuffer);
-          currentOffset += 2;
-          // Parse num_element_value_pairs and element_value_pairs and visit these values.
-          readElementValues(methodVisitor.visitLocalVariableAnnotation(context.currentTypeAnnotationTarget,
-                  context.currentTypeAnnotationTargetPath, context.currentLocalVariableAnnotationRangeStarts,
-                  context.currentLocalVariableAnnotationRangeEnds, context.currentLocalVariableAnnotationRangeIndices,
-                  annotationDescriptor, false), currentOffset, true, charBuffer);
-        }
-      }
-    }
-
-    // Visit the non standard attributes.
-    while (attributes != null) {
-      // Copy and reset the nextAttribute field so that it can also be used in MethodWriter.
-      Attribute nextAttribute = attributes.nextAttribute;
-      attributes.nextAttribute = null;
-      methodVisitor.visitAttribute(attributes);
-      attributes = nextAttribute;
-    }
-
     // Visit the max stack and max locals values.
     methodVisitor.visitMaxs(maxStack, maxLocals);
   }
@@ -1841,185 +1341,6 @@ public class ClassReader {
   void createDebugLabel(int bytecodeOffset, Label[] labels) {
     if (labels[bytecodeOffset] == null) {
       readLabel(bytecodeOffset, labels).flags |= Label.FLAG_DEBUG_ONLY;
-    }
-  }
-
-  int[] readTypeAnnotations(MethodVisitor methodVisitor, Context context, int runtimeTypeAnnotationsOffset, boolean visible) {
-    char[] charBuffer = context.charBuffer;
-    int currentOffset = runtimeTypeAnnotationsOffset;
-    // Read the num_annotations field and create an array to store the type_annotation offsets.
-    int[] typeAnnotationsOffsets = new int[readUnsignedShort(currentOffset)];
-    currentOffset += 2;
-    // Parse the 'annotations' array field.
-    for (int i = 0; i < typeAnnotationsOffsets.length; ++i) {
-      typeAnnotationsOffsets[i] = currentOffset;
-      // Parse the type_annotation's target_type and the target_info fields. The size of the
-      // target_info field depends on the value of target_type.
-      int targetType = readInt(currentOffset);
-      switch (targetType >>> 24) {
-        case TypeReference.LOCAL_VARIABLE:
-        case TypeReference.RESOURCE_VARIABLE:
-          // A localvar_target has a variable size, which depends on the value of their table_length
-          // field. It also references bytecode offsets, for which we need labels.
-          int tableLength = readUnsignedShort(currentOffset + 1);
-          currentOffset += 3;
-          while (tableLength-- > 0) {
-            int startPc = readUnsignedShort(currentOffset);
-            int length = readUnsignedShort(currentOffset + 2);
-            // Skip the index field (2 bytes).
-            currentOffset += 6;
-            createLabel(startPc, context.currentMethodLabels);
-            createLabel(startPc + length, context.currentMethodLabels);
-          }
-          break;
-        case TypeReference.CAST:
-        case TypeReference.CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT:
-        case TypeReference.METHOD_INVOCATION_TYPE_ARGUMENT:
-        case TypeReference.CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT:
-        case TypeReference.METHOD_REFERENCE_TYPE_ARGUMENT:
-          currentOffset += 4;
-          break;
-        case TypeReference.CLASS_EXTENDS:
-        case TypeReference.CLASS_TYPE_PARAMETER_BOUND:
-        case TypeReference.METHOD_TYPE_PARAMETER_BOUND:
-        case TypeReference.THROWS:
-        case TypeReference.EXCEPTION_PARAMETER:
-        case TypeReference.INSTANCEOF:
-        case TypeReference.NEW:
-        case TypeReference.CONSTRUCTOR_REFERENCE:
-        case TypeReference.METHOD_REFERENCE:
-          currentOffset += 3;
-          break;
-        case TypeReference.CLASS_TYPE_PARAMETER:
-        case TypeReference.METHOD_TYPE_PARAMETER:
-        case TypeReference.METHOD_FORMAL_PARAMETER:
-        case TypeReference.FIELD:
-        case TypeReference.METHOD_RETURN:
-        case TypeReference.METHOD_RECEIVER:
-        default:
-          // TypeReference type which can't be used in Code attribute, or which is unknown.
-          throw new IllegalArgumentException();
-      }
-      // Parse the rest of the type_annotation structure, starting with the target_path structure
-      // (whose size depends on its path_length field).
-      int pathLength = readByte(currentOffset);
-      if ((targetType >>> 24) == TypeReference.EXCEPTION_PARAMETER) {
-        // Parse the target_path structure and create a corresponding TypePath.
-        TypePath path = pathLength == 0 ? null : new TypePath(b, currentOffset);
-        currentOffset += 1 + 2 * pathLength;
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentOffset, charBuffer);
-        currentOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentOffset = readElementValues(
-                methodVisitor.visitTryCatchAnnotation(targetType & 0xFFFFFF00, path, annotationDescriptor, visible),
-                currentOffset, true, charBuffer);
-      } else {
-        // We don't want to visit the other target_type annotations, so we just skip them (which
-        // requires some parsing because the element_value_pairs array has a variable size). First,
-        // skip the target_path structure:
-        currentOffset += 3 + 2 * pathLength;
-        // Then skip the num_element_value_pairs and element_value_pairs fields (by reading them
-        // with a null AnnotationVisitor).
-        currentOffset = readElementValues(null, currentOffset, true, charBuffer);
-      }
-    }
-    return typeAnnotationsOffsets;
-  }
-
-  int getTypeAnnotationBytecodeOffset(int[] typeAnnotationOffsets, int typeAnnotationIndex) {
-    if (typeAnnotationOffsets == null || typeAnnotationIndex >= typeAnnotationOffsets.length
-            || readByte(typeAnnotationOffsets[typeAnnotationIndex]) < TypeReference.INSTANCEOF) {
-      return -1;
-    }
-    return readUnsignedShort(typeAnnotationOffsets[typeAnnotationIndex] + 1);
-  }
-
-  int readTypeAnnotationTarget(Context context, int typeAnnotationOffset) {
-    int currentOffset = typeAnnotationOffset;
-    // Parse and store the target_type structure.
-    int targetType = readInt(typeAnnotationOffset);
-    switch (targetType >>> 24) {
-      case TypeReference.CLASS_TYPE_PARAMETER:
-      case TypeReference.METHOD_TYPE_PARAMETER:
-      case TypeReference.METHOD_FORMAL_PARAMETER:
-        targetType &= 0xFFFF0000;
-        currentOffset += 2;
-        break;
-      case TypeReference.FIELD:
-      case TypeReference.METHOD_RETURN:
-      case TypeReference.METHOD_RECEIVER:
-        targetType &= 0xFF000000;
-        currentOffset += 1;
-        break;
-      case TypeReference.LOCAL_VARIABLE:
-      case TypeReference.RESOURCE_VARIABLE:
-        targetType &= 0xFF000000;
-        int tableLength = readUnsignedShort(currentOffset + 1);
-        currentOffset += 3;
-        context.currentLocalVariableAnnotationRangeStarts = new Label[tableLength];
-        context.currentLocalVariableAnnotationRangeEnds = new Label[tableLength];
-        context.currentLocalVariableAnnotationRangeIndices = new int[tableLength];
-        for (int i = 0; i < tableLength; ++i) {
-          int startPc = readUnsignedShort(currentOffset);
-          int length = readUnsignedShort(currentOffset + 2);
-          int index = readUnsignedShort(currentOffset + 4);
-          currentOffset += 6;
-          context.currentLocalVariableAnnotationRangeStarts[i] = createLabel(startPc, context.currentMethodLabels);
-          context.currentLocalVariableAnnotationRangeEnds[i] = createLabel(startPc + length, context.currentMethodLabels);
-          context.currentLocalVariableAnnotationRangeIndices[i] = index;
-        }
-        break;
-      case TypeReference.CAST:
-      case TypeReference.CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT:
-      case TypeReference.METHOD_INVOCATION_TYPE_ARGUMENT:
-      case TypeReference.CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT:
-      case TypeReference.METHOD_REFERENCE_TYPE_ARGUMENT:
-        targetType &= 0xFF0000FF;
-        currentOffset += 4;
-        break;
-      case TypeReference.CLASS_EXTENDS:
-      case TypeReference.CLASS_TYPE_PARAMETER_BOUND:
-      case TypeReference.METHOD_TYPE_PARAMETER_BOUND:
-      case TypeReference.THROWS:
-      case TypeReference.EXCEPTION_PARAMETER:
-        targetType &= 0xFFFFFF00;
-        currentOffset += 3;
-        break;
-      case TypeReference.INSTANCEOF:
-      case TypeReference.NEW:
-      case TypeReference.CONSTRUCTOR_REFERENCE:
-      case TypeReference.METHOD_REFERENCE:
-        targetType &= 0xFF000000;
-        currentOffset += 3;
-        break;
-      default:
-        throw new IllegalArgumentException();
-    }
-    context.currentTypeAnnotationTarget = targetType;
-    // Parse and store the target_path structure.
-    int pathLength = readByte(currentOffset);
-    context.currentTypeAnnotationTargetPath = pathLength == 0 ? null : new TypePath(b, currentOffset);
-    // Return the start offset of the rest of the type_annotation structure.
-    return currentOffset + 1 + 2 * pathLength;
-  }
-
-  void readParameterAnnotations(MethodVisitor methodVisitor, Context context, int runtimeParameterAnnotationsOffset, boolean visible) {
-    int currentOffset = runtimeParameterAnnotationsOffset;
-    int numParameters = b[currentOffset++] & 0xFF;
-    methodVisitor.visitAnnotableParameterCount(numParameters, visible);
-    char[] charBuffer = context.charBuffer;
-    for (int i = 0; i < numParameters; ++i) {
-      int numAnnotations = readUnsignedShort(currentOffset);
-      currentOffset += 2;
-      while (numAnnotations-- > 0) {
-        // Parse the type_index field.
-        String annotationDescriptor = readUTF8(currentOffset, charBuffer);
-        currentOffset += 2;
-        // Parse num_element_value_pairs and element_value_pairs and visit these values.
-        currentOffset = readElementValues(methodVisitor.visitParameterAnnotation(i, annotationDescriptor, visible),
-                currentOffset, true, charBuffer);
-      }
     }
   }
 
@@ -2046,8 +1367,7 @@ public class ClassReader {
     return currentOffset;
   }
 
-  int readElementValue(AnnotationVisitor annotationVisitor, int elementValueOffset, String elementName,
-          char[] charBuffer) {
+  int readElementValue(AnnotationVisitor annotationVisitor, int elementValueOffset, String elementName, char[] charBuffer) {
     int currentOffset = elementValueOffset;
     if (annotationVisitor == null) {
       switch (b[currentOffset] & 0xFF) {
@@ -2083,8 +1403,7 @@ public class ClassReader {
         break;
 
       case 'Z': // const_value_index, CONSTANT_Integer
-        annotationVisitor.visit(elementName,
-                readInt(cpInfoOffsets[readUnsignedShort(currentOffset)]) == 0 ? Boolean.FALSE : Boolean.TRUE);
+        annotationVisitor.visit(elementName, readInt(cpInfoOffsets[readUnsignedShort(currentOffset)]) == 0 ? Boolean.FALSE : Boolean.TRUE);
         currentOffset += 2;
         break;
       case 's': // const_value_index, CONSTANT_Utf8
@@ -2092,8 +1411,7 @@ public class ClassReader {
         currentOffset += 2;
         break;
       case 'e': // enum_const_value
-        annotationVisitor.visitEnum(elementName, readUTF8(currentOffset, charBuffer),
-                readUTF8(currentOffset + 2, charBuffer));
+        annotationVisitor.visitEnum(elementName, readUTF8(currentOffset, charBuffer), readUTF8(currentOffset + 2, charBuffer));
         currentOffset += 4;
         break;
       case 'c': // class_info
@@ -2101,15 +1419,13 @@ public class ClassReader {
         currentOffset += 2;
         break;
       case '@': // annotation_value
-        currentOffset = readElementValues(
-                annotationVisitor.visitAnnotation(elementName, readUTF8(currentOffset, charBuffer)), currentOffset + 2, true,
-                charBuffer);
+        currentOffset = readElementValues(null, currentOffset + 2, true, charBuffer);
         break;
       case '[': // array_value
         int numValues = readUnsignedShort(currentOffset);
         currentOffset += 2;
         if (numValues == 0) {
-          return readElementValues(annotationVisitor.visitArray(elementName), currentOffset - 2, false, charBuffer);
+          return readElementValues(null, currentOffset - 2, false, charBuffer);
         }
         switch (b[currentOffset] & 0xFF) {
           case 'B':
@@ -2177,8 +1493,7 @@ public class ClassReader {
             annotationVisitor.visit(elementName, doubleValues);
             break;
           default:
-            currentOffset = readElementValues(annotationVisitor.visitArray(elementName), currentOffset - 2, false,
-                    charBuffer);
+            currentOffset = readElementValues(null, currentOffset - 2, false, charBuffer);
             break;
         }
         break;
@@ -2428,15 +1743,6 @@ public class ClassReader {
     return null;
   }
 
-  Attribute readAttribute(Attribute[] attributePrototypes, String type, int offset, int length, char[] charBuffer, int codeAttributeOffset, Label[] labels) {
-    for (Attribute attributePrototype : attributePrototypes) {
-      if (attributePrototype.type.equals(type)) {
-        return attributePrototype.read(this, offset, length, charBuffer, codeAttributeOffset, labels);
-      }
-    }
-    return new Attribute(type).read(this, offset, length, null, -1, null);
-  }
-
   int getItemCount() {
     return cpInfoOffsets.length;
   }
@@ -2523,35 +1829,6 @@ public class ClassReader {
     return readStringish(offset, charBuffer);
   }
 
-  String readModule(int offset, char[] charBuffer) {
-    return readStringish(offset, charBuffer);
-  }
-
-  String readPackage(int offset, char[] charBuffer) {
-    return readStringish(offset, charBuffer);
-  }
-
-  ConstantDynamic readConstantDynamic(int constantPoolEntryIndex, char[] charBuffer) {
-    ConstantDynamic constantDynamic = constantDynamicValues[constantPoolEntryIndex];
-    if (constantDynamic != null) {
-      return constantDynamic;
-    }
-    int cpInfoOffset = cpInfoOffsets[constantPoolEntryIndex];
-    int nameAndTypeCpInfoOffset = cpInfoOffsets[readUnsignedShort(cpInfoOffset + 2)];
-    String name = readUTF8(nameAndTypeCpInfoOffset, charBuffer);
-    String descriptor = readUTF8(nameAndTypeCpInfoOffset + 2, charBuffer);
-    int bootstrapMethodOffset = bootstrapMethodOffsets[readUnsignedShort(cpInfoOffset)];
-    Handle handle = (Handle) readConst(readUnsignedShort(bootstrapMethodOffset), charBuffer);
-    Object[] bootstrapMethodArguments = new Object[readUnsignedShort(bootstrapMethodOffset + 2)];
-    bootstrapMethodOffset += 4;
-    for (int i = 0; i < bootstrapMethodArguments.length; i++) {
-      bootstrapMethodArguments[i] = readConst(readUnsignedShort(bootstrapMethodOffset), charBuffer);
-      bootstrapMethodOffset += 2;
-    }
-    return constantDynamicValues[constantPoolEntryIndex] = new ConstantDynamic(name, descriptor, handle,
-            bootstrapMethodArguments);
-  }
-
   Object readConst(int constantPoolEntryIndex, char[] charBuffer) {
     int cpInfoOffset = cpInfoOffsets[constantPoolEntryIndex];
     switch (b[cpInfoOffset - 1]) {
@@ -2578,8 +1855,6 @@ public class ClassReader {
         String descriptor = readUTF8(nameAndTypeCpInfoOffset + 2, charBuffer);
         boolean isInterface = b[referenceCpInfoOffset - 1] == Symbol.CONSTANT_INTERFACE_METHODREF_TAG;
         return new Handle(referenceKind, owner, name, descriptor, isInterface);
-      case Symbol.CONSTANT_DYNAMIC_TAG:
-        return readConstantDynamic(constantPoolEntryIndex, charBuffer);
       default:
         throw new IllegalArgumentException();
     }

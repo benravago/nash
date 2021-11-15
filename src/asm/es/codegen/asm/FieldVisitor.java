@@ -9,28 +9,9 @@ public abstract class FieldVisitor {
   }
 
   public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-    if (fv != null) {
-      return fv.visitAnnotation(descriptor, visible);
-    }
-    return null;
+    return (fv != null) ? fv.visitAnnotation(descriptor, visible) : null;
   }
-
-  AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-    if (fv != null) {
-      return fv.visitTypeAnnotation(typeRef, typePath, descriptor, visible);
-    }
-    return null;
-  }
-
-  public void visitAttribute(Attribute attribute) {
-    if (fv != null) {
-      fv.visitAttribute(attribute);
-    }
-  }
-
   public void visitEnd() {
-    if (fv != null) {
-      fv.visitEnd();
-    }
+    if (fv != null) fv.visitEnd();
   }
 }

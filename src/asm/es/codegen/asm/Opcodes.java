@@ -26,8 +26,6 @@ public interface Opcodes {
   int ACC_MANDATED = 0x8000; // parameter, module, module *
   int ACC_MODULE = 0x8000; // class
 
-  int ACC_DEPRECATED = 0x20000; // class, field, method
-
   int T_BOOLEAN = 4;
   int T_CHAR = 5;
   int T_FLOAT = 6;
