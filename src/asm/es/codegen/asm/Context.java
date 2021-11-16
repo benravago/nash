@@ -2,7 +2,7 @@ package es.codegen.asm;
 
 class Context {
 
-  int parsingOptions;
+  // int parsingOptions;
   char[] charBuffer;
 
   int currentMethodAccessFlags;

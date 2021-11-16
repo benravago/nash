@@ -251,7 +251,6 @@ class MethodWriter extends MethodVisitor {
   int[] previousFrame;
   int[] currentFrame;
   boolean hasSubroutines;
-  boolean hasAsmInstructions;
   int lastBytecodeOffset;
   int sourceOffset;
   int sourceLength;
@@ -292,10 +291,6 @@ class MethodWriter extends MethodVisitor {
 
   boolean hasFrames() {
     return stackMapTableNumberOfEntries > 0;
-  }
-
-  boolean hasAsmInstructions() {
-    return hasAsmInstructions;
   }
 
   @Override
@@ -649,7 +644,6 @@ class MethodWriter extends MethodVisitor {
     // Add the instruction to the bytecode of the method.
     // Compute the 'base' opcode, i.e. GOTO or JSR if opcode is GOTO_W or JSR_W, otherwise opcode.
     int baseOpcode = opcode >= Constants.GOTO_W ? opcode - Constants.WIDE_JUMP_OPCODE_DELTA : opcode;
-    boolean nextInsnIsJumpTarget = false;
     if ((label.flags & Label.FLAG_RESOLVED) != 0 && label.bytecodeOffset - code.length < Short.MIN_VALUE) {
       // Case of a backward jump with an offset < -32768. In this case we automatically replace GOTO
       // with GOTO_W, JSR with JSR_W and IFxxx <l> with IFNOTxxx <L> GOTO_W <l> L:..., where
@@ -660,21 +654,7 @@ class MethodWriter extends MethodVisitor {
       } else if (baseOpcode == Opcodes.JSR) {
         code.putByte(Constants.JSR_W);
       } else {
-        // Put the "opposite" opcode of baseOpcode. This can be done by flipping the least
-        // significant bit for IFNULL and IFNONNULL, and similarly for IFEQ ... IF_ACMPEQ (with a
-        // pre and post offset by 1). The jump offset is 8 bytes (3 for IFNOTxxx, 5 for GOTO_W).
-        code.putByte(baseOpcode >= Opcodes.IFNULL ? baseOpcode ^ 1 : ((baseOpcode + 1) ^ 1) - 1);
-        code.putShort(8);
-        // Here we could put a GOTO_W in theory, but if ASM specific instructions are used in this
-        // method or another one, and if the class has frames, we will need to insert a frame after
-        // this GOTO_W during the additional ClassReader -> ClassWriter round trip to remove the ASM
-        // specific instructions. To not miss this additional frame, we need to use an ASM_GOTO_W
-        // here, which has the unfortunate effect of forcing this additional round trip (which in
-        // some case would not have been really necessary, but we can't know this at this point).
-        code.putByte(Constants.ASM_GOTO_W);
-        hasAsmInstructions = true;
-        // The instruction after the GOTO_W becomes the target of the IFNOT instruction.
-        nextInsnIsJumpTarget = true;
+        throw new IllegalArgumentException("ASM_GOTO_W");
       }
       label.put(code, code.length - 1, true);
     } else if (baseOpcode != opcode) {
@@ -736,9 +716,6 @@ class MethodWriter extends MethodVisitor {
       // If the next instruction starts a new basic block, call visitLabel to add the label of this
       // instruction as a successor of the current block, and to start a new basic block.
       if (nextBasicBlock != null) {
-        if (nextInsnIsJumpTarget) {
-          nextBasicBlock.flags |= Label.FLAG_JUMP_TARGET;
-        }
         visitLabel(nextBasicBlock);
       }
       if (baseOpcode == Opcodes.GOTO) {
@@ -750,7 +727,7 @@ class MethodWriter extends MethodVisitor {
   @Override
   public void visitLabel(Label label) {
     // Resolve the forward references to this label, if any.
-    hasAsmInstructions |= label.resolve(code.data, code.length);
+    label.resolve(code.data, code.length);
     // visitLabel starts a new basic block (except for debug only labels), so we need to update the
     // previous and current block references and list of successors.
     if ((label.flags & Label.FLAG_DEBUG_ONLY) != 0) {

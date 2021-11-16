@@ -16,6 +16,7 @@ class Constants implements Opcodes {
 
   static final String CONSTANT_VALUE = "ConstantValue";
   static final String CODE = "Code";
+  static final String STACK_MAP = "StackMap";
   static final String STACK_MAP_TABLE = "StackMapTable";
   static final String EXCEPTIONS = "Exceptions";
   static final String DEPRECATED = "Deprecated";
@@ -74,28 +75,6 @@ class Constants implements Opcodes {
 
   static final int WIDE_JUMP_OPCODE_DELTA = GOTO_W - GOTO;
 
-  static final int ASM_OPCODE_DELTA = 49;
-
-  static final int ASM_IFNULL_OPCODE_DELTA = 20;
-
-  static final int ASM_IFEQ = IFEQ + ASM_OPCODE_DELTA;
-  static final int ASM_IFNE = IFNE + ASM_OPCODE_DELTA;
-  static final int ASM_IFLT = IFLT + ASM_OPCODE_DELTA;
-  static final int ASM_IFGE = IFGE + ASM_OPCODE_DELTA;
-  static final int ASM_IFGT = IFGT + ASM_OPCODE_DELTA;
-  static final int ASM_IFLE = IFLE + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ICMPEQ = IF_ICMPEQ + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ICMPNE = IF_ICMPNE + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ICMPLT = IF_ICMPLT + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ICMPGE = IF_ICMPGE + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ICMPGT = IF_ICMPGT + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ICMPLE = IF_ICMPLE + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ACMPEQ = IF_ACMPEQ + ASM_OPCODE_DELTA;
-  static final int ASM_IF_ACMPNE = IF_ACMPNE + ASM_OPCODE_DELTA;
-  static final int ASM_GOTO = GOTO + ASM_OPCODE_DELTA;
-  static final int ASM_JSR = JSR + ASM_OPCODE_DELTA;
-  static final int ASM_IFNULL = IFNULL + ASM_IFNULL_OPCODE_DELTA;
-  static final int ASM_IFNONNULL = IFNONNULL + ASM_IFNULL_OPCODE_DELTA;
-  static final int ASM_GOTO_W = 220;
-
+  // static final int ASM_OPCODE_DELTA = 49;
+  // static final int ASM_IFNULL_OPCODE_DELTA = 20;
 }

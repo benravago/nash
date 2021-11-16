@@ -316,7 +316,7 @@ public class ClassGenerator {
 
   static ScriptClassInfo getScriptClassInfo(ClassReader reader) {
     var scic = new ScriptClassInfoCollector();
-    reader.accept(scic, 0);
+    reader.accept(scic);
     return scic.getScriptClassInfo();
   }
 

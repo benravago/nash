@@ -110,13 +110,12 @@ public class Label {
     forwardReferences[0] = lastElementIndex;
   }
 
-  boolean resolve(byte[] code, int bytecodeOffset) {
+  void resolve(byte[] code, int bytecodeOffset) {
     this.flags |= FLAG_RESOLVED;
     this.bytecodeOffset = bytecodeOffset;
     if (forwardReferences == null) {
-      return false;
+      return;
     }
-    boolean hasAsmInstructions = false;
     for (int i = forwardReferences[0]; i > 0; i -= 2) {
       int sourceInsnBytecodeOffset = forwardReferences[i - 1];
       int reference = forwardReferences[i];
@@ -124,19 +123,7 @@ public class Label {
       int handle = reference & FORWARD_REFERENCE_HANDLE_MASK;
       if ((reference & FORWARD_REFERENCE_TYPE_MASK) == FORWARD_REFERENCE_TYPE_SHORT) {
         if (relativeOffset < Short.MIN_VALUE || relativeOffset > Short.MAX_VALUE) {
-          // Change the opcode of the jump instruction, in order to be able to find it later in
-          // ClassReader. These ASM specific opcodes are similar to jump instruction opcodes, except
-          // that the 2 bytes offset is unsigned (and can therefore represent values from 0 to
-          // 65535, which is sufficient since the size of a method is limited to 65535 bytes).
-          int opcode = code[sourceInsnBytecodeOffset] & 0xFF;
-          if (opcode < Opcodes.IFNULL) {
-            // Change IFEQ ... JSR to ASM_IFEQ ... ASM_JSR.
-            code[sourceInsnBytecodeOffset] = (byte) (opcode + Constants.ASM_OPCODE_DELTA);
-          } else {
-            // Change IFNULL and IFNONNULL to ASM_IFNULL and ASM_IFNONNULL.
-            code[sourceInsnBytecodeOffset] = (byte) (opcode + Constants.ASM_IFNULL_OPCODE_DELTA);
-          }
-          hasAsmInstructions = true;
+          throw new IllegalArgumentException("ASM_*_DELTA");
         }
         code[handle++] = (byte) (relativeOffset >>> 8);
         code[handle] = (byte) relativeOffset;
@@ -147,7 +134,6 @@ public class Label {
         code[handle] = (byte) relativeOffset;
       }
     }
-    return hasAsmInstructions;
   }
 
   void markSubroutine(short subroutineId) {

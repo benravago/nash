@@ -62,6 +62,9 @@ public abstract class MethodVisitor {
   public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
     if (mv != null) mv.visitTryCatchBlock(start, end, handler, type);
   }
+  public void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
+    if (mv != null) mv.visitLocalVariable(name, descriptor, signature, start, end, index);
+  }
   void visitLineNumber(int line, Label start) {
     if (mv != null) mv.visitLineNumber(line, start);
   }
@@ -70,12 +73,5 @@ public abstract class MethodVisitor {
   }
   public void visitEnd() {
     if (mv != null) mv.visitEnd();
-  }
-
-  public void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
-    System.out.println("visitLocalVariable");
-    if (mv != null) {
-      mv.visitLocalVariable(name, descriptor, signature, start, end, index);
-    }
   }
 }

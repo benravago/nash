@@ -74,7 +74,7 @@ public class Main {
         var writer = ClassGenerator.makeClassWriter();
         var reader = new ClassReader(buf);
         var inst = new ScriptClassInstrumentor(writer, sci);
-        reader.accept(inst, 0);
+        reader.accept(inst);
         // write instrumented class
         try (var fos = new FileOutputStream(new File(outDir, inFile.getName()))) {
           buf = writer.toByteArray();

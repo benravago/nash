@@ -162,11 +162,9 @@ public class ClassWriter extends ClassVisitor {
     }
     result.putShort(methodsCount);
     boolean hasFrames = false;
-    boolean hasAsmInstructions = false;
     methodWriter = firstMethod;
     while (methodWriter != null) {
       hasFrames |= methodWriter.hasFrames();
-      hasAsmInstructions |= methodWriter.hasAsmInstructions();
       methodWriter.putMethodInfo(result);
       methodWriter = (MethodWriter) methodWriter.mv;
     }
@@ -179,30 +177,13 @@ public class ClassWriter extends ClassVisitor {
       result.putShort(symbolTable.addConstantUtf8(Constants.SOURCE_FILE)).putInt(2).putShort(sourceFileIndex);
     }
     symbolTable.putBootstrapMethods(result);
-
-    // Third step: replace the ASM specific instructions, if any.
-    if (hasAsmInstructions) {
-      return replaceAsmInstructions(result.data, hasFrames);
-    } else {
-      return result.data;
-    }
-  }
-
-  byte[] replaceAsmInstructions(byte[] classFile, boolean hasFrames) {
-    firstField = null;
-    lastField = null;
-    firstMethod = null;
-    lastMethod = null;
-    compute = hasFrames ? MethodWriter.COMPUTE_INSERTED_FRAMES : MethodWriter.COMPUTE_NOTHING;
-    new ClassReader(classFile, 0, false).accept(this, (hasFrames ? ClassReader.EXPAND_FRAMES : 0) | ClassReader.EXPAND_ASM_INSNS);
-    return toByteArray();
+    return result.data;
   }
 
   int newConst(Object value) {
     return symbolTable.addConstant(value).index;
   }
 
-  // DontCheck(AbbreviationAsWordInName): can't be renamed (for backward binary compatibility).
   int newUTF8(String value) {
     return symbolTable.addConstantUtf8(value);
   }
