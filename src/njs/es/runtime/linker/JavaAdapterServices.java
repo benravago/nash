@@ -170,7 +170,7 @@ public final class JavaAdapterServices {
 
   static MethodHandle createNoPermissionsInvoker() {
     var className = "NoPermissionsInvoker";
-    var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+    var cw = new ClassWriter();
     cw.visit(ACC_PUBLIC | ACC_SUPER | ACC_FINAL, className, null, "java/lang/Object", null);
     var objectType = Type.getType(Object.class);
     var methodHandleType = Type.getType(MethodHandle.class);

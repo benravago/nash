@@ -6,6 +6,7 @@ class FieldWriter extends FieldVisitor {
   final int accessFlags;
   final int nameIndex;
   final int descriptorIndex;
+
   int signatureIndex;
   int constantValueIndex;
 
@@ -29,16 +30,12 @@ class FieldWriter extends FieldVisitor {
   }
 
   int computeFieldInfoSize() {
-    // The access_flags, name_index, descriptor_index and attributes_count fields use 8 bytes.
     var size = 8;
-    // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     if (constantValueIndex != 0) {
-      // ConstantValue attributes always use 8 bytes.
       symbolTable.addConstantUtf8(Constants.CONSTANT_VALUE);
       size += 8;
     }
     if (signatureIndex != 0) {
-      // Signature attributes always use 8 bytes.
       symbolTable.addConstantUtf8(Constants.SIGNATURE);
       size += 8;
     }
@@ -46,10 +43,7 @@ class FieldWriter extends FieldVisitor {
   }
 
   void putFieldInfo(ByteVector output) {
-    // Put the access_flags, name_index and descriptor_index fields.
     output.putShort(accessFlags).putShort(nameIndex).putShort(descriptorIndex);
-    // Compute and put the attributes_count field.
-    // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     var attributesCount = 0;
     if (constantValueIndex != 0) {
       ++attributesCount;
@@ -58,8 +52,6 @@ class FieldWriter extends FieldVisitor {
       ++attributesCount;
     }
     output.putShort(attributesCount);
-    // Put the field_info attributes.
-    // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     if (constantValueIndex != 0) {
       output.putShort(symbolTable.addConstantUtf8(Constants.CONSTANT_VALUE)).putInt(2).putShort(constantValueIndex);
     }

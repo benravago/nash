@@ -203,7 +203,7 @@ final class JavaAdapterBytecodeGenerator {
     this.interfaces = interfaces;
     this.classOverride = classOverride;
     this.commonLoader = commonLoader;
-    cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+    cw = new ClassWriter() {
       @Override
       protected String getCommonSuperClass(String type1, String type2) {
         // We need to override ClassWriter.getCommonSuperClass to use this factory's commonLoader

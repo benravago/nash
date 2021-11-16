@@ -2,7 +2,6 @@ package es.codegen.asm;
 
 class Context {
 
-  // int parsingOptions;
   char[] charBuffer;
 
   int currentMethodAccessFlags;
@@ -10,8 +9,6 @@ class Context {
   String currentMethodDescriptor;
   Label[] currentMethodLabels;
 
-  int currentTypeAnnotationTarget;
-  TypePath currentTypeAnnotationTargetPath;
   Label[] currentLocalVariableAnnotationRangeStarts;
   Label[] currentLocalVariableAnnotationRangeEnds;
   int[] currentLocalVariableAnnotationRangeIndices;

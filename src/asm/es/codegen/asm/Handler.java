@@ -29,10 +29,10 @@ class Handler {
     } else {
       firstHandler.nextHandler = removeRange(firstHandler.nextHandler, start, end);
     }
-    int handlerStart = firstHandler.startPc.bytecodeOffset;
-    int handlerEnd = firstHandler.endPc.bytecodeOffset;
-    int rangeStart = start.bytecodeOffset;
-    int rangeEnd = end == null ? Integer.MAX_VALUE : end.bytecodeOffset;
+    var handlerStart = firstHandler.startPc.bytecodeOffset;
+    var handlerEnd = firstHandler.endPc.bytecodeOffset;
+    var rangeStart = start.bytecodeOffset;
+    var rangeEnd = end == null ? Integer.MAX_VALUE : end.bytecodeOffset;
     // Return early if [handlerStart,handlerEnd[ and [rangeStart,rangeEnd[ don't intersect.
     if (rangeStart >= handlerEnd || rangeEnd <= handlerStart) {
       return firstHandler;
@@ -57,8 +57,8 @@ class Handler {
   }
 
   static int getExceptionTableLength(Handler firstHandler) {
-    int length = 0;
-    Handler handler = firstHandler;
+    var length = 0;
+    var handler = firstHandler;
     while (handler != null) {
       length++;
       handler = handler.nextHandler;
@@ -72,10 +72,12 @@ class Handler {
 
   static void putExceptionTable(Handler firstHandler, ByteVector output) {
     output.putShort(getExceptionTableLength(firstHandler));
-    Handler handler = firstHandler;
+    var handler = firstHandler;
     while (handler != null) {
-      output.putShort(handler.startPc.bytecodeOffset).putShort(handler.endPc.bytecodeOffset)
-              .putShort(handler.handlerPc.bytecodeOffset).putShort(handler.catchType);
+      output.putShort(handler.startPc.bytecodeOffset)
+            .putShort(handler.endPc.bytecodeOffset)
+            .putShort(handler.handlerPc.bytecodeOffset)
+            .putShort(handler.catchType);
       handler = handler.nextHandler;
     }
   }

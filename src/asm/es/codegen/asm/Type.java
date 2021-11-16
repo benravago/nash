@@ -42,34 +42,23 @@ public class Type {
     this.valueBegin = valueBegin;
     this.valueEnd = valueEnd;
   }
-  
+
   public static Type getType(String typeDescriptor) {
     return getTypeInternal(typeDescriptor, 0, typeDescriptor.length());
   }
 
   public static Type getType(Class<?> clazz) {
     if (clazz.isPrimitive()) {
-      if (clazz == Integer.TYPE) {
-        return INT_TYPE;
-      } else if (clazz == Void.TYPE) {
-        return VOID_TYPE;
-      } else if (clazz == Boolean.TYPE) {
-        return BOOLEAN_TYPE;
-      } else if (clazz == Byte.TYPE) {
-        return BYTE_TYPE;
-      } else if (clazz == Character.TYPE) {
-        return CHAR_TYPE;
-      } else if (clazz == Short.TYPE) {
-        return SHORT_TYPE;
-      } else if (clazz == Double.TYPE) {
-        return DOUBLE_TYPE;
-      } else if (clazz == Float.TYPE) {
-        return FLOAT_TYPE;
-      } else if (clazz == Long.TYPE) {
-        return LONG_TYPE;
-      } else {
-        throw new AssertionError();
-      }
+      if (clazz == Integer.TYPE) return INT_TYPE; else
+      if (clazz == Void.TYPE) return VOID_TYPE; else
+      if (clazz == Boolean.TYPE) return BOOLEAN_TYPE; else
+      if (clazz == Byte.TYPE) return BYTE_TYPE; else
+      if (clazz == Character.TYPE) return CHAR_TYPE; else
+      if (clazz == Short.TYPE) return SHORT_TYPE; else
+      if (clazz == Double.TYPE) return DOUBLE_TYPE; else
+      if (clazz == Float.TYPE) return FLOAT_TYPE; else
+      if (clazz == Long.TYPE) return LONG_TYPE; else
+      throw new AssertionError();
     } else {
       return getType(getDescriptor(clazz));
     }
@@ -84,7 +73,7 @@ public class Type {
   }
 
   public Type getElementType() {
-    final int numDimensions = getDimensions();
+    var numDimensions = getDimensions();
     return getTypeInternal(valueBuffer, valueBegin + numDimensions, valueEnd);
   }
 
@@ -106,9 +95,9 @@ public class Type {
 
   public static Type[] getArgumentTypes(String methodDescriptor) {
     // First step: compute the number of argument types in methodDescriptor.
-    int numArgumentTypes = 0;
+    var numArgumentTypes = 0;
     // Skip the first character, which is always a '('.
-    int currentOffset = 1;
+    var currentOffset = 1;
     // Parse the argument types, one at a each loop iteration.
     while (methodDescriptor.charAt(currentOffset) != ')') {
       while (methodDescriptor.charAt(currentOffset) == '[') {
@@ -120,15 +109,14 @@ public class Type {
       }
       ++numArgumentTypes;
     }
-
     // Second step: create a Type instance for each argument type.
-    Type[] argumentTypes = new Type[numArgumentTypes];
+    var argumentTypes = new Type[numArgumentTypes];
     // Skip the first character, which is always a '('.
     currentOffset = 1;
     // Parse and create the argument types, one at each loop iteration.
-    int currentArgumentTypeIndex = 0;
+    var currentArgumentTypeIndex = 0;
     while (methodDescriptor.charAt(currentOffset) != ')') {
-      final int currentArgumentTypeOffset = currentOffset;
+      var currentArgumentTypeOffset = currentOffset;
       while (methodDescriptor.charAt(currentOffset) == '[') {
         currentOffset++;
       }
@@ -136,16 +124,15 @@ public class Type {
         // Skip the argument descriptor content.
         currentOffset = methodDescriptor.indexOf(';', currentOffset) + 1;
       }
-      argumentTypes[currentArgumentTypeIndex++] = getTypeInternal(methodDescriptor, currentArgumentTypeOffset,
-              currentOffset);
+      argumentTypes[currentArgumentTypeIndex++] = getTypeInternal(methodDescriptor, currentArgumentTypeOffset, currentOffset);
     }
     return argumentTypes;
   }
 
   static Type[] getArgumentTypes(Method method) {
-    Class<?>[] classes = method.getParameterTypes();
-    Type[] types = new Type[classes.length];
-    for (int i = classes.length - 1; i >= 0; --i) {
+    var classes = method.getParameterTypes();
+    var types = new Type[classes.length];
+    for (var i = classes.length - 1; i >= 0; --i) {
       types[i] = getType(classes[i]);
     }
     return types;
@@ -157,7 +144,7 @@ public class Type {
 
   public static Type getReturnType(String methodDescriptor) {
     // Skip the first character, which is always a '('.
-    int currentOffset = 1;
+    var currentOffset = 1;
     // Skip the argument types, one at a each loop iteration.
     while (methodDescriptor.charAt(currentOffset) != ')') {
       while (methodDescriptor.charAt(currentOffset) == '[') {
@@ -176,68 +163,44 @@ public class Type {
   }
 
   static Type getTypeInternal(String descriptorBuffer, int descriptorBegin, int descriptorEnd) {
-    switch (descriptorBuffer.charAt(descriptorBegin)) {
-      case 'V':
-        return VOID_TYPE;
-      case 'Z':
-        return BOOLEAN_TYPE;
-      case 'C':
-        return CHAR_TYPE;
-      case 'B':
-        return BYTE_TYPE;
-      case 'S':
-        return SHORT_TYPE;
-      case 'I':
-        return INT_TYPE;
-      case 'F':
-        return FLOAT_TYPE;
-      case 'J':
-        return LONG_TYPE;
-      case 'D':
-        return DOUBLE_TYPE;
-      case '[':
-        return new Type(ARRAY, descriptorBuffer, descriptorBegin, descriptorEnd);
-      case 'L':
-        return new Type(OBJECT, descriptorBuffer, descriptorBegin + 1, descriptorEnd - 1);
-      case '(':
-        return new Type(METHOD, descriptorBuffer, descriptorBegin, descriptorEnd);
-      default:
-        throw new IllegalArgumentException();
-    }
+    return switch (descriptorBuffer.charAt(descriptorBegin)) {
+      case 'V' -> VOID_TYPE;
+      case 'Z' -> BOOLEAN_TYPE;
+      case 'C' -> CHAR_TYPE;
+      case 'B' -> BYTE_TYPE;
+      case 'S' -> SHORT_TYPE;
+      case 'I' -> INT_TYPE;
+      case 'F' -> FLOAT_TYPE;
+      case 'J' -> LONG_TYPE;
+      case 'D' -> DOUBLE_TYPE;
+      case '[' -> new Type(ARRAY, descriptorBuffer, descriptorBegin, descriptorEnd);
+      case 'L' -> new Type(OBJECT, descriptorBuffer, descriptorBegin + 1, descriptorEnd - 1);
+      case '(' -> new Type(METHOD, descriptorBuffer, descriptorBegin, descriptorEnd);
+      default -> throw new IllegalArgumentException();
+    };
   }
 
   public String getClassName() {
-    switch (sort) {
-      case VOID:
-        return "void";
-      case BOOLEAN:
-        return "boolean";
-      case CHAR:
-        return "char";
-      case BYTE:
-        return "byte";
-      case SHORT:
-        return "short";
-      case INT:
-        return "int";
-      case FLOAT:
-        return "float";
-      case LONG:
-        return "long";
-      case DOUBLE:
-        return "double";
-      case ARRAY:
-        StringBuilder stringBuilder = new StringBuilder(getElementType().getClassName());
-        for (int i = getDimensions(); i > 0; --i) {
+    return switch (sort) {
+      case VOID -> "void";
+      case BOOLEAN -> "boolean";
+      case CHAR -> "char";
+      case BYTE -> "byte";
+      case SHORT -> "short";
+      case INT -> "int";
+      case FLOAT -> "float";
+      case LONG -> "long";
+      case DOUBLE -> "double";
+      case OBJECT, INTERNAL -> valueBuffer.substring(valueBegin, valueEnd).replace('/', '.');
+      case ARRAY -> {
+        var stringBuilder = new StringBuilder(getElementType().getClassName());
+        for (var i = getDimensions(); i > 0; --i) {
           stringBuilder.append("[]");
         }
-        return stringBuilder.toString();
-      case OBJECT:
-      case INTERNAL:
-        return valueBuffer.substring(valueBegin, valueEnd).replace('/', '.');
-      default:
-        throw new AssertionError();
-    }
+        yield stringBuilder.toString();
+      }
+      default -> throw new AssertionError();
+    };
   }
 
   public String getInternalName() {
@@ -249,35 +212,33 @@ public class Type {
   }
 
   public String getDescriptor() {
-    if (sort == OBJECT) {
-      return valueBuffer.substring(valueBegin - 1, valueEnd + 1);
-    } else if (sort == INTERNAL) {
-      return new StringBuilder().append('L').append(valueBuffer, valueBegin, valueEnd).append(';').toString();
-    } else {
-      return valueBuffer.substring(valueBegin, valueEnd);
-    }
+    return switch (sort) {
+      case OBJECT -> valueBuffer.substring(valueBegin - 1, valueEnd + 1);
+      case INTERNAL -> new StringBuilder().append('L').append(valueBuffer, valueBegin, valueEnd).append(';').toString();
+      default -> valueBuffer.substring(valueBegin, valueEnd);
+    };
   }
 
   public static String getDescriptor(Class<?> clazz) {
-    StringBuilder stringBuilder = new StringBuilder();
+    var stringBuilder = new StringBuilder();
     appendDescriptor(clazz, stringBuilder);
     return stringBuilder.toString();
   }
 
   static String getConstructorDescriptor(Constructor<?> constructor) {
-    StringBuilder stringBuilder = new StringBuilder();
+    var stringBuilder = new StringBuilder();
     stringBuilder.append('(');
-    Class<?>[] parameters = constructor.getParameterTypes();
-    for (Class<?> parameter : parameters) {
+    var parameters = constructor.getParameterTypes();
+    for (var parameter : parameters) {
       appendDescriptor(parameter, stringBuilder);
     }
     return stringBuilder.append(")V").toString();
   }
 
   public static String getMethodDescriptor(Type returnType, Type... argumentTypes) {
-    StringBuilder stringBuilder = new StringBuilder();
+    var stringBuilder = new StringBuilder();
     stringBuilder.append('(');
-    for (Type argumentType : argumentTypes) {
+    for (var argumentType : argumentTypes) {
       argumentType.appendDescriptor(stringBuilder);
     }
     stringBuilder.append(')');
@@ -286,10 +247,10 @@ public class Type {
   }
 
   static String getMethodDescriptor(Method method) {
-    StringBuilder stringBuilder = new StringBuilder();
+    var stringBuilder = new StringBuilder();
     stringBuilder.append('(');
-    Class<?>[] parameters = method.getParameterTypes();
-    for (Class<?> parameter : parameters) {
+    var parameters = method.getParameterTypes();
+    for (var parameter : parameters) {
       appendDescriptor(parameter, stringBuilder);
     }
     stringBuilder.append(')');
@@ -298,51 +259,38 @@ public class Type {
   }
 
   void appendDescriptor(StringBuilder stringBuilder) {
-    if (sort == OBJECT) {
-      stringBuilder.append(valueBuffer, valueBegin - 1, valueEnd + 1);
-    } else if (sort == INTERNAL) {
-      stringBuilder.append('L').append(valueBuffer, valueBegin, valueEnd).append(';');
-    } else {
-      stringBuilder.append(valueBuffer, valueBegin, valueEnd);
+    switch (sort) {
+      case OBJECT -> stringBuilder.append(valueBuffer, valueBegin - 1, valueEnd + 1);
+      case INTERNAL -> stringBuilder.append('L').append(valueBuffer, valueBegin, valueEnd).append(';');
+      default -> stringBuilder.append(valueBuffer, valueBegin, valueEnd);
     }
   }
 
   static void appendDescriptor(Class<?> clazz, StringBuilder stringBuilder) {
-    Class<?> currentClass = clazz;
+    var currentClass = clazz;
     while (currentClass.isArray()) {
       stringBuilder.append('[');
       currentClass = currentClass.getComponentType();
     }
     if (currentClass.isPrimitive()) {
       char descriptor;
-      if (currentClass == Integer.TYPE) {
-        descriptor = 'I';
-      } else if (currentClass == Void.TYPE) {
-        descriptor = 'V';
-      } else if (currentClass == Boolean.TYPE) {
-        descriptor = 'Z';
-      } else if (currentClass == Byte.TYPE) {
-        descriptor = 'B';
-      } else if (currentClass == Character.TYPE) {
-        descriptor = 'C';
-      } else if (currentClass == Short.TYPE) {
-        descriptor = 'S';
-      } else if (currentClass == Double.TYPE) {
-        descriptor = 'D';
-      } else if (currentClass == Float.TYPE) {
-        descriptor = 'F';
-      } else if (currentClass == Long.TYPE) {
-        descriptor = 'J';
-      } else {
-        throw new AssertionError();
-      }
+      if (currentClass == Integer.TYPE) descriptor = 'I'; else
+      if (currentClass == Void.TYPE) descriptor = 'V'; else
+      if (currentClass == Boolean.TYPE) descriptor = 'Z'; else
+      if (currentClass == Byte.TYPE) descriptor = 'B'; else
+      if (currentClass == Character.TYPE) descriptor = 'C'; else
+      if (currentClass == Short.TYPE) descriptor = 'S'; else
+      if (currentClass == Double.TYPE) descriptor = 'D'; else
+      if (currentClass == Float.TYPE) descriptor = 'F'; else
+      if (currentClass == Long.TYPE) descriptor = 'J'; else
+      throw new AssertionError();
       stringBuilder.append(descriptor);
     } else {
       stringBuilder.append('L');
-      String name = currentClass.getName();
-      int nameLength = name.length();
-      for (int i = 0; i < nameLength; ++i) {
-        char car = name.charAt(i);
+      var name = currentClass.getName();
+      var nameLength = name.length();
+      for (var i = 0; i < nameLength; ++i) {
+        var car = name.charAt(i);
         stringBuilder.append(car == '.' ? '/' : car);
       }
       stringBuilder.append(';');
@@ -354,7 +302,7 @@ public class Type {
   }
 
   int getDimensions() {
-    int numDimensions = 1;
+    var numDimensions = 1;
     while (valueBuffer.charAt(valueBegin + numDimensions) == '[') {
       numDimensions++;
     }
@@ -362,25 +310,12 @@ public class Type {
   }
 
   public int getSize() {
-    switch (sort) {
-      case VOID:
-        return 0;
-      case BOOLEAN:
-      case CHAR:
-      case BYTE:
-      case SHORT:
-      case INT:
-      case FLOAT:
-      case ARRAY:
-      case OBJECT:
-      case INTERNAL:
-        return 1;
-      case LONG:
-      case DOUBLE:
-        return 2;
-      default:
-        throw new AssertionError();
-    }
+    return switch (sort) {
+      case VOID -> 0;
+      case BOOLEAN, CHAR, BYTE, SHORT, INT, FLOAT, ARRAY, OBJECT, INTERNAL -> 1;
+      case LONG, DOUBLE -> 2;
+      default -> throw new AssertionError();
+    };
   }
 
   int getArgumentsAndReturnSizes() {
@@ -388,10 +323,10 @@ public class Type {
   }
 
   static int getArgumentsAndReturnSizes(String methodDescriptor) {
-    int argumentsSize = 1;
+    var argumentsSize = 1;
     // Skip the first character, which is always a '('.
-    int currentOffset = 1;
-    int currentChar = methodDescriptor.charAt(currentOffset);
+    var currentOffset = 1;
+    var currentChar = methodDescriptor.charAt(currentOffset);
     // Parse the argument types and compute their size, one at a each loop iteration.
     while (currentChar != ')') {
       if (currentChar == 'J' || currentChar == 'D') {
@@ -420,63 +355,39 @@ public class Type {
 
   public int getOpcode(int opcode) {
     if (opcode == Opcodes.IALOAD || opcode == Opcodes.IASTORE) {
-      switch (sort) {
-        case BOOLEAN:
-        case BYTE:
-          return opcode + (Opcodes.BALOAD - Opcodes.IALOAD);
-        case CHAR:
-          return opcode + (Opcodes.CALOAD - Opcodes.IALOAD);
-        case SHORT:
-          return opcode + (Opcodes.SALOAD - Opcodes.IALOAD);
-        case INT:
-          return opcode;
-        case FLOAT:
-          return opcode + (Opcodes.FALOAD - Opcodes.IALOAD);
-        case LONG:
-          return opcode + (Opcodes.LALOAD - Opcodes.IALOAD);
-        case DOUBLE:
-          return opcode + (Opcodes.DALOAD - Opcodes.IALOAD);
-        case ARRAY:
-        case OBJECT:
-        case INTERNAL:
-          return opcode + (Opcodes.AALOAD - Opcodes.IALOAD);
-        case METHOD:
-        case VOID:
-          throw new UnsupportedOperationException();
-        default:
-          throw new AssertionError();
-      }
+      return switch (sort) {
+        case BOOLEAN, BYTE -> opcode + (Opcodes.BALOAD - Opcodes.IALOAD);
+        case CHAR -> opcode + (Opcodes.CALOAD - Opcodes.IALOAD);
+        case SHORT -> opcode + (Opcodes.SALOAD - Opcodes.IALOAD);
+        case INT -> opcode;
+        case FLOAT -> opcode + (Opcodes.FALOAD - Opcodes.IALOAD);
+        case LONG -> opcode + (Opcodes.LALOAD - Opcodes.IALOAD);
+        case DOUBLE -> opcode + (Opcodes.DALOAD - Opcodes.IALOAD);
+        case ARRAY, OBJECT, INTERNAL -> opcode + (Opcodes.AALOAD - Opcodes.IALOAD);
+        case METHOD, VOID -> throw new UnsupportedOperationException();
+        default -> throw new AssertionError();
+      };
     } else {
-      switch (sort) {
-        case VOID:
+      return switch (sort) {
+        case BOOLEAN, BYTE, CHAR, SHORT, INT -> opcode;
+        case FLOAT -> opcode + (Opcodes.FRETURN - Opcodes.IRETURN);
+        case LONG -> opcode + (Opcodes.LRETURN - Opcodes.IRETURN);
+        case DOUBLE -> opcode + (Opcodes.DRETURN - Opcodes.IRETURN);
+        case VOID -> {
           if (opcode != Opcodes.IRETURN) {
             throw new UnsupportedOperationException();
           }
-          return Opcodes.RETURN;
-        case BOOLEAN:
-        case BYTE:
-        case CHAR:
-        case SHORT:
-        case INT:
-          return opcode;
-        case FLOAT:
-          return opcode + (Opcodes.FRETURN - Opcodes.IRETURN);
-        case LONG:
-          return opcode + (Opcodes.LRETURN - Opcodes.IRETURN);
-        case DOUBLE:
-          return opcode + (Opcodes.DRETURN - Opcodes.IRETURN);
-        case ARRAY:
-        case OBJECT:
-        case INTERNAL:
+          yield Opcodes.RETURN;
+        }
+        case ARRAY, OBJECT, INTERNAL -> {
           if (opcode != Opcodes.ILOAD && opcode != Opcodes.ISTORE && opcode != Opcodes.IRETURN) {
             throw new UnsupportedOperationException();
           }
-          return opcode + (Opcodes.ARETURN - Opcodes.IRETURN);
-        case METHOD:
-          throw new UnsupportedOperationException();
-        default:
-          throw new AssertionError();
-      }
+          yield opcode + (Opcodes.ARETURN - Opcodes.IRETURN);
+        }
+        case METHOD -> throw new UnsupportedOperationException();
+        default -> throw new AssertionError();
+      };
     }
   }
 
@@ -488,14 +399,14 @@ public class Type {
     if (!(object instanceof Type)) {
       return false;
     }
-    Type other = (Type) object;
+    var other = (Type) object;
     if ((sort == INTERNAL ? OBJECT : sort) != (other.sort == INTERNAL ? OBJECT : other.sort)) {
       return false;
     }
-    int begin = valueBegin;
-    int end = valueEnd;
-    int otherBegin = other.valueBegin;
-    int otherEnd = other.valueEnd;
+    var begin = valueBegin;
+    var end = valueEnd;
+    var otherBegin = other.valueBegin;
+    var otherEnd = other.valueEnd;
     // Compare the values.
     if (end - begin != otherEnd - otherBegin) {
       return false;
@@ -510,7 +421,7 @@ public class Type {
 
   @Override
   public int hashCode() {
-    int hashCode = 13 * (sort == INTERNAL ? OBJECT : sort);
+    var hashCode = 13 * (sort == INTERNAL ? OBJECT : sort);
     if (sort >= ARRAY) {
       for (int i = valueBegin, end = valueEnd; i < end; i++) {
         hashCode = 17 * (hashCode + valueBuffer.charAt(i));

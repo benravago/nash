@@ -102,7 +102,7 @@ public class ClassEmitter {
    *        {@code null} if none
    */
   ClassEmitter(Context context, String className, String superClassName, String... interfaceNames) {
-    this(context, new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS));
+    this(context, new ClassWriter());
     cw.visit(ACC_PUBLIC | ACC_SUPER, className, null, superClassName, interfaceNames);
   }
 
@@ -113,7 +113,7 @@ public class ClassEmitter {
    * @param unitClassName Compile unit class name.
    */
   ClassEmitter(String sourceName, String unitClassName, Context context) {
-    this(context, new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+    this(context, new ClassWriter() {
       private static final String OBJECT_CLASS = "java/lang/Object";
       @Override
       protected String getCommonSuperClass(String type1, String type2) {

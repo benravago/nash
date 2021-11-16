@@ -28,94 +28,12 @@ class SymbolTable {
     this.constantPool = new ByteVector();
   }
 
-  SymbolTable(ClassWriter classWriter, ClassReader classReader) {
-    this.classWriter = classWriter;
-    this.sourceClassReader = classReader;
-
-    // Copy the constant pool binary content.
-    byte[] inputBytes = classReader.b;
-    int constantPoolOffset = classReader.getItem(1) - 1;
-    int constantPoolLength = classReader.header - constantPoolOffset;
-    constantPoolCount = classReader.getItemCount();
-    constantPool = new ByteVector(constantPoolLength);
-    constantPool.putByteArray(inputBytes, constantPoolOffset, constantPoolLength);
-
-    // Add the constant pool items in the symbol table entries. Reserve enough space in 'entries' to
-    // avoid too many hash set collisions (entries is not dynamically resized by the addConstant*
-    // method calls below), and to account for bootstrap method entries.
-    entries = new Entry[constantPoolCount * 2];
-    char[] charBuffer = new char[classReader.getMaxStringLength()];
-    boolean hasBootstrapMethods = false;
-    int itemIndex = 1;
-    while (itemIndex < constantPoolCount) {
-      int itemOffset = classReader.getItem(itemIndex);
-      int itemTag = inputBytes[itemOffset - 1];
-      int nameAndTypeItemOffset;
-      switch (itemTag) {
-        case Symbol.CONSTANT_FIELDREF_TAG:
-        case Symbol.CONSTANT_METHODREF_TAG:
-        case Symbol.CONSTANT_INTERFACE_METHODREF_TAG:
-          nameAndTypeItemOffset = classReader.getItem(classReader.readUnsignedShort(itemOffset + 2));
-          addConstantMemberReference(itemIndex, itemTag, classReader.readClass(itemOffset, charBuffer),
-                  classReader.readUTF8(nameAndTypeItemOffset, charBuffer),
-                  classReader.readUTF8(nameAndTypeItemOffset + 2, charBuffer));
-          break;
-        case Symbol.CONSTANT_INTEGER_TAG:
-        case Symbol.CONSTANT_FLOAT_TAG:
-          addConstantIntegerOrFloat(itemIndex, itemTag, classReader.readInt(itemOffset));
-          break;
-        case Symbol.CONSTANT_NAME_AND_TYPE_TAG:
-          addConstantNameAndType(itemIndex, classReader.readUTF8(itemOffset, charBuffer),
-                  classReader.readUTF8(itemOffset + 2, charBuffer));
-          break;
-        case Symbol.CONSTANT_LONG_TAG:
-        case Symbol.CONSTANT_DOUBLE_TAG:
-          addConstantLongOrDouble(itemIndex, itemTag, classReader.readLong(itemOffset));
-          break;
-        case Symbol.CONSTANT_UTF8_TAG:
-          addConstantUtf8(itemIndex, classReader.readUtf(itemIndex, charBuffer));
-          break;
-        case Symbol.CONSTANT_METHOD_HANDLE_TAG:
-          int memberRefItemOffset = classReader.getItem(classReader.readUnsignedShort(itemOffset + 1));
-          nameAndTypeItemOffset = classReader.getItem(classReader.readUnsignedShort(memberRefItemOffset + 2));
-          addConstantMethodHandle(itemIndex, classReader.readByte(itemOffset),
-                  classReader.readClass(memberRefItemOffset, charBuffer),
-                  classReader.readUTF8(nameAndTypeItemOffset, charBuffer),
-                  classReader.readUTF8(nameAndTypeItemOffset + 2, charBuffer));
-          break;
-        case Symbol.CONSTANT_DYNAMIC_TAG:
-        case Symbol.CONSTANT_INVOKE_DYNAMIC_TAG:
-          hasBootstrapMethods = true;
-          nameAndTypeItemOffset = classReader.getItem(classReader.readUnsignedShort(itemOffset + 2));
-          addConstantDynamicOrInvokeDynamicReference(itemTag, itemIndex,
-                  classReader.readUTF8(nameAndTypeItemOffset, charBuffer),
-                  classReader.readUTF8(nameAndTypeItemOffset + 2, charBuffer), classReader.readUnsignedShort(itemOffset));
-          break;
-        case Symbol.CONSTANT_STRING_TAG:
-        case Symbol.CONSTANT_CLASS_TAG:
-        case Symbol.CONSTANT_METHOD_TYPE_TAG:
-        case Symbol.CONSTANT_MODULE_TAG:
-        case Symbol.CONSTANT_PACKAGE_TAG:
-          addConstantUtf8Reference(itemIndex, itemTag, classReader.readUTF8(itemOffset, charBuffer));
-          break;
-        default:
-          throw new IllegalArgumentException();
-      }
-      itemIndex += (itemTag == Symbol.CONSTANT_LONG_TAG || itemTag == Symbol.CONSTANT_DOUBLE_TAG) ? 2 : 1;
-    }
-
-    // Copy the BootstrapMethods, if any.
-    if (hasBootstrapMethods) {
-      copyBootstrapMethods(classReader, charBuffer);
-    }
-  }
-
   void copyBootstrapMethods(ClassReader classReader, char[] charBuffer) {
     // Find attributOffset of the 'bootstrap_methods' array.
-    byte[] inputBytes = classReader.b;
-    int currentAttributeOffset = classReader.getFirstAttributeOffset();
-    for (int i = classReader.readUnsignedShort(currentAttributeOffset - 2); i > 0; --i) {
-      String attributeName = classReader.readUTF8(currentAttributeOffset, charBuffer);
+    var inputBytes = classReader.b;
+    var currentAttributeOffset = classReader.getFirstAttributeOffset();
+    for (var i = classReader.readUnsignedShort(currentAttributeOffset - 2); i > 0; --i) {
+      var attributeName = classReader.readUTF8(currentAttributeOffset, charBuffer);
       if (Constants.BOOTSTRAP_METHODS.equals(attributeName)) {
         bootstrapMethodCount = classReader.readUnsignedShort(currentAttributeOffset + 6);
         break;
@@ -124,22 +42,21 @@ class SymbolTable {
     }
     if (bootstrapMethodCount > 0) {
       // Compute the offset and the length of the BootstrapMethods 'bootstrap_methods' array.
-      int bootstrapMethodsOffset = currentAttributeOffset + 8;
-      int bootstrapMethodsLength = classReader.readInt(currentAttributeOffset + 2) - 2;
+      var bootstrapMethodsOffset = currentAttributeOffset + 8;
+      var bootstrapMethodsLength = classReader.readInt(currentAttributeOffset + 2) - 2;
       bootstrapMethods = new ByteVector(bootstrapMethodsLength);
       bootstrapMethods.putByteArray(inputBytes, bootstrapMethodsOffset, bootstrapMethodsLength);
-
       // Add each bootstrap method in the symbol table entries.
-      int currentOffset = bootstrapMethodsOffset;
-      for (int i = 0; i < bootstrapMethodCount; i++) {
-        int offset = currentOffset - bootstrapMethodsOffset;
-        int bootstrapMethodRef = classReader.readUnsignedShort(currentOffset);
+      var currentOffset = bootstrapMethodsOffset;
+      for (var i = 0; i < bootstrapMethodCount; i++) {
+        var offset = currentOffset - bootstrapMethodsOffset;
+        var bootstrapMethodRef = classReader.readUnsignedShort(currentOffset);
         currentOffset += 2;
-        int numBootstrapArguments = classReader.readUnsignedShort(currentOffset);
+        var numBootstrapArguments = classReader.readUnsignedShort(currentOffset);
         currentOffset += 2;
-        int hashCode = classReader.readConst(bootstrapMethodRef, charBuffer).hashCode();
+        var hashCode = classReader.readConst(bootstrapMethodRef, charBuffer).hashCode();
         while (numBootstrapArguments-- > 0) {
-          int bootstrapArgument = classReader.readUnsignedShort(currentOffset);
+          var bootstrapArgument = classReader.readUnsignedShort(currentOffset);
           currentOffset += 2;
           hashCode ^= classReader.readConst(bootstrapArgument, charBuffer).hashCode();
         }
@@ -189,8 +106,10 @@ class SymbolTable {
 
   void putBootstrapMethods(ByteVector output) {
     if (bootstrapMethods != null) {
-      output.putShort(addConstantUtf8(Constants.BOOTSTRAP_METHODS)).putInt(bootstrapMethods.length + 2)
-              .putShort(bootstrapMethodCount).putByteArray(bootstrapMethods.data, 0, bootstrapMethods.length);
+      output.putShort(addConstantUtf8(Constants.BOOTSTRAP_METHODS))
+            .putInt(bootstrapMethods.length + 2)
+            .putShort(bootstrapMethodCount)
+            .putByteArray(bootstrapMethods.data, 0, bootstrapMethods.length);
     }
   }
 
@@ -200,14 +119,14 @@ class SymbolTable {
 
   Entry put(Entry entry) {
     if (entryCount > (entries.length * 3) / 4) {
-      int currentCapacity = entries.length;
-      int newCapacity = currentCapacity * 2 + 1;
-      Entry[] newEntries = new Entry[newCapacity];
-      for (int i = currentCapacity - 1; i >= 0; --i) {
-        Entry currentEntry = entries[i];
+      var currentCapacity = entries.length;
+      var newCapacity = currentCapacity * 2 + 1;
+      var newEntries = new Entry[newCapacity];
+      for (var i = currentCapacity - 1; i >= 0; --i) {
+        var currentEntry = entries[i];
         while (currentEntry != null) {
-          int newCurrentEntryIndex = currentEntry.hashCode % newCapacity;
-          Entry nextEntry = currentEntry.next;
+          var newCurrentEntryIndex = currentEntry.hashCode % newCapacity;
+          var nextEntry = currentEntry.next;
           currentEntry.next = newEntries[newCurrentEntryIndex];
           newEntries[newCurrentEntryIndex] = currentEntry;
           currentEntry = nextEntry;
@@ -216,55 +135,48 @@ class SymbolTable {
       entries = newEntries;
     }
     entryCount++;
-    int index = entry.hashCode % entries.length;
+    var index = entry.hashCode % entries.length;
     entry.next = entries[index];
     return entries[index] = entry;
   }
 
   void add(Entry entry) {
     entryCount++;
-    int index = entry.hashCode % entries.length;
+    var index = entry.hashCode % entries.length;
     entry.next = entries[index];
     entries[index] = entry;
   }
 
   Symbol addConstant(Object value) {
-    if (value instanceof Integer) {
-      return addConstantInteger(((Integer) value).intValue());
-    } else if (value instanceof Byte) {
-      return addConstantInteger(((Byte) value).intValue());
-    } else if (value instanceof Character) {
-      return addConstantInteger(((Character) value).charValue());
-    } else if (value instanceof Short) {
-      return addConstantInteger(((Short) value).intValue());
-    } else if (value instanceof Boolean) {
-      return addConstantInteger(((Boolean) value).booleanValue() ? 1 : 0);
-    } else if (value instanceof Float) {
-      return addConstantFloat(((Float) value).floatValue());
-    } else if (value instanceof Long) {
-      return addConstantLong(((Long) value).longValue());
-    } else if (value instanceof Double) {
-      return addConstantDouble(((Double) value).doubleValue());
-    } else if (value instanceof String) {
-      return addConstantString((String) value);
-    } else if (value instanceof Type) {
-      Type type = (Type) value;
-      int typeSort = type.getSort();
-      if (typeSort == Type.OBJECT) {
-        return addConstantClass(type.getInternalName());
-      } else if (typeSort == Type.METHOD) {
-        return addConstantMethodType(type.getDescriptor());
-      } else { // type is a primitive or array type.
-        return addConstantClass(type.getDescriptor());
-      }
-    } else if (value instanceof Handle) {
-      Handle handle = (Handle) value;
-      return addConstantMethodHandle(handle.getTag(), handle.getOwner(), handle.getName(), handle.getDesc(),
-              handle.isInterface());
-    } else if (value instanceof ConstantDynamic) {
-      ConstantDynamic constantDynamic = (ConstantDynamic) value;
-      return addConstantDynamic(constantDynamic.getName(), constantDynamic.getDescriptor(),
-              constantDynamic.getBootstrapMethod(), constantDynamic.getBootstrapMethodArgumentsUnsafe());
+    if (value instanceof Integer i) {
+      return addConstantInteger(i);
+    } else if (value instanceof Byte b) {
+      return addConstantInteger(b.intValue());
+    } else if (value instanceof Character c) {
+      return addConstantInteger(c);
+    } else if (value instanceof Short s) {
+      return addConstantInteger(s.intValue());
+    } else if (value instanceof Boolean b) {
+      return addConstantInteger(b ? 1 : 0);
+    } else if (value instanceof Float f) {
+      return addConstantFloat(f);
+    } else if (value instanceof Long l) {
+      return addConstantLong(l);
+    } else if (value instanceof Double d) {
+      return addConstantDouble(d);
+    } else if (value instanceof String s) {
+      return addConstantString(s);
+    } else if (value instanceof Type t) {
+      var typeSort = t.getSort();
+      return switch (typeSort) {
+        case Type.OBJECT -> addConstantClass(t.getInternalName());
+        case Type.METHOD -> addConstantMethodType(t.getDescriptor());
+        default -> addConstantClass(t.getDescriptor()); // type is a primitive or array type.
+      };
+    } else if (value instanceof Handle h) {
+      return addConstantMethodHandle(h.getTag(), h.getOwner(), h.getName(), h.getDesc(), h.isInterface());
+    } else if (value instanceof ConstantDynamic cd) {
+      return addConstantDynamic(cd.getName(), cd.getDescriptor(), cd.getBootstrapMethod(), cd.getBootstrapMethodArgumentsUnsafe());
     } else {
       throw new IllegalArgumentException("value " + value);
     }
@@ -279,16 +191,15 @@ class SymbolTable {
   }
 
   Symbol addConstantMethodref(String owner, String name, String descriptor, boolean isInterface) {
-    int tag = isInterface ? Symbol.CONSTANT_INTERFACE_METHODREF_TAG : Symbol.CONSTANT_METHODREF_TAG;
+    var tag = isInterface ? Symbol.CONSTANT_INTERFACE_METHODREF_TAG : Symbol.CONSTANT_METHODREF_TAG;
     return addConstantMemberReference(tag, owner, name, descriptor);
   }
 
   Entry addConstantMemberReference(int tag, String owner, String name, String descriptor) {
-    int hashCode = hash(tag, owner, name, descriptor);
-    Entry entry = get(hashCode);
+    var hashCode = hash(tag, owner, name, descriptor);
+    var entry = get(hashCode);
     while (entry != null) {
-      if (entry.tag == tag && entry.hashCode == hashCode && entry.owner.equals(owner) && entry.name.equals(name)
-              && entry.value.equals(descriptor)) {
+      if (entry.tag == tag && entry.hashCode == hashCode && entry.owner.equals(owner) && entry.name.equals(name) && entry.value.equals(descriptor)) {
         return entry;
       }
       entry = entry.next;
@@ -314,8 +225,8 @@ class SymbolTable {
   }
 
   Symbol addConstantIntegerOrFloat(int tag, int value) {
-    int hashCode = hash(tag, value);
-    Entry entry = get(hashCode);
+    var hashCode = hash(tag, value);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == tag && entry.hashCode == hashCode && entry.data == value) {
         return entry;
@@ -339,15 +250,15 @@ class SymbolTable {
   }
 
   Symbol addConstantLongOrDouble(int tag, long value) {
-    int hashCode = hash(tag, value);
-    Entry entry = get(hashCode);
+    var hashCode = hash(tag, value);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == tag && entry.hashCode == hashCode && entry.data == value) {
         return entry;
       }
       entry = entry.next;
     }
-    int index = constantPoolCount;
+    var index = constantPoolCount;
     constantPool.putByte(tag).putLong(value);
     constantPoolCount += 2;
     return put(new Entry(index, tag, value, hashCode));
@@ -358,9 +269,9 @@ class SymbolTable {
   }
 
   int addConstantNameAndType(String name, String descriptor) {
-    int tag = Symbol.CONSTANT_NAME_AND_TYPE_TAG;
-    int hashCode = hash(tag, name, descriptor);
-    Entry entry = get(hashCode);
+    var tag = Symbol.CONSTANT_NAME_AND_TYPE_TAG;
+    var hashCode = hash(tag, name, descriptor);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == tag && entry.hashCode == hashCode && entry.name.equals(name) && entry.value.equals(descriptor)) {
         return entry.index;
@@ -377,8 +288,8 @@ class SymbolTable {
   }
 
   int addConstantUtf8(String value) {
-    int hashCode = hash(Symbol.CONSTANT_UTF8_TAG, value);
-    Entry entry = get(hashCode);
+    var hashCode = hash(Symbol.CONSTANT_UTF8_TAG, value);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == Symbol.CONSTANT_UTF8_TAG && entry.hashCode == hashCode && entry.value.equals(value)) {
         return entry.index;
@@ -393,16 +304,13 @@ class SymbolTable {
     add(new Entry(index, Symbol.CONSTANT_UTF8_TAG, value, hash(Symbol.CONSTANT_UTF8_TAG, value)));
   }
 
-  Symbol addConstantMethodHandle(int referenceKind, String owner, String name, String descriptor,
-          boolean isInterface) {
-    int tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
-    // Note that we don't need to include isInterface in the hash computation, because it is
-    // redundant with owner (we can't have the same owner with different isInterface values).
-    int hashCode = hash(tag, owner, name, descriptor, referenceKind);
-    Entry entry = get(hashCode);
+  Symbol addConstantMethodHandle(int referenceKind, String owner, String name, String descriptor, boolean isInterface) {
+    var tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
+    // Note that we don't need to include isInterface in the hash computation, because it is redundant with owner (we can't have the same owner with different isInterface values).
+    var hashCode = hash(tag, owner, name, descriptor, referenceKind);
+    var entry = get(hashCode);
     while (entry != null) {
-      if (entry.tag == tag && entry.hashCode == hashCode && entry.data == referenceKind && entry.owner.equals(owner)
-              && entry.name.equals(name) && entry.value.equals(descriptor)) {
+      if (entry.tag == tag && entry.hashCode == hashCode && entry.data == referenceKind && entry.owner.equals(owner) && entry.name.equals(name) && entry.value.equals(descriptor)) {
         return entry;
       }
       entry = entry.next;
@@ -416,8 +324,8 @@ class SymbolTable {
   }
 
   void addConstantMethodHandle(int index, int referenceKind, String owner, String name, String descriptor) {
-    int tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
-    int hashCode = hash(tag, owner, name, descriptor, referenceKind);
+    var tag = Symbol.CONSTANT_METHOD_HANDLE_TAG;
+    var hashCode = hash(tag, owner, name, descriptor, referenceKind);
     add(new Entry(index, tag, owner, name, descriptor, referenceKind, hashCode));
   }
 
@@ -426,23 +334,20 @@ class SymbolTable {
   }
 
   Symbol addConstantDynamic(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
-    Symbol bootstrapMethod = addBootstrapMethod(bootstrapMethodHandle, bootstrapMethodArguments);
-    return addConstantDynamicOrInvokeDynamicReference(Symbol.CONSTANT_DYNAMIC_TAG, name, descriptor,
-            bootstrapMethod.index);
+    var bootstrapMethod = addBootstrapMethod(bootstrapMethodHandle, bootstrapMethodArguments);
+    return addConstantDynamicOrInvokeDynamicReference(Symbol.CONSTANT_DYNAMIC_TAG, name, descriptor, bootstrapMethod.index);
   }
 
   Symbol addConstantInvokeDynamic(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
-    Symbol bootstrapMethod = addBootstrapMethod(bootstrapMethodHandle, bootstrapMethodArguments);
-    return addConstantDynamicOrInvokeDynamicReference(Symbol.CONSTANT_INVOKE_DYNAMIC_TAG, name, descriptor,
-            bootstrapMethod.index);
+    var bootstrapMethod = addBootstrapMethod(bootstrapMethodHandle, bootstrapMethodArguments);
+    return addConstantDynamicOrInvokeDynamicReference(Symbol.CONSTANT_INVOKE_DYNAMIC_TAG, name, descriptor, bootstrapMethod.index);
   }
 
   Symbol addConstantDynamicOrInvokeDynamicReference(int tag, String name, String descriptor, int bootstrapMethodIndex) {
-    int hashCode = hash(tag, name, descriptor, bootstrapMethodIndex);
-    Entry entry = get(hashCode);
+    var hashCode = hash(tag, name, descriptor, bootstrapMethodIndex);
+    var entry = get(hashCode);
     while (entry != null) {
-      if (entry.tag == tag && entry.hashCode == hashCode && entry.data == bootstrapMethodIndex
-              && entry.name.equals(name) && entry.value.equals(descriptor)) {
+      if (entry.tag == tag && entry.hashCode == hashCode && entry.data == bootstrapMethodIndex && entry.name.equals(name) && entry.value.equals(descriptor)) {
         return entry;
       }
       entry = entry.next;
@@ -452,7 +357,7 @@ class SymbolTable {
   }
 
   void addConstantDynamicOrInvokeDynamicReference(int tag, int index, String name, String descriptor, int bootstrapMethodIndex) {
-    int hashCode = hash(tag, name, descriptor, bootstrapMethodIndex);
+    var hashCode = hash(tag, name, descriptor, bootstrapMethodIndex);
     add(new Entry(index, tag, null, name, descriptor, bootstrapMethodIndex, hashCode));
   }
 
@@ -465,8 +370,8 @@ class SymbolTable {
   }
 
   Symbol addConstantUtf8Reference(int tag, String value) {
-    int hashCode = hash(tag, value);
-    Entry entry = get(hashCode);
+    var hashCode = hash(tag, value);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == tag && entry.hashCode == hashCode && entry.value.equals(value)) {
         return entry;
@@ -482,52 +387,41 @@ class SymbolTable {
   }
 
   Symbol addBootstrapMethod(Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
-    ByteVector bootstrapMethodsAttribute = bootstrapMethods;
+    var bootstrapMethodsAttribute = bootstrapMethods;
     if (bootstrapMethodsAttribute == null) {
       bootstrapMethodsAttribute = bootstrapMethods = new ByteVector();
     }
-
-    // The bootstrap method arguments can be Constant_Dynamic values, which reference other
-    // bootstrap methods. We must therefore add the bootstrap method arguments to the constant pool
-    // and BootstrapMethods attribute first, so that the BootstrapMethods attribute is not modified
-    // while adding the given bootstrap method to it, in the rest of this method.
-    for (Object bootstrapMethodArgument : bootstrapMethodArguments) {
+    // The bootstrap method arguments can be Constant_Dynamic values, which reference other bootstrap methods. We must therefore add the bootstrap method arguments to the constant pool and BootstrapMethods attribute first, so that the BootstrapMethods attribute is not modified while adding the given bootstrap method to it, in the rest of this method.
+    for (var bootstrapMethodArgument : bootstrapMethodArguments) {
       addConstant(bootstrapMethodArgument);
     }
-
-    // Write the bootstrap method in the BootstrapMethods table. This is necessary to be able to
-    // compare it with existing ones, and will be reverted below if there is already a similar
-    // bootstrap method.
-    int bootstrapMethodOffset = bootstrapMethodsAttribute.length;
-    bootstrapMethodsAttribute.putShort(addConstantMethodHandle(bootstrapMethodHandle.getTag(),
-            bootstrapMethodHandle.getOwner(), bootstrapMethodHandle.getName(), bootstrapMethodHandle.getDesc(),
-            bootstrapMethodHandle.isInterface()).index);
-    int numBootstrapArguments = bootstrapMethodArguments.length;
+    // Write the bootstrap method in the BootstrapMethods table. This is necessary to be able to compare it with existing ones, and will be reverted below if there is already a similar bootstrap method.
+    var bootstrapMethodOffset = bootstrapMethodsAttribute.length;
+    bootstrapMethodsAttribute.putShort(addConstantMethodHandle(bootstrapMethodHandle.getTag(), bootstrapMethodHandle.getOwner(), bootstrapMethodHandle.getName(), bootstrapMethodHandle.getDesc(), bootstrapMethodHandle.isInterface()).index);
+    var numBootstrapArguments = bootstrapMethodArguments.length;
     bootstrapMethodsAttribute.putShort(numBootstrapArguments);
-    for (Object bootstrapMethodArgument : bootstrapMethodArguments) {
+    for (var bootstrapMethodArgument : bootstrapMethodArguments) {
       bootstrapMethodsAttribute.putShort(addConstant(bootstrapMethodArgument).index);
     }
-
     // Compute the length and the hash code of the bootstrap method.
-    int bootstrapMethodlength = bootstrapMethodsAttribute.length - bootstrapMethodOffset;
-    int hashCode = bootstrapMethodHandle.hashCode();
-    for (Object bootstrapMethodArgument : bootstrapMethodArguments) {
+    var bootstrapMethodlength = bootstrapMethodsAttribute.length - bootstrapMethodOffset;
+    var hashCode = bootstrapMethodHandle.hashCode();
+    for (var bootstrapMethodArgument : bootstrapMethodArguments) {
       hashCode ^= bootstrapMethodArgument.hashCode();
     }
     hashCode &= 0x7FFFFFFF;
-
     // Add the bootstrap method to the symbol table or revert the above changes.
     return addBootstrapMethod(bootstrapMethodOffset, bootstrapMethodlength, hashCode);
   }
 
   Symbol addBootstrapMethod(int offset, int length, int hashCode) {
-    byte[] bootstrapMethodsData = bootstrapMethods.data;
-    Entry entry = get(hashCode);
+    var bootstrapMethodsData = bootstrapMethods.data;
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == Symbol.BOOTSTRAP_METHOD_TAG && entry.hashCode == hashCode) {
-        int otherOffset = (int) entry.data;
-        boolean isSameBootstrapMethod = true;
-        for (int i = 0; i < length; ++i) {
+        var otherOffset = (int) entry.data;
+        var isSameBootstrapMethod = true;
+        for (var i = 0; i < length; ++i) {
           if (bootstrapMethodsData[offset + i] != bootstrapMethodsData[otherOffset + i]) {
             isSameBootstrapMethod = false;
             break;
@@ -548,8 +442,8 @@ class SymbolTable {
   }
 
   int addType(String value) {
-    int hashCode = hash(Symbol.TYPE_TAG, value);
-    Entry entry = get(hashCode);
+    var hashCode = hash(Symbol.TYPE_TAG, value);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == Symbol.TYPE_TAG && entry.hashCode == hashCode && entry.value.equals(value)) {
         return entry.index;
@@ -560,11 +454,10 @@ class SymbolTable {
   }
 
   int addUninitializedType(String value, int bytecodeOffset) {
-    int hashCode = hash(Symbol.UNINITIALIZED_TYPE_TAG, value, bytecodeOffset);
-    Entry entry = get(hashCode);
+    var hashCode = hash(Symbol.UNINITIALIZED_TYPE_TAG, value, bytecodeOffset);
+    var entry = get(hashCode);
     while (entry != null) {
-      if (entry.tag == Symbol.UNINITIALIZED_TYPE_TAG && entry.hashCode == hashCode && entry.data == bytecodeOffset
-              && entry.value.equals(value)) {
+      if (entry.tag == Symbol.UNINITIALIZED_TYPE_TAG && entry.hashCode == hashCode && entry.data == bytecodeOffset && entry.value.equals(value)) {
         return entry.index;
       }
       entry = entry.next;
@@ -574,18 +467,18 @@ class SymbolTable {
 
   int addMergedType(int typeTableIndex1, int typeTableIndex2) {
     // TODO sort the arguments? The merge result should be independent of their order.
-    long data = typeTableIndex1 | (((long) typeTableIndex2) << 32);
-    int hashCode = hash(Symbol.MERGED_TYPE_TAG, typeTableIndex1 + typeTableIndex2);
-    Entry entry = get(hashCode);
+    var data = typeTableIndex1 | (((long) typeTableIndex2) << 32);
+    var hashCode = hash(Symbol.MERGED_TYPE_TAG, typeTableIndex1 + typeTableIndex2);
+    var entry = get(hashCode);
     while (entry != null) {
       if (entry.tag == Symbol.MERGED_TYPE_TAG && entry.hashCode == hashCode && entry.data == data) {
         return entry.info;
       }
       entry = entry.next;
     }
-    String type1 = typeTable[typeTableIndex1].value;
-    String type2 = typeTable[typeTableIndex2].value;
-    int commonSuperTypeIndex = addType(classWriter.getCommonSuperClass(type1, type2));
+    var type1 = typeTable[typeTableIndex1].value;
+    var type2 = typeTable[typeTableIndex2].value;
+    var commonSuperTypeIndex = addType(classWriter.getCommonSuperClass(type1, type2));
     put(new Entry(typeCount, Symbol.MERGED_TYPE_TAG, data, hashCode)).info = commonSuperTypeIndex;
     return commonSuperTypeIndex;
   }
@@ -595,7 +488,7 @@ class SymbolTable {
       typeTable = new Entry[16];
     }
     if (typeCount == typeTable.length) {
-      Entry[] newTypeTable = new Entry[2 * typeTable.length];
+      var newTypeTable = new Entry[2 * typeTable.length];
       System.arraycopy(typeTable, 0, newTypeTable, 0, typeTable.length);
       typeTable = newTypeTable;
     }

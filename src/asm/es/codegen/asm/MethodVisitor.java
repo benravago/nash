@@ -14,9 +14,6 @@ public abstract class MethodVisitor {
   public void visitCode() {
     if (mv != null) mv.visitCode();
   }
-  void visitFrame(int type, int numLocal, Object[] local, int numStack, Object[] stack) {
-    if (mv != null) mv.visitFrame(type, numLocal, local, numStack, stack);
-  }
   public void visitInsn(int opcode) {
     if (mv != null) mv.visitInsn(opcode);
   }

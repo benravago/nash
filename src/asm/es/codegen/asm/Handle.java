@@ -38,15 +38,13 @@ public class Handle {
 
   @Override
   public boolean equals(Object object) {
-    if (object == this) {
+    if (object == this ) {
       return true;
     }
-    if (!(object instanceof Handle)) {
-      return false;
+    if (object instanceof Handle handle) {
+      return tag == handle.tag && isInterface == handle.isInterface && owner.equals(handle.owner) && name.equals(handle.name) && descriptor.equals(handle.descriptor);
     }
-    Handle handle = (Handle) object;
-    return tag == handle.tag && isInterface == handle.isInterface && owner.equals(handle.owner)
-            && name.equals(handle.name) && descriptor.equals(handle.descriptor);
+    return false;
   }
 
   @Override

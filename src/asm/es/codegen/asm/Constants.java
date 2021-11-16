@@ -75,6 +75,4 @@ class Constants implements Opcodes {
 
   static final int WIDE_JUMP_OPCODE_DELTA = GOTO_W - GOTO;
 
-  // static final int ASM_OPCODE_DELTA = 49;
-  // static final int ASM_IFNULL_OPCODE_DELTA = 20;
 }

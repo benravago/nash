@@ -69,7 +69,7 @@ public class ClassGenerator {
   }
 
   static ClassWriter makeClassWriter() {
-    return new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+    return new ClassWriter() {
       @Override
       protected String getCommonSuperClass(String type1, String type2) {
         try {

@@ -420,7 +420,6 @@ public class ClassReader {
       }
     }
     // Visit the bytecode instructions.
-    boolean insertFrame = false;
     int wideJumpOpcodeDelta = Constants.WIDE_JUMP_OPCODE_DELTA;
     currentOffset = bytecodeStartOffset;
     while (currentOffset < bytecodeEndOffset) {
@@ -430,22 +429,11 @@ public class ClassReader {
         currentLabel.accept(methodVisitor, true);
       }
       while (stackMapFrameOffset != 0 && (context.currentFrameOffset == currentBytecodeOffset || context.currentFrameOffset == -1)) {
-        if (context.currentFrameOffset != -1) {
-          if (!compressedFrames || false) {
-            methodVisitor.visitFrame(Opcodes.F_NEW, context.currentFrameLocalCount, context.currentFrameLocalTypes, context.currentFrameStackCount, context.currentFrameStackTypes);
-          } else {
-            methodVisitor.visitFrame(context.currentFrameType, context.currentFrameLocalCountDelta, context.currentFrameLocalTypes, context.currentFrameStackCount, context.currentFrameStackTypes);
-          }
-          insertFrame = false;
-        }
         if (stackMapFrameOffset < stackMapTableEndOffset) {
           stackMapFrameOffset = readStackMapFrame(stackMapFrameOffset, compressedFrames, false, context);
         } else {
           stackMapFrameOffset = 0;
         }
-      }
-      if (insertFrame) {
-        insertFrame = false;
       }
       var opcode = classFileBuffer[currentOffset] & 0xFF;
       switch (opcode) {
@@ -785,59 +773,6 @@ public class ClassReader {
     return currentOffset;
   }
 
-  void computeImplicitFrame(Context context) {
-    var methodDescriptor = context.currentMethodDescriptor;
-    var locals = context.currentFrameLocalTypes;
-    var numLocal = 0;
-    if ((context.currentMethodAccessFlags & Opcodes.ACC_STATIC) == 0) {
-      if ("<init>".equals(context.currentMethodName)) {
-        locals[numLocal++] = Opcodes.UNINITIALIZED_THIS;
-      } else {
-        locals[numLocal++] = readClass(header + 2, context.charBuffer);
-      }
-    }
-    var currentMethodDescritorOffset = 1;
-    for (;;) {
-      var currentArgumentDescriptorStartOffset = currentMethodDescritorOffset;
-      switch (methodDescriptor.charAt(currentMethodDescritorOffset++)) {
-        case 'Z', 'C', 'B', 'S', 'I' -> {
-          locals[numLocal++] = Opcodes.INTEGER;
-        }
-        case 'F' -> {
-          locals[numLocal++] = Opcodes.FLOAT;
-        }
-        case 'J' -> {
-          locals[numLocal++] = Opcodes.LONG;
-        }
-        case 'D' -> {
-          locals[numLocal++] = Opcodes.DOUBLE;
-        }
-        case '[' -> {
-          while (methodDescriptor.charAt(currentMethodDescritorOffset) == '[') {
-            ++currentMethodDescritorOffset;
-          }
-          if (methodDescriptor.charAt(currentMethodDescritorOffset) == 'L') {
-            ++currentMethodDescritorOffset;
-            while (methodDescriptor.charAt(currentMethodDescritorOffset) != ';') {
-              ++currentMethodDescritorOffset;
-            }
-          }
-          locals[numLocal++] = methodDescriptor.substring(currentArgumentDescriptorStartOffset, ++currentMethodDescritorOffset);
-        }
-        case 'L' -> {
-          while (methodDescriptor.charAt(currentMethodDescritorOffset) != ';') {
-            ++currentMethodDescritorOffset;
-          }
-          locals[numLocal++] = methodDescriptor.substring(currentArgumentDescriptorStartOffset + 1, currentMethodDescritorOffset++);
-        }
-        default -> {
-          context.currentFrameLocalCount = numLocal;
-          return;
-        }
-      }
-    }
-  }
-
   int readStackMapFrame(int stackMapFrameOffset, boolean compressed, boolean expand, Context context) {
     var currentOffset = stackMapFrameOffset;
     var charBuffer = context.charBuffer;
@@ -989,18 +924,6 @@ public class ClassReader {
       currentAttributeOffset += attributeLength;
     }
     return null;
-  }
-
-  int getItemCount() {
-    return cpInfoOffsets.length;
-  }
-
-  int getItem(int constantPoolEntryIndex) {
-    return cpInfoOffsets[constantPoolEntryIndex];
-  }
-
-  int getMaxStringLength() {
-    return maxStringLength;
   }
 
   int readByte(int offset) {

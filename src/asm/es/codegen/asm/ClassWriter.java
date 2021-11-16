@@ -2,9 +2,6 @@ package es.codegen.asm;
 
 public class ClassWriter extends ClassVisitor {
 
-  public static final int COMPUTE_MAXS = 1;
-  public static final int COMPUTE_FRAMES = 2;
-
   int version;
   final SymbolTable symbolTable;
   int accessFlags;
@@ -18,27 +15,15 @@ public class ClassWriter extends ClassVisitor {
   MethodWriter lastMethod;
   int signatureIndex;
   int sourceFileIndex;
-  int compute;
 
-  public ClassWriter(int flags) {
-    this(null, flags);
-  }
-
-  ClassWriter(ClassReader classReader, int flags) {
+  public ClassWriter() {
     super(null);
-    symbolTable = classReader == null ? new SymbolTable(this) : new SymbolTable(this, classReader);
-    if ((flags & COMPUTE_FRAMES) != 0) {
-      this.compute = MethodWriter.COMPUTE_ALL_FRAMES;
-    } else if ((flags & COMPUTE_MAXS) != 0) {
-      this.compute = MethodWriter.COMPUTE_MAX_STACK_AND_LOCAL;
-    } else {
-      this.compute = MethodWriter.COMPUTE_NOTHING;
-    }
+    symbolTable = new SymbolTable(this);
   }
 
   //int V1_7 = 0 << 16 | 51;
   static final int V1_8 = 0 << 16 | 52;
-  
+
   @Override
   public void visit(int access, String name, String signature, String superName, String[] interfaces) {
     this.version = V1_8;
@@ -51,12 +36,9 @@ public class ClassWriter extends ClassVisitor {
     if (interfaces != null && interfaces.length > 0) {
       interfaceCount = interfaces.length;
       this.interfaces = new int[interfaceCount];
-      for (int i = 0; i < interfaceCount; ++i) {
+      for (var i = 0; i < interfaceCount; ++i) {
         this.interfaces[i] = symbolTable.addConstantClass(interfaces[i]).index;
       }
-    }
-    if (compute == MethodWriter.COMPUTE_MAX_STACK_AND_LOCAL) {
-      compute = MethodWriter.COMPUTE_MAX_STACK_AND_LOCAL_FROM_FRAMES;
     }
   }
 
@@ -74,7 +56,7 @@ public class ClassWriter extends ClassVisitor {
 
   @Override
   public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-    FieldWriter fieldWriter = new FieldWriter(symbolTable, access, name, descriptor, signature, value);
+    var fieldWriter = new FieldWriter(symbolTable, access, name, descriptor, signature, value);
     if (firstField == null) {
       firstField = fieldWriter;
     } else {
@@ -85,7 +67,7 @@ public class ClassWriter extends ClassVisitor {
 
   @Override
   public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-    MethodWriter methodWriter = new MethodWriter(symbolTable, access, name, descriptor, signature, exceptions, compute);
+    var methodWriter = new MethodWriter(symbolTable, access, name, descriptor, signature, exceptions); // MethodWriter.COMPUTE_ALL_FRAMES
     if (firstMethod == null) {
       firstMethod = methodWriter;
     } else {
@@ -100,27 +82,22 @@ public class ClassWriter extends ClassVisitor {
   }
 
   public byte[] toByteArray() {
-    // First step: compute the size in bytes of the ClassFile structure.
-    // The magic field uses 4 bytes, 10 mandatory fields (minor_version, major_version,
-    // constant_pool_count, access_flags, this_class, super_class, interfaces_count, fields_count,
-    // methods_count and attributes_count) use 2 bytes each, and each interface uses 2 bytes too.
-    int size = 24 + 2 * interfaceCount;
-    int fieldsCount = 0;
-    FieldWriter fieldWriter = firstField;
+    var size = 24 + 2 * interfaceCount;
+    var fieldsCount = 0;
+    var fieldWriter = firstField;
     while (fieldWriter != null) {
       ++fieldsCount;
       size += fieldWriter.computeFieldInfoSize();
       fieldWriter = (FieldWriter) fieldWriter.fv;
     }
-    int methodsCount = 0;
-    MethodWriter methodWriter = firstMethod;
+    var methodsCount = 0;
+    var methodWriter = firstMethod;
     while (methodWriter != null) {
       ++methodsCount;
       size += methodWriter.computeMethodInfoSize();
       methodWriter = (MethodWriter) methodWriter.mv;
     }
-    // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
-    int attributesCount = 0;
+    var attributesCount = 0;
     if (signatureIndex != 0) {
       ++attributesCount;
       size += 8;
@@ -135,23 +112,18 @@ public class ClassWriter extends ClassVisitor {
       ++attributesCount;
       size += symbolTable.computeBootstrapMethodsSize();
     }
-    // IMPORTANT: this must be the last part of the ClassFile size computation, because the previous
-    // statements can add attribute names to the constant pool, thereby changing its size!
     size += symbolTable.getConstantPoolLength();
-    int constantPoolCount = symbolTable.getConstantPoolCount();
+    var constantPoolCount = symbolTable.getConstantPoolCount();
     if (constantPoolCount > 0xFFFF) {
       throw new IndexOutOfBoundsException("Class too large: " + symbolTable.getClassName());
     }
-
-    // Second step: allocate a ByteVector of the correct size (in order to avoid any array copy in
-    // dynamic resizes) and fill it with the ClassFile content.
-    ByteVector result = new ByteVector(size);
+    var result = new ByteVector(size);
     result.putInt(0xCAFEBABE).putInt(version);
     symbolTable.putConstantPool(result);
-    int mask = 0; // version >= 1.5
+    var mask = 0; // version >= 1.5
     result.putShort(accessFlags & ~mask).putShort(thisClass).putShort(superClass);
     result.putShort(interfaceCount);
-    for (int i = 0; i < interfaceCount; ++i) {
+    for (var i = 0; i < interfaceCount; ++i) {
       result.putShort(interfaces[i]);
     }
     result.putShort(fieldsCount);
@@ -161,14 +133,11 @@ public class ClassWriter extends ClassVisitor {
       fieldWriter = (FieldWriter) fieldWriter.fv;
     }
     result.putShort(methodsCount);
-    boolean hasFrames = false;
     methodWriter = firstMethod;
     while (methodWriter != null) {
-      hasFrames |= methodWriter.hasFrames();
       methodWriter.putMethodInfo(result);
       methodWriter = (MethodWriter) methodWriter.mv;
     }
-    // For ease of reference, we use here the same attribute order as in Section 4.7 of the JVMS.
     result.putShort(attributesCount);
     if (signatureIndex != 0) {
       result.putShort(symbolTable.addConstantUtf8(Constants.SIGNATURE)).putInt(2).putShort(signatureIndex);
@@ -213,8 +182,7 @@ public class ClassWriter extends ClassVisitor {
   }
 
   int newInvokeDynamic(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
-    return symbolTable.addConstantInvokeDynamic(name, descriptor, bootstrapMethodHandle,
-            bootstrapMethodArguments).index;
+    return symbolTable.addConstantInvokeDynamic(name, descriptor, bootstrapMethodHandle, bootstrapMethodArguments).index;
   }
 
   int newField(String owner, String name, String descriptor) {
@@ -230,7 +198,7 @@ public class ClassWriter extends ClassVisitor {
   }
 
   protected String getCommonSuperClass(String type1, String type2) {
-    ClassLoader classLoader = getClassLoader();
+    var classLoader = getClass().getClassLoader();;
     Class<?> class1;
     try {
       class1 = Class.forName(type1.replace('/', '.'), false, classLoader);
@@ -257,9 +225,5 @@ public class ClassWriter extends ClassVisitor {
       } while (!class1.isAssignableFrom(class2));
       return class1.getName().replace('.', '/');
     }
-  }
-
-  ClassLoader getClassLoader() {
-    return getClass().getClassLoader();
   }
 }

@@ -55,9 +55,9 @@ public class Label {
       if (otherLineNumbers == null) {
         otherLineNumbers = new int[LINE_NUMBERS_CAPACITY_INCREMENT];
       }
-      int otherLineNumberIndex = ++otherLineNumbers[0];
+      var otherLineNumberIndex = ++otherLineNumbers[0];
       if (otherLineNumberIndex >= otherLineNumbers.length) {
-        int[] newLineNumbers = new int[otherLineNumbers.length + LINE_NUMBERS_CAPACITY_INCREMENT];
+        var newLineNumbers = new int[otherLineNumbers.length + LINE_NUMBERS_CAPACITY_INCREMENT];
         System.arraycopy(otherLineNumbers, 0, newLineNumbers, 0, otherLineNumbers.length);
         otherLineNumbers = newLineNumbers;
       }
@@ -70,7 +70,7 @@ public class Label {
     if (visitLineNumbers && lineNumber != 0) {
       methodVisitor.visitLineNumber(lineNumber & 0xFFFF, this);
       if (otherLineNumbers != null) {
-        for (int i = 1; i <= otherLineNumbers[0]; ++i) {
+        for (var i = 1; i <= otherLineNumbers[0]; ++i) {
           methodVisitor.visitLineNumber(otherLineNumbers[i], this);
         }
       }
@@ -99,9 +99,9 @@ public class Label {
     if (forwardReferences == null) {
       forwardReferences = new int[FORWARD_REFERENCES_CAPACITY_INCREMENT];
     }
-    int lastElementIndex = forwardReferences[0];
+    var lastElementIndex = forwardReferences[0];
     if (lastElementIndex + 2 >= forwardReferences.length) {
-      int[] newValues = new int[forwardReferences.length + FORWARD_REFERENCES_CAPACITY_INCREMENT];
+      var newValues = new int[forwardReferences.length + FORWARD_REFERENCES_CAPACITY_INCREMENT];
       System.arraycopy(forwardReferences, 0, newValues, 0, forwardReferences.length);
       forwardReferences = newValues;
     }
@@ -116,11 +116,11 @@ public class Label {
     if (forwardReferences == null) {
       return;
     }
-    for (int i = forwardReferences[0]; i > 0; i -= 2) {
-      int sourceInsnBytecodeOffset = forwardReferences[i - 1];
-      int reference = forwardReferences[i];
-      int relativeOffset = bytecodeOffset - sourceInsnBytecodeOffset;
-      int handle = reference & FORWARD_REFERENCE_HANDLE_MASK;
+    for (var i = forwardReferences[0]; i > 0; i -= 2) {
+      var sourceInsnBytecodeOffset = forwardReferences[i - 1];
+      var reference = forwardReferences[i];
+      var relativeOffset = bytecodeOffset - sourceInsnBytecodeOffset;
+      var handle = reference & FORWARD_REFERENCE_HANDLE_MASK;
       if ((reference & FORWARD_REFERENCE_TYPE_MASK) == FORWARD_REFERENCE_TYPE_SHORT) {
         if (relativeOffset < Short.MIN_VALUE || relativeOffset > Short.MAX_VALUE) {
           throw new IllegalArgumentException("ASM_*_DELTA");
@@ -137,20 +137,15 @@ public class Label {
   }
 
   void markSubroutine(short subroutineId) {
-    // Data flow algorithm: put this basic block in a list of blocks to process (which are blocks
-    // belonging to subroutine subroutineId) and, while there are blocks to process, remove one from
-    // the list, mark it as belonging to the subroutine, and add its successor basic blocks in the
-    // control flow graph to the list of blocks to process (if not already done).
-    Label listOfBlocksToProcess = this;
+    // Data flow algorithm: put this basic block in a list of blocks to process (which are blocks belonging to subroutine subroutineId) and, while there are blocks to process, remove one from the list, mark it as belonging to the subroutine, and add its successor basic blocks in the control flow graph to the list of blocks to process (if not already done).
+    var listOfBlocksToProcess = this;
     listOfBlocksToProcess.nextListElement = EMPTY_LIST;
     while (listOfBlocksToProcess != EMPTY_LIST) {
       // Remove a basic block from the list of blocks to process.
-      Label basicBlock = listOfBlocksToProcess;
+      var basicBlock = listOfBlocksToProcess;
       listOfBlocksToProcess = listOfBlocksToProcess.nextListElement;
       basicBlock.nextListElement = null;
-
-      // If it is not already marked as belonging to a subroutine, mark it as belonging to
-      // subroutineId and add its successors to the list of blocks to process (unless already done).
+      // If it is not already marked as belonging to a subroutine, mark it as belonging to subroutineId and add its successors to the list of blocks to process (unless already done).
       if (basicBlock.subroutineId == 0) {
         basicBlock.subroutineId = subroutineId;
         listOfBlocksToProcess = basicBlock.pushSuccessors(listOfBlocksToProcess);
@@ -159,56 +154,40 @@ public class Label {
   }
 
   void addSubroutineRetSuccessors(Label subroutineCaller) {
-    // Data flow algorithm: put this basic block in a list blocks to process (which are blocks
-    // belonging to a subroutine starting with this label) and, while there are blocks to process,
-    // remove one from the list, put it in a list of blocks that have been processed, add a return
-    // edge to the successor of subroutineCaller if applicable, and add its successor basic blocks
-    // in the control flow graph to the list of blocks to process (if not already done).
-    Label listOfProcessedBlocks = EMPTY_LIST;
-    Label listOfBlocksToProcess = this;
+    // Data flow algorithm: put this basic block in a list blocks to process (which are blocks belonging to a subroutine starting with this label) and, while there are blocks to process, remove one from the list, put it in a list of blocks that have been processed, add a return edge to the successor of subroutineCaller if applicable, and add its successor basic blocks in the control flow graph to the list of blocks to process (if not already done).
+    var listOfProcessedBlocks = EMPTY_LIST;
+    var listOfBlocksToProcess = this;
     listOfBlocksToProcess.nextListElement = EMPTY_LIST;
     while (listOfBlocksToProcess != EMPTY_LIST) {
       // Move a basic block from the list of blocks to process to the list of processed blocks.
-      Label basicBlock = listOfBlocksToProcess;
+      var basicBlock = listOfBlocksToProcess;
       listOfBlocksToProcess = basicBlock.nextListElement;
       basicBlock.nextListElement = listOfProcessedBlocks;
       listOfProcessedBlocks = basicBlock;
-
-      // Add an edge from this block to the successor of the caller basic block, if this block is
-      // the end of a subroutine and if this block and subroutineCaller do not belong to the same
-      // subroutine.
+      // Add an edge from this block to the successor of the caller basic block, if this block is the end of a subroutine and if this block and subroutineCaller do not belong to the same subroutine.
       if ((basicBlock.flags & FLAG_SUBROUTINE_END) != 0 && basicBlock.subroutineId != subroutineCaller.subroutineId) {
-        basicBlock.outgoingEdges = new Edge(basicBlock.outputStackSize,
-                // By construction, the first outgoing edge of a basic block that ends with a jsr
-                // instruction leads to the jsr continuation block, i.e. where execution continues
-                // when ret is called (see {@link #FLAG_SUBROUTINE_CALLER}).
-                subroutineCaller.outgoingEdges.successor, basicBlock.outgoingEdges);
+        // By construction, the first outgoing edge of a basic block that ends with a jsr instruction leads to the jsr continuation block, i.e. where execution continues when ret is called (see {@link #FLAG_SUBROUTINE_CALLER}).
+        basicBlock.outgoingEdges = new Edge(basicBlock.outputStackSize, subroutineCaller.outgoingEdges.successor, basicBlock.outgoingEdges);
       }
-      // Add its successors to the list of blocks to process. Note that {@link #pushSuccessors} does
-      // not push basic blocks which are already in a list. Here this means either in the list of
-      // blocks to process, or in the list of already processed blocks. This second list is
-      // important to make sure we don't reprocess an already processed block.
+      // Add its successors to the list of blocks to process. Note that {@link #pushSuccessors} does not push basic blocks which are already in a list. Here this means either in the list of blocks to process, or in the list of already processed blocks. This second list is important to make sure we don't reprocess an already processed block.
       listOfBlocksToProcess = basicBlock.pushSuccessors(listOfBlocksToProcess);
     }
-    // Reset the {@link #nextListElement} of all the basic blocks that have been processed to null,
-    // so that this method can be called again with a different subroutine or subroutine caller.
+    // Reset the {@link #nextListElement} of all the basic blocks that have been processed to null, so that this method can be called again with a different subroutine or subroutine caller.
     while (listOfProcessedBlocks != EMPTY_LIST) {
-      Label newListOfProcessedBlocks = listOfProcessedBlocks.nextListElement;
+      var newListOfProcessedBlocks = listOfProcessedBlocks.nextListElement;
       listOfProcessedBlocks.nextListElement = null;
       listOfProcessedBlocks = newListOfProcessedBlocks;
     }
   }
 
   Label pushSuccessors(Label listOfLabelsToProcess) {
-    Label newListOfLabelsToProcess = listOfLabelsToProcess;
-    Edge outgoingEdge = outgoingEdges;
+    var newListOfLabelsToProcess = listOfLabelsToProcess;
+    var outgoingEdge = outgoingEdges;
     while (outgoingEdge != null) {
-      // By construction, the second outgoing edge of a basic block that ends with a jsr instruction
-      // leads to the jsr target (see {@link #FLAG_SUBROUTINE_CALLER}).
-      boolean isJsrTarget = (flags & Label.FLAG_SUBROUTINE_CALLER) != 0 && outgoingEdge == outgoingEdges.nextEdge;
+      // By construction, the second outgoing edge of a basic block that ends with a jsr instruction leads to the jsr target (see {@link #FLAG_SUBROUTINE_CALLER}).
+      var isJsrTarget = (flags & Label.FLAG_SUBROUTINE_CALLER) != 0 && outgoingEdge == outgoingEdges.nextEdge;
       if (!isJsrTarget && outgoingEdge.successor.nextListElement == null) {
-        // Add this successor to the list of blocks to process, if it does not already belong to a
-        // list of labels.
+        // Add this successor to the list of blocks to process, if it does not already belong to a list of labels.
         outgoingEdge.successor.nextListElement = newListOfLabelsToProcess;
         newListOfLabelsToProcess = outgoingEdge.successor;
       }

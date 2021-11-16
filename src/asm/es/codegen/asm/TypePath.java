@@ -30,63 +30,17 @@ class TypePath {
     return typePathContainer[typePathOffset + 2 * index + 2];
   }
 
-  static TypePath fromString(String typePath) {
-    if (typePath == null || typePath.isEmpty()) {
-      return null;
-    }
-    int typePathLength = typePath.length();
-    ByteVector output = new ByteVector(typePathLength);
-    output.putByte(0);
-    int typePathIndex = 0;
-    while (typePathIndex < typePathLength) {
-      char c = typePath.charAt(typePathIndex++);
-      if (c == '[') {
-        output.put11(ARRAY_ELEMENT, 0);
-      } else if (c == '.') {
-        output.put11(INNER_TYPE, 0);
-      } else if (c == '*') {
-        output.put11(WILDCARD_BOUND, 0);
-      } else if (c >= '0' && c <= '9') {
-        int typeArg = c - '0';
-        while (typePathIndex < typePathLength) {
-          c = typePath.charAt(typePathIndex++);
-          if (c >= '0' && c <= '9') {
-            typeArg = typeArg * 10 + c - '0';
-          } else if (c == ';') {
-            break;
-          } else {
-            throw new IllegalArgumentException();
-          }
-        }
-        output.put11(TYPE_ARGUMENT, typeArg);
-      } else {
-        throw new IllegalArgumentException();
-      }
-    }
-    output.data[0] = (byte) (output.length / 2);
-    return new TypePath(output.data, 0);
-  }
-
   @Override
   public String toString() {
-    int length = getLength();
-    StringBuilder result = new StringBuilder(length * 2);
-    for (int i = 0; i < length; ++i) {
+    var length = getLength();
+    var result = new StringBuilder(length * 2);
+    for (var i = 0; i < length; ++i) {
       switch (getStep(i)) {
-        case ARRAY_ELEMENT:
-          result.append('[');
-          break;
-        case INNER_TYPE:
-          result.append('.');
-          break;
-        case WILDCARD_BOUND:
-          result.append('*');
-          break;
-        case TYPE_ARGUMENT:
-          result.append(getStepArgument(i)).append(';');
-          break;
-        default:
-          throw new AssertionError();
+        case ARRAY_ELEMENT -> result.append('[');
+        case INNER_TYPE -> result.append('.');
+        case WILDCARD_BOUND -> result.append('*');
+        case TYPE_ARGUMENT -> result.append(getStepArgument(i)).append(';');
+        default -> throw new AssertionError();
       }
     }
     return result.toString();
@@ -96,7 +50,7 @@ class TypePath {
     if (typePath == null) {
       output.putByte(0);
     } else {
-      int length = typePath.typePathContainer[typePath.typePathOffset] * 2 + 1;
+      var length = typePath.typePathContainer[typePath.typePathOffset] * 2 + 1;
       output.putByteArray(typePath.typePathContainer, typePath.typePathOffset, length);
     }
   }
