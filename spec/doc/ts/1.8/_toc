@@ -1,0 +1,325 @@
+<ul class="spec">
+  <li><a href="sec-introduction" title="1"> Introduction</a>
+  <ul>
+  <li><a href="sec-introduction#ambient-declarations-11" title="1.1"> Ambient Declarations</a></li>
+  <li><a href="sec-introduction#function-types-12" title="1.2"> Function Types</a></li>
+  <li><a href="sec-introduction#object-types-13" title="1.3"> Object Types</a></li>
+  <li><a href="sec-introduction#structural-subtyping-14" title="1.4"> Structural Subtyping</a></li>
+  <li><a href="sec-introduction#contextual-typing-15" title="1.5"> Contextual Typing</a></li>
+  <li><a href="sec-introduction#classes-16" title="1.6"> Classes</a></li>
+  <li><a href="sec-introduction#enum-types-17" title="1.7"> Enum Types</a></li>
+  <li><a href="sec-introduction#overloading-on-string-parameters-18" title="1.8"> Overloading on String Parameters</a></li>
+  <li><a href="sec-introduction#generic-types-and-functions-19" title="1.9"> Generic Types and Functions</a></li>
+  <li><a href="sec-introduction#namespaces-110" title="1.10"> Namespaces</a></li>
+  <li><a href="sec-introduction#modules-111" title="1.11"> Modules</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-basic-concepts" title="2"> Basic Concepts</a>
+  <ul>
+  <li><a href="sec-basic-concepts#grammar-conventions-21" title="2.1"> Grammar Conventions</a></li>
+  <li><a href="sec-basic-concepts#names-22" title="2.2"> Names</a>
+  <ul>
+  <li><a href="sec-basic-concepts#reserved-words-221" title="2.2.1"> Reserved Words</a></li>
+  <li><a href="sec-basic-concepts#property-names-222" title="2.2.2"> Property Names</a></li>
+  <li><a href="sec-basic-concepts#computed-property-names-223" title="2.2.3"> Computed Property Names</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-basic-concepts#declarations-23" title="2.3"> Declarations</a></li>
+  <li><a href="sec-basic-concepts#scopes-24" title="2.4"> Scopes</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types" title="3"> Types</a>
+  <ul>
+  <li><a href="sec-types#the-any-type-31" title="3.1"> The Any Type</a></li>
+  <li><a href="sec-types#primitive-types-32" title="3.2"> Primitive Types</a>
+  <ul>
+  <li><a href="sec-types#the-number-type-321" title="3.2.1"> The Number Type</a></li>
+  <li><a href="sec-types#the-boolean-type-322" title="3.2.2"> The Boolean Type</a></li>
+  <li><a href="sec-types#the-string-type-323" title="3.2.3"> The String Type</a></li>
+  <li><a href="sec-types#the-symbol-type-324" title="3.2.4"> The Symbol Type</a></li>
+  <li><a href="sec-types#the-void-type-325" title="3.2.5"> The Void Type</a></li>
+  <li><a href="sec-types#the-null-type-326" title="3.2.6"> The Null Type</a></li>
+  <li><a href="sec-types#the-undefined-type-327" title="3.2.7"> The Undefined Type</a></li>
+  <li><a href="sec-types#enum-types-328" title="3.2.8"> Enum Types</a></li>
+  <li><a href="sec-types#string-literal-types-329" title="3.2.9"> String Literal Types</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types#object-types-33" title="3.3"> Object Types</a>
+  <ul>
+  <li><a href="sec-types#named-type-references-331" title="3.3.1"> Named Type References</a></li>
+  <li><a href="sec-types#array-types-332" title="3.3.2"> Array Types</a></li>
+  <li><a href="sec-types#tuple-types-333" title="3.3.3"> Tuple Types</a></li>
+  <li><a href="sec-types#function-types-334" title="3.3.4"> Function Types</a></li>
+  <li><a href="sec-types#constructor-types-335" title="3.3.5"> Constructor Types</a></li>
+  <li><a href="sec-types#members-336" title="3.3.6"> Members</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types#union-types-34" title="3.4"> Union Types</a></li>
+  <li><a href="sec-types#intersection-types-35" title="3.5"> Intersection Types</a></li>
+  <li><a href="sec-types#type-parameters-36" title="3.6"> Type Parameters</a>
+  <ul>
+  <li><a href="sec-types#type-parameter-lists-361" title="3.6.1"> Type Parameter Lists</a></li>
+  <li><a href="sec-types#type-argument-lists-362" title="3.6.2"> Type Argument Lists</a></li>
+  <li><a href="sec-types#this-types-363" title="3.6.3"> This-types</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types#named-types-37" title="3.7"> Named Types</a></li>
+  <li><a href="sec-types#specifying-types-38" title="3.8"> Specifying Types</a>
+  <ul>
+  <li><a href="sec-types#predefined-types-381" title="3.8.1"> Predefined Types</a></li>
+  <li><a href="sec-types#type-references-382" title="3.8.2"> Type References</a></li>
+  <li><a href="sec-types#object-type-literals-383" title="3.8.3"> Object Type Literals</a></li>
+  <li><a href="sec-types#array-type-literals-384" title="3.8.4"> Array Type Literals</a></li>
+  <li><a href="sec-types#tuple-type-literals-385" title="3.8.5"> Tuple Type Literals</a></li>
+  <li><a href="sec-types#union-type-literals-386" title="3.8.6"> Union Type Literals</a></li>
+  <li><a href="sec-types#intersection-type-literals-387" title="3.8.7"> Intersection Type Literals</a></li>
+  <li><a href="sec-types#function-type-literals-388" title="3.8.8"> Function Type Literals</a></li>
+  <li><a href="sec-types#constructor-type-literals-389" title="3.8.9"> Constructor Type Literals</a></li>
+  <li><a href="sec-types#type-queries-3810" title="3.8.10"> Type Queries</a></li>
+  <li><a href="sec-types#this-type-references-3811" title="3.8.11"> This-Type References</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types#specifying-members-39" title="3.9"> Specifying Members</a>
+  <ul>
+  <li><a href="sec-types#property-signatures-391" title="3.9.1"> Property Signatures</a></li>
+  <li><a href="sec-types#call-signatures-392" title="3.9.2"> Call Signatures</a></li>
+  <li><a href="sec-types#construct-signatures-393" title="3.9.3"> Construct Signatures</a></li>
+  <li><a href="sec-types#index-signatures-394" title="3.9.4"> Index Signatures</a></li>
+  <li><a href="sec-types#method-signatures-395" title="3.9.5"> Method Signatures</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types#type-aliases-310" title="3.10"> Type Aliases</a></li>
+  <li><a href="sec-types#type-relationships-311" title="3.11"> Type Relationships</a>
+  <ul>
+  <li><a href="sec-types#apparent-members-3111" title="3.11.1"> Apparent Members</a></li>
+  <li><a href="sec-types#type-and-member-identity-3112" title="3.11.2"> Type and Member Identity</a></li>
+  <li><a href="sec-types#subtypes-and-supertypes-3113" title="3.11.3"> Subtypes and Supertypes</a></li>
+  <li><a href="sec-types#assignment-compatibility-3114" title="3.11.4"> Assignment Compatibility</a></li>
+  <li><a href="sec-types#excess-properties-3115" title="3.11.5"> Excess Properties</a></li>
+  <li><a href="sec-types#contextual-signature-instantiation-3116" title="3.11.6"> Contextual Signature Instantiation</a></li>
+  <li><a href="sec-types#type-inference-3117" title="3.11.7"> Type Inference</a></li>
+  <li><a href="sec-types#recursive-types-3118" title="3.11.8"> Recursive Types</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-types#widened-types-312" title="3.12"> Widened Types</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-expressions" title="4"> Expressions</a>
+  <ul>
+  <li><a href="sec-expressions#values-and-references-41" title="4.1"> Values and References</a></li>
+  <li><a href="sec-expressions#the-this-keyword-42" title="4.2"> The this Keyword</a></li>
+  <li><a href="sec-expressions#identifiers-43" title="4.3"> Identifiers</a></li>
+  <li><a href="sec-expressions#literals-44" title="4.4"> Literals</a></li>
+  <li><a href="sec-expressions#object-literals-45" title="4.5"> Object Literals</a></li>
+  <li><a href="sec-expressions#array-literals-46" title="4.6"> Array Literals</a></li>
+  <li><a href="sec-expressions#template-literals-47" title="4.7"> Template Literals</a></li>
+  <li><a href="sec-expressions#parentheses-48" title="4.8"> Parentheses</a></li>
+  <li><a href="sec-expressions#the-super-keyword-49" title="4.9"> The super Keyword</a>
+  <ul>
+  <li><a href="sec-expressions#super-calls-491" title="4.9.1"> Super Calls</a></li>
+  <li><a href="sec-expressions#super-property-access-492" title="4.9.2"> Super Property Access</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-expressions#function-expressions-410" title="4.10"> Function Expressions</a></li>
+  <li><a href="sec-expressions#arrow-functions-411" title="4.11"> Arrow Functions</a></li>
+  <li><a href="sec-expressions#class-expressions-412" title="4.12"> Class Expressions</a></li>
+  <li><a href="sec-expressions#property-access-413" title="4.13"> Property Access</a></li>
+  <li><a href="sec-expressions#the-new-operator-414" title="4.14"> The new Operator</a></li>
+  <li><a href="sec-expressions#function-calls-415" title="4.15"> Function Calls</a>
+  <ul>
+  <li><a href="sec-expressions#overload-resolution-4151" title="4.15.1"> Overload Resolution</a></li>
+  <li><a href="sec-expressions#type-argument-inference-4152" title="4.15.2"> Type Argument Inference</a></li>
+  <li><a href="sec-expressions#grammar-ambiguities-4153" title="4.15.3"> Grammar Ambiguities</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-expressions#type-assertions-416" title="4.16"> Type Assertions</a></li>
+  <li><a href="sec-expressions#jsx-expressions-417" title="4.17"> JSX Expressions</a></li>
+  <li><a href="sec-expressions#unary-operators-418" title="4.18"> Unary Operators</a>
+  <ul>
+  <li><a href="sec-expressions#the--and----operators-4181" title="4.18.1"> The ++ and -- operators</a></li>
+  <li><a href="sec-expressions#the---and--operators-4182" title="4.18.2"> The +, –, and ~ operators</a></li>
+  <li><a href="sec-expressions#the--operator-4183" title="4.18.3"> The ! operator</a></li>
+  <li><a href="sec-expressions#the-delete-operator-4184" title="4.18.4"> The delete Operator</a></li>
+  <li><a href="sec-expressions#the-void-operator-4185" title="4.18.5"> The void Operator</a></li>
+  <li><a href="sec-expressions#the-typeof-operator-4186" title="4.18.6"> The typeof Operator</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-expressions#binary-operators-419" title="4.19"> Binary Operators</a>
+  <ul>
+  <li><a href="sec-expressions#the----------and--operators-4191" title="4.19.1"> The *, /, %, –, &lt;&lt;, &gt;&gt;, &gt;&gt;&gt;, &amp;, ^, and | operators</a></li>
+  <li><a href="sec-expressions#the--operator-4192" title="4.19.2"> The + operator</a></li>
+  <li><a href="sec-expressions#the--------and--operators-4193" title="4.19.3"> The &lt;, &gt;, &lt;=, &gt;=, ==, !=, ===, and !== operators</a></li>
+  <li><a href="sec-expressions#the-instanceof-operator-4194" title="4.19.4"> The instanceof operator</a></li>
+  <li><a href="sec-expressions#the-in-operator-4195" title="4.19.5"> The in operator</a></li>
+  <li><a href="sec-expressions#the--operator-4196" title="4.19.6"> The &amp;&amp; operator</a></li>
+  <li><a href="sec-expressions#the--operator-4197" title="4.19.7"> The || operator</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-expressions#the-conditional-operator-420" title="4.20"> The Conditional Operator</a></li>
+  <li><a href="sec-expressions#assignment-operators-421" title="4.21"> Assignment Operators</a>
+  <ul>
+  <li><a href="sec-expressions#destructuring-assignment-4211" title="4.21.1"> Destructuring Assignment</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-expressions#the-comma-operator-422" title="4.22"> The Comma Operator</a></li>
+  <li><a href="sec-expressions#contextually-typed-expressions-423" title="4.23"> Contextually Typed Expressions</a></li>
+  <li><a href="sec-expressions#type-guards-424" title="4.24"> Type Guards</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-statements" title="5"> Statements</a>
+  <ul>
+  <li><a href="sec-statements#blocks-51" title="5.1"> Blocks</a></li>
+  <li><a href="sec-statements#variable-statements-52" title="5.2"> Variable Statements</a>
+  <ul>
+  <li><a href="sec-statements#simple-variable-declarations-521" title="5.2.1"> Simple Variable Declarations</a></li>
+  <li><a href="sec-statements#destructuring-variable-declarations-522" title="5.2.2"> Destructuring Variable Declarations</a></li>
+  <li><a href="sec-statements#implied-type-523" title="5.2.3"> Implied Type</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-statements#let-and-const-declarations-53" title="5.3"> Let and Const Declarations</a></li>
+  <li><a href="sec-statements#if-do-and-while-statements-54" title="5.4"> If, Do, and While Statements</a></li>
+  <li><a href="sec-statements#for-statements-55" title="5.5"> For Statements</a></li>
+  <li><a href="sec-statements#for-in-statements-56" title="5.6"> For-In Statements</a></li>
+  <li><a href="sec-statements#for-of-statements-57" title="5.7"> For-Of Statements</a></li>
+  <li><a href="sec-statements#continue-statements-58" title="5.8"> Continue Statements</a></li>
+  <li><a href="sec-statements#break-statements-59" title="5.9"> Break Statements</a></li>
+  <li><a href="sec-statements#return-statements-510" title="5.10"> Return Statements</a></li>
+  <li><a href="sec-statements#with-statements-511" title="5.11"> With Statements</a></li>
+  <li><a href="sec-statements#switch-statements-512" title="5.12"> Switch Statements</a></li>
+  <li><a href="sec-statements#throw-statements-513" title="5.13"> Throw Statements</a></li>
+  <li><a href="sec-statements#try-statements-514" title="5.14"> Try Statements</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-functions" title="6"> Functions</a>
+  <ul>
+  <li><a href="sec-functions#function-declarations-61" title="6.1"> Function Declarations</a></li>
+  <li><a href="sec-functions#function-overloads-62" title="6.2"> Function Overloads</a></li>
+  <li><a href="sec-functions#function-implementations-63" title="6.3"> Function Implementations</a></li>
+  <li><a href="sec-functions#destructuring-parameter-declarations-64" title="6.4"> Destructuring Parameter Declarations</a></li>
+  <li><a href="sec-functions#generic-functions-65" title="6.5"> Generic Functions</a></li>
+  <li><a href="sec-functions#code-generation-66" title="6.6"> Code Generation</a></li>
+  <li><a href="sec-functions#generator-functions-67" title="6.7"> Generator Functions</a></li>
+  <li><a href="sec-functions#asynchronous-functions-68" title="6.8"> Asynchronous Functions</a></li>
+  <li><a href="sec-functions#type-guard-functions-69" title="6.9"> Type Guard Functions</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-interfaces" title="7"> Interfaces</a>
+  <ul>
+  <li><a href="sec-interfaces#interface-declarations-71" title="7.1"> Interface Declarations</a></li>
+  <li><a href="sec-interfaces#declaration-merging-72" title="7.2"> Declaration Merging</a></li>
+  <li><a href="sec-interfaces#interfaces-extending-classes-73" title="7.3"> Interfaces Extending Classes</a></li>
+  <li><a href="sec-interfaces#dynamic-type-checks-74" title="7.4"> Dynamic Type Checks</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-classes" title="8"> Classes</a>
+  <ul>
+  <li><a href="sec-classes#class-declarations-81" title="8.1"> Class Declarations</a>
+  <ul>
+  <li><a href="sec-classes#class-heritage-specification-811" title="8.1.1"> Class Heritage Specification</a></li>
+  <li><a href="sec-classes#class-body-812" title="8.1.2"> Class Body</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-classes#members-82" title="8.2"> Members</a>
+  <ul>
+  <li><a href="sec-classes#instance-and-static-members-821" title="8.2.1"> Instance and Static Members</a></li>
+  <li><a href="sec-classes#accessibility-822" title="8.2.2"> Accessibility</a></li>
+  <li><a href="sec-classes#inheritance-and-overriding-823" title="8.2.3"> Inheritance and Overriding</a></li>
+  <li><a href="sec-classes#class-types-824" title="8.2.4"> Class Types</a></li>
+  <li><a href="sec-classes#constructor-function-types-825" title="8.2.5"> Constructor Function Types</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-classes#constructor-declarations-83" title="8.3"> Constructor Declarations</a>
+  <ul>
+  <li><a href="sec-classes#constructor-parameters-831" title="8.3.1"> Constructor Parameters</a></li>
+  <li><a href="sec-classes#super-calls-832" title="8.3.2"> Super Calls</a></li>
+  <li><a href="sec-classes#automatic-constructors-833" title="8.3.3"> Automatic Constructors</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-classes#property-member-declarations-84" title="8.4"> Property Member Declarations</a>
+  <ul>
+  <li><a href="sec-classes#member-variable-declarations-841" title="8.4.1"> Member Variable Declarations</a></li>
+  <li><a href="sec-classes#member-function-declarations-842" title="8.4.2"> Member Function Declarations</a></li>
+  <li><a href="sec-classes#member-accessor-declarations-843" title="8.4.3"> Member Accessor Declarations</a></li>
+  <li><a href="sec-classes#dynamic-property-declarations-844" title="8.4.4"> Dynamic Property Declarations</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-classes#index-member-declarations-85" title="8.5"> Index Member Declarations</a></li>
+  <li><a href="sec-classes#decorators-86" title="8.6"> Decorators</a></li>
+  <li><a href="sec-classes#code-generation-87" title="8.7"> Code Generation</a>
+  <ul>
+  <li><a href="sec-classes#classes-without-extends-clauses-871" title="8.7.1"> Classes Without Extends Clauses</a></li>
+  <li><a href="sec-classes#classes-with-extends-clauses-872" title="8.7.2"> Classes With Extends Clauses</a></li>
+  </ul>
+  </li>
+  </ul>
+  </li>
+  <li><a href="sec-enums" title="9"> Enums</a>
+  <ul>
+  <li><a href="sec-enums#enum-declarations-91" title="9.1"> Enum Declarations</a></li>
+  <li><a href="sec-enums#enum-members-92" title="9.2"> Enum Members</a></li>
+  <li><a href="sec-enums#declaration-merging-93" title="9.3"> Declaration Merging</a></li>
+  <li><a href="sec-enums#constant-enum-declarations-94" title="9.4"> Constant Enum Declarations</a></li>
+  <li><a href="sec-enums#code-generation-95" title="9.5"> Code Generation</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-namespaces" title="10"> Namespaces</a>
+  <ul>
+  <li><a href="sec-namespaces#namespace-declarations-101" title="10.1"> Namespace Declarations</a></li>
+  <li><a href="sec-namespaces#namespace-body-102" title="10.2"> Namespace Body</a></li>
+  <li><a href="sec-namespaces#import-alias-declarations-103" title="10.3"> Import Alias Declarations</a></li>
+  <li><a href="sec-namespaces#export-declarations-104" title="10.4"> Export Declarations</a></li>
+  <li><a href="sec-namespaces#declaration-merging-105" title="10.5"> Declaration Merging</a></li>
+  <li><a href="sec-namespaces#code-generation-106" title="10.6"> Code Generation</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-scripts-and-modules" title="11"> Scripts and Modules</a>
+  <ul>
+  <li><a href="sec-scripts-and-modules#programs-and-source-files-111" title="11.1"> Programs and Source Files</a>
+  <ul>
+  <li><a href="sec-scripts-and-modules#source-files-dependencies-1111" title="11.1.1"> Source Files Dependencies</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-scripts-and-modules#scripts-112" title="11.2"> Scripts</a></li>
+  <li><a href="sec-scripts-and-modules#modules-113" title="11.3"> Modules</a>
+  <ul>
+  <li><a href="sec-scripts-and-modules#module-names-1131" title="11.3.1"> Module Names</a></li>
+  <li><a href="sec-scripts-and-modules#import-declarations-1132" title="11.3.2"> Import Declarations</a></li>
+  <li><a href="sec-scripts-and-modules#import-require-declarations-1133" title="11.3.3"> Import Require Declarations</a></li>
+  <li><a href="sec-scripts-and-modules#export-declarations-1134" title="11.3.4"> Export Declarations</a></li>
+  <li><a href="sec-scripts-and-modules#export-assignments-1135" title="11.3.5"> Export Assignments</a></li>
+  <li><a href="sec-scripts-and-modules#commonjs-modules-1136" title="11.3.6"> CommonJS Modules</a></li>
+  <li><a href="sec-scripts-and-modules#amd-modules-1137" title="11.3.7"> AMD Modules</a></li>
+  </ul>
+  </li>
+  </ul>
+  </li>
+  <li><a href="sec-ambients" title="12"> Ambients</a>
+  <ul>
+  <li><a href="sec-ambients#ambient-declarations-121" title="12.1"> Ambient Declarations</a>
+  <ul>
+  <li><a href="sec-ambients#ambient-variable-declarations-1211" title="12.1.1"> Ambient Variable Declarations</a></li>
+  <li><a href="sec-ambients#ambient-function-declarations-1212" title="12.1.2"> Ambient Function Declarations</a></li>
+  <li><a href="sec-ambients#ambient-class-declarations-1213" title="12.1.3"> Ambient Class Declarations</a></li>
+  <li><a href="sec-ambients#ambient-enum-declarations-1214" title="12.1.4"> Ambient Enum Declarations</a></li>
+  <li><a href="sec-ambients#ambient-namespace-declarations-1215" title="12.1.5"> Ambient Namespace Declarations</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-ambients#ambient-module-declarations-122" title="12.2"> Ambient Module Declarations</a></li>
+  </ul>
+  </li>
+  <li><a href="sec-grammar" title="A"> Grammar</a>
+  <ul>
+  <li><a href="sec-grammar#types-a1" title="A.1"> Types</a></li>
+  <li><a href="sec-grammar#expressions-a2" title="A.2"> Expressions</a></li>
+  <li><a href="sec-grammar#statements-a3" title="A.3"> Statements</a></li>
+  <li><a href="sec-grammar#functions-a4" title="A.4"> Functions</a></li>
+  <li><a href="sec-grammar#interfaces-a5" title="A.5"> Interfaces</a></li>
+  <li><a href="sec-grammar#classes-a6" title="A.6"> Classes</a></li>
+  <li><a href="sec-grammar#enums-a7" title="A.7"> Enums</a></li>
+  <li><a href="sec-grammar#namespaces-a8" title="A.8"> Namespaces</a></li>
+  <li><a href="sec-grammar#scripts-and-modules-a9" title="A.9"> Scripts and Modules</a></li>
+  <li><a href="sec-grammar#ambients-a10" title="A.10"> Ambients</a></li>
+  </ul>
+  </li>
+  </ul>
+  

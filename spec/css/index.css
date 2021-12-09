@@ -1,0 +1,99 @@
+
+@font-face {
+  font-family: 'Segoe';
+  src: url('font/SegoeUI-Regular.woff2');
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: Segoe;
+  display: flex;
+  flex-wrap: nowrap;
+  height: 100vh;
+  height: -webkit-fill-available;
+  max-height: 100vh;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#bside {
+  margin-top: 1em;
+  overflow: auto;
+}
+
+main {
+  padding: 1em;
+}
+
+.divider {
+  flex-shrink: 0;
+  width: 4px;
+  height: 100vh;
+  background-color: lightsteelblue;
+  /* border: solid rgba(0, 0, 0, .15); */
+  /* border-width: 1px 0; */
+  /* box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15); */
+}
+
+.hidden {
+  display: none;
+}
+
+select:required:invalid {
+  color: teal;
+}
+option[value=""][disabled] {
+  display: none;
+}
+option {
+  color: black;
+}
+
+.sidebar {
+  resize: both;
+  overflow: auto;
+  width: 25%;
+}
+
+.toc a.submenu.collapsed::before {
+  content: "\025B8\00a0"; /* &BlackTriangleRight; */
+}
+.toc a.submenu:not(.collapsed):before {
+  content: "\025BE\00a0"; /* &BlackTriangleDown; */
+}
+
+.toc li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.toc ul.submenu {
+  padding-left: 1.2em;
+}
+.toc li.submenu {
+  list-style: none;
+}
+.toc .nav-link {
+  font-weight: 500;
+  padding-top: 0;
+  padding-bottom: 0; 
+  color: var(--bs-dark);
+}
+.toc .nav-link:hover {
+  color: var(--bs-primary);
+}
+
+.nav-link span:hover {
+  cursor: pointer;
+}
+.nav-link sub:before {
+  content: "\00a0\00a0";
+}
+.nav-link sub:hover {
+  cursor: default;
+  text-decoration: underline;
+}
+

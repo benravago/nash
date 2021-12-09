@@ -1,0 +1,1564 @@
+<ul>
+    <li><a href="sec-intro">Introduction</a></li>
+    <li><a href="sec-scope" title="1"> Scope</a></li>
+    <li><a href="sec-conformance" title="2"> Conformance</a></li>
+    <li><a href="sec-normative-references" title="3"> Normative references</a></li>
+    <li><a href="sec-overview" title="4"> Overview
+      </a><ul>
+        <li><a href="sec-overview#sec-web-scripting" title="4.1"> Web Scripting</a></li>
+        <li><a href="sec-overview#sec-ecmascript-overview" title="4.2"> ECMAScript Overview
+          </a><ul>
+            <li><a href="sec-overview#sec-objects" title="4.2.1"> Objects</a></li>
+            <li><a href="sec-overview#sec-strict-variant-of-ecmascript" title="4.2.2"> The Strict Variant of
+                ECMAScript</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-overview#sec-terms-and-definitions" title="4.3"> Terms and definitions
+          </a><ul>
+            <li><a href="sec-overview#sec-type" title="4.3.1"> type</a></li>
+            <li><a href="sec-overview#sec-primitive-value" title="4.3.2"> primitive value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-object" title="4.3.3"> object</a></li>
+            <li><a href="sec-overview#sec-constructor" title="4.3.4"> constructor</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-prototype" title="4.3.5"> prototype</a></li>
+            <li><a href="sec-overview#sec-ordinary-object" title="4.3.6"> ordinary object</a></li>
+            <li><a href="sec-overview#sec-exotic-object" title="4.3.7"> exotic object</a></li>
+            <li><a href="sec-overview#sec-standard-object" title="4.3.8"> standard object</a></li>
+            <li><a href="sec-overview#sec-built-in-object" title="4.3.9"> built-in object</a></li>
+            <li><a href="sec-overview#sec-undefined-value" title="4.3.10"> undefined value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-undefined-type" title="4.3.11"> Undefined type</a></li>
+            <li><a href="sec-overview#sec-null-value" title="4.3.12"> null value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-null-type" title="4.3.13"> Null type</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-boolean-value" title="4.3.14"> Boolean value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-boolean-type" title="4.3.15"> Boolean type</a></li>
+            <li><a href="sec-overview#sec-boolean-object" title="4.3.16"> Boolean object</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-string-value" title="4.3.17"> String value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-string-type" title="4.3.18"> String type</a></li>
+            <li><a href="sec-overview#sec-string-object" title="4.3.19"> String object</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-number-value" title="4.3.20"> Number value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-number-type" title="4.3.21"> Number type</a></li>
+            <li><a href="sec-overview#sec-number-object" title="4.3.22"> Number object</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-infinity" title="4.3.23"> Infinity</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-nan" title="4.3.24"> NaN</a></li>
+            <li><a href="sec-overview#sec-symbol-value" title="4.3.25"> Symbol value</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-symbol-type" title="4.3.26"> Symbol type</a></li>
+            <li><a href="sec-overview#sec-symbol-object" title="4.3.27"> Symbol object</a></li>
+            <li><a href="sec-overview#sec-terms-and-definitions-function" title="4.3.28"> function</a></li>
+            <li><a href="sec-overview#sec-built-in-function" title="4.3.29"> built-in function</a></li>
+            <li><a href="sec-overview#sec-property" title="4.3.30"> property</a></li>
+            <li><a href="sec-overview#sec-method" title="4.3.31"> method</a></li>
+            <li><a href="sec-overview#sec-built-in-method" title="4.3.32"> built-in method</a></li>
+            <li><a href="sec-overview#sec-attribute" title="4.3.33"> attribute</a></li>
+            <li><a href="sec-overview#sec-own-property" title="4.3.34"> own property</a></li>
+            <li><a href="sec-overview#sec-inherited-property" title="4.3.35"> inherited property</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-overview#sec-organization-of-this-specification" title="4.4"> Organization of This
+            Specification</a></li>
+      </ul>
+    </li>
+    <li><a href="sec-notational-conventions" title="5"> Notational Conventions
+      </a><ul>
+        <li><a href="sec-notational-conventions#sec-syntactic-and-lexical-grammars" title="5.1"> Syntactic and Lexical Grammars
+          </a><ul>
+            <li><a href="sec-notational-conventions#sec-context-free-grammars" title="5.1.1"> Context-Free Grammars</a></li>
+            <li><a href="sec-notational-conventions#sec-lexical-and-regexp-grammars" title="5.1.2"> The Lexical and RegExp
+                Grammars</a></li>
+            <li><a href="sec-notational-conventions#sec-numeric-string-grammar" title="5.1.3"> The Numeric String Grammar</a></li>
+            <li><a href="sec-notational-conventions#sec-syntactic-grammar" title="5.1.4"> The Syntactic Grammar</a></li>
+            <li><a href="sec-notational-conventions#sec-grammar-notation" title="5.1.5"> Grammar Notation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-notational-conventions#sec-algorithm-conventions" title="5.2"> Algorithm Conventions</a></li>
+        <li><a href="sec-notational-conventions#sec-static-semantic-rules" title="5.3"> Static Semantic Rules</a></li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-data-types-and-values" title="6"> ECMAScript Data Types and Values
+      </a><ul>
+        <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types" title="6.1"> ECMAScript Language Types
+          </a><ul>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types-undefined-type" title="6.1.1"> The Undefined
+                Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types-null-type" title="6.1.2"> The Null Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types-boolean-type" title="6.1.3"> The Boolean Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types-string-type" title="6.1.4"> The String Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types-symbol-type" title="6.1.5"> The Symbol Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-language-types-number-type" title="6.1.6"> The Number Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-object-type" title="6.1.7"> The Object Type</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-data-types-and-values#sec-ecmascript-specification-types" title="6.2"> ECMAScript Specification Types
+          </a><ul>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-list-and-record-specification-type" title="6.2.1"> The List and Record
+                Specification Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-completion-record-specification-type" title="6.2.2"> The Completion Record
+                Specification Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-reference-specification-type" title="6.2.3"> The Reference Specification
+                Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-property-descriptor-specification-type" title="6.2.4"> The Property
+                Descriptor Specification Type</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-lexical-environment-and-environment-record-specification-types" title="6.2.5"> The Lexical
+                Environment and Environment Record Specification Types</a></li>
+            <li><a href="sec-ecmascript-data-types-and-values#sec-data-blocks" title="6.2.6"> Data Blocks</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-abstract-operations" title="7"> Abstract Operations
+      </a><ul>
+        <li><a href="sec-abstract-operations#sec-type-conversion" title="7.1"> Type Conversion
+          </a><ul>
+            <li><a href="sec-abstract-operations#sec-toprimitive" title="7.1.1"> ToPrimitive ( input [, PreferredType] )</a></li>
+            <li><a href="sec-abstract-operations#sec-toboolean" title="7.1.2"> ToBoolean ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-tonumber" title="7.1.3"> ToNumber ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-tointeger" title="7.1.4"> ToInteger ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-toint32" title="7.1.5"> ToInt32 ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-touint32" title="7.1.6"> ToUint32 ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-toint16" title="7.1.7"> ToInt16 ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-touint16" title="7.1.8"> ToUint16 ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-toint8" title="7.1.9"> ToInt8 ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-touint8" title="7.1.10"> ToUint8 ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-touint8clamp" title="7.1.11"> ToUint8Clamp ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-tostring" title="7.1.12"> ToString ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-toobject" title="7.1.13"> ToObject ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-topropertykey" title="7.1.14"> ToPropertyKey ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-tolength" title="7.1.15"> ToLength ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-canonicalnumericindexstring" title="7.1.16"> CanonicalNumericIndexString (
+                argument )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-abstract-operations#sec-testing-and-comparison-operations" title="7.2"> Testing and Comparison Operations
+          </a><ul>
+            <li><a href="sec-abstract-operations#sec-requireobjectcoercible" title="7.2.1"> RequireObjectCoercible ( argument
+                )</a></li>
+            <li><a href="sec-abstract-operations#sec-isarray" title="7.2.2"> IsArray ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-iscallable" title="7.2.3"> IsCallable ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-isconstructor" title="7.2.4"> IsConstructor ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-isextensible-o" title="7.2.5"> IsExtensible (O)</a></li>
+            <li><a href="sec-abstract-operations#sec-isinteger" title="7.2.6"> IsInteger ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-ispropertykey" title="7.2.7"> IsPropertyKey ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-isregexp" title="7.2.8"> IsRegExp ( argument )</a></li>
+            <li><a href="sec-abstract-operations#sec-samevalue" title="7.2.9"> SameValue(x, y)</a></li>
+            <li><a href="sec-abstract-operations#sec-samevaluezero" title="7.2.10"> SameValueZero(x, y)</a></li>
+            <li><a href="sec-abstract-operations#sec-abstract-relational-comparison" title="7.2.11"> Abstract Relational
+                Comparison</a></li>
+            <li><a href="sec-abstract-operations#sec-abstract-equality-comparison" title="7.2.12"> Abstract Equality
+                Comparison</a></li>
+            <li><a href="sec-abstract-operations#sec-strict-equality-comparison" title="7.2.13"> Strict Equality Comparison</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-abstract-operations#sec-operations-on-objects" title="7.3"> Operations on Objects
+          </a><ul>
+            <li><a href="sec-abstract-operations#sec-get-o-p" title="7.3.1"> Get (O, P)</a></li>
+            <li><a href="sec-abstract-operations#sec-getv" title="7.3.2"> GetV (V, P)</a></li>
+            <li><a href="sec-abstract-operations#sec-set-o-p-v-throw" title="7.3.3"> Set (O, P, V, Throw)</a></li>
+            <li><a href="sec-abstract-operations#sec-createdataproperty" title="7.3.4"> CreateDataProperty (O, P, V)</a></li>
+            <li><a href="sec-abstract-operations#sec-createmethodproperty" title="7.3.5"> CreateMethodProperty (O, P, V)</a></li>
+            <li><a href="sec-abstract-operations#sec-createdatapropertyorthrow" title="7.3.6"> CreateDataPropertyOrThrow (O, P,
+                V)</a></li>
+            <li><a href="sec-abstract-operations#sec-definepropertyorthrow" title="7.3.7"> DefinePropertyOrThrow (O, P, desc)</a></li>
+            <li><a href="sec-abstract-operations#sec-deletepropertyorthrow" title="7.3.8"> DeletePropertyOrThrow (O, P)</a></li>
+            <li><a href="sec-abstract-operations#sec-getmethod" title="7.3.9"> GetMethod (O, P)</a></li>
+            <li><a href="sec-abstract-operations#sec-hasproperty" title="7.3.10"> HasProperty (O, P)</a></li>
+            <li><a href="sec-abstract-operations#sec-hasownproperty" title="7.3.11"> HasOwnProperty (O, P)</a></li>
+            <li><a href="sec-abstract-operations#sec-call" title="7.3.12"> Call(F, V, [argumentsList])</a></li>
+            <li><a href="sec-abstract-operations#sec-construct" title="7.3.13"> Construct (F, [argumentsList], [newTarget])</a></li>
+            <li><a href="sec-abstract-operations#sec-setintegritylevel" title="7.3.14"> SetIntegrityLevel (O, level)</a></li>
+            <li><a href="sec-abstract-operations#sec-testintegritylevel" title="7.3.15"> TestIntegrityLevel (O, level)</a></li>
+            <li><a href="sec-abstract-operations#sec-createarrayfromlist" title="7.3.16"> CreateArrayFromList (elements)</a></li>
+            <li><a href="sec-abstract-operations#sec-createlistfromarraylike" title="7.3.17"> CreateListFromArrayLike (obj [,
+                elementTypes] )</a></li>
+            <li><a href="sec-abstract-operations#sec-invoke" title="7.3.18"> Invoke(O,P, [argumentsList])</a></li>
+            <li><a href="sec-abstract-operations#sec-ordinaryhasinstance" title="7.3.19"> OrdinaryHasInstance (C, O)</a></li>
+            <li><a href="sec-abstract-operations#sec-speciesconstructor" title="7.3.20"> SpeciesConstructor ( O,
+                defaultConstructor )</a></li>
+            <li><a href="sec-abstract-operations#sec-enumerableownnames" title="7.3.21"> EnumerableOwnNames (O)</a></li>
+            <li><a href="sec-abstract-operations#sec-getfunctionrealm" title="7.3.22"> GetFunctionRealm ( obj )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-abstract-operations#sec-operations-on-iterator-objects" title="7.4"> Operations on Iterator Objects
+          </a><ul>
+            <li><a href="sec-abstract-operations#sec-getiterator" title="7.4.1"> GetIterator ( obj, method )</a></li>
+            <li><a href="sec-abstract-operations#sec-iteratornext" title="7.4.2"> IteratorNext ( iterator, value )</a></li>
+            <li><a href="sec-abstract-operations#sec-iteratorcomplete" title="7.4.3"> IteratorComplete ( iterResult )</a></li>
+            <li><a href="sec-abstract-operations#sec-iteratorvalue" title="7.4.4"> IteratorValue ( iterResult )</a></li>
+            <li><a href="sec-abstract-operations#sec-iteratorstep" title="7.4.5"> IteratorStep ( iterator )</a></li>
+            <li><a href="sec-abstract-operations#sec-iteratorclose" title="7.4.6"> IteratorClose( iterator, completion )</a></li>
+            <li><a href="sec-abstract-operations#sec-createiterresultobject" title="7.4.7"> CreateIterResultObject ( value, done
+                )</a></li>
+            <li><a href="sec-abstract-operations#sec-createlistiterator" title="7.4.8"> CreateListIterator ( list )</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-executable-code-and-execution-contexts" title="8"> Executable Code and Execution
+        Contexts
+      </a><ul>
+        <li><a href="sec-executable-code-and-execution-contexts#sec-lexical-environments" title="8.1"> Lexical Environments
+          </a><ul>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-environment-records" title="8.1.1"> Environment Records</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-lexical-environment-operations" title="8.1.2"> Lexical Environment
+                Operations</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-executable-code-and-execution-contexts#sec-code-realms" title="8.2"> Code Realms
+          </a><ul>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-createrealm" title="8.2.1"> CreateRealm ( )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-createintrinsics" title="8.2.2"> CreateIntrinsics ( realmRec )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-setrealmglobalobject" title="8.2.3"> SetRealmGlobalObject ( realmRec,
+                globalObj )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-setdefaultglobalbindings" title="8.2.4"> SetDefaultGlobalBindings ( realmRec
+                )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-executable-code-and-execution-contexts#sec-execution-contexts" title="8.3"> Execution Contexts
+          </a><ul>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-resolvebinding" title="8.3.1"> ResolveBinding ( name, [env] )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-getthisenvironment" title="8.3.2"> GetThisEnvironment ( )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-resolvethisbinding" title="8.3.3"> ResolveThisBinding ( )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-getnewtarget" title="8.3.4"> GetNewTarget ( )</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-getglobalobject" title="8.3.5"> GetGlobalObject ( )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-executable-code-and-execution-contexts#sec-jobs-and-job-queues" title="8.4"> Jobs and Job Queues
+          </a><ul>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-enqueuejob" title="8.4.1"> EnqueueJob (queueName, job, arguments)</a></li>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-nextjob-result" title="8.4.2"> NextJob result</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-executable-code-and-execution-contexts#sec-ecmascript-initialization" title="8.5"> ECMAScript Initialization()
+          </a><ul>
+            <li><a href="sec-executable-code-and-execution-contexts#sec-initializehostdefinedrealm" title="8.5.1"> InitializeHostDefinedRealm ( realm
+                )</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ordinary-and-exotic-objects-behaviours" title="9"> Ordinary and Exotic Objects
+        Behaviours
+      </a><ul>
+        <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots" title="9.1"> Ordinary Object
+            Internal Methods and Internal Slots
+          </a><ul>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-getprototypeof" title="9.1.1"> [[GetPrototypeOf]]
+                ( )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-setprototypeof-v" title="9.1.2">
+                [[SetPrototypeOf]] (V)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-isextensible" title="9.1.3"> [[IsExtensible]] (
+                )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-preventextensions" title="9.1.4">
+                [[PreventExtensions]] ( )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-getownproperty-p" title="9.1.5">
+                [[GetOwnProperty]] (P)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-defineownproperty-p-desc" title="9.1.6">
+                [[DefineOwnProperty]] (P, Desc)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p" title="9.1.7">
+                [[HasProperty]](P)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver" title="9.1.8"> [[Get]] (P,
+                Receiver)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver" title="9.1.9"> [[Set]] ( P, V,
+                Receiver)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-delete-p" title="9.1.10">
+                [[Delete]] (P)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-enumerate" title="9.1.11"> [[Enumerate]] ()</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys" title="9.1.12">
+                [[OwnPropertyKeys]] ( )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-objectcreate" title="9.1.13"> ObjectCreate(proto, internalSlotsList)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ordinarycreatefromconstructor" title="9.1.14"> OrdinaryCreateFromConstructor
+                ( constructor,  intrinsicDefaultProto, internalSlotsList )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-getprototypefromconstructor" title="9.1.15"> GetPrototypeFromConstructor (
+                constructor, intrinsicDefaultProto )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ecmascript-function-objects" title="9.2"> ECMAScript Function Objects
+          </a><ul>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ecmascript-function-objects-call-thisargument-argumentslist" title="9.2.1">
+                [[Call]] ( thisArgument, argumentsList)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-ecmascript-function-objects-construct-argumentslist-newtarget" title="9.2.2">
+                [[Construct]] ( argumentsList, newTarget)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-functionallocate" title="9.2.3"> FunctionAllocate (functionPrototype, strict
+                [,functionKind] )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-functioninitialize" title="9.2.4"> FunctionInitialize (F, kind,
+                ParameterList, Body, Scope)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-functioncreate" title="9.2.5"> FunctionCreate (kind, ParameterList, Body,
+                Scope, Strict, prototype)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-generatorfunctioncreate" title="9.2.6"> GeneratorFunctionCreate (kind,
+                ParameterList, Body, Scope, Strict)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-addrestrictedfunctionproperties" title="9.2.7">
+                AddRestrictedFunctionProperties ( F, realm )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-makeconstructor" title="9.2.8"> MakeConstructor (F, writablePrototype,
+                prototype)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-makeclassconstructor" title="9.2.9"> MakeClassConstructor ( F)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-makemethod" title="9.2.10"> MakeMethod ( F, homeObject)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-setfunctionname" title="9.2.11"> SetFunctionName (F, name, prefix)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-functiondeclarationinstantiation" title="9.2.12">
+                FunctionDeclarationInstantiation(func, argumentsList)</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-built-in-function-objects" title="9.3"> Built-in Function Objects
+          </a><ul>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-built-in-function-objects-call-thisargument-argumentslist" title="9.3.1">
+                [[Call]] ( thisArgument, argumentsList)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-built-in-function-objects-construct-argumentslist-newtarget" title="9.3.2">
+                [[Construct]] (argumentsList, newTarget)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-createbuiltinfunction" title="9.3.3"> CreateBuiltinFunction(realm, steps,
+                prototype, internalSlotsList)</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-built-in-exotic-object-internal-methods-and-slots" title="9.4"> Built-in Exotic
+            Object Internal Methods and Slots
+          </a><ul>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-bound-function-exotic-objects" title="9.4.1"> Bound Function Exotic
+                Objects</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-array-exotic-objects" title="9.4.2"> Array Exotic Objects</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-string-exotic-objects" title="9.4.3"> String Exotic Objects</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-arguments-exotic-objects" title="9.4.4"> Arguments Exotic Objects</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-integer-indexed-exotic-objects" title="9.4.5"> Integer Indexed Exotic
+                Objects</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-module-namespace-exotic-objects" title="9.4.6"> Module Namespace Exotic
+                Objects</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots" title="9.5"> Proxy Object
+            Internal Methods and Internal Slots
+          </a><ul>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof" title="9.5.1"> [[GetPrototypeOf]] (
+                )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v" title="9.5.2"> [[SetPrototypeOf]]
+                (V)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-isextensible" title="9.5.3">
+                [[IsExtensible]] ( )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-preventextensions" title="9.5.4">
+                [[PreventExtensions]] ( )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p" title="9.5.5"> [[GetOwnProperty]]
+                (P)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc" title="9.5.6">
+                [[DefineOwnProperty]] (P, Desc)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p" title="9.5.7"> [[HasProperty]]
+                (P)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver" title="9.5.8"> [[Get]] (P,
+                Receiver)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver" title="9.5.9"> [[Set]] ( P, V,
+                Receiver)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-delete-p" title="9.5.10">
+                [[Delete]] (P)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-enumerate" title="9.5.11">
+                [[Enumerate]] ()</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys" title="9.5.12"> [[OwnPropertyKeys]]
+                ( )</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist" title="9.5.13">
+                [[Call]] (thisArgument, argumentsList)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget" title="9.5.14">
+                [[Construct]] ( argumentsList, newTarget)</a></li>
+            <li><a href="sec-ordinary-and-exotic-objects-behaviours#sec-proxycreate" title="9.5.15"> ProxyCreate(target, handler)</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-language-source-code" title="10"> ECMAScript Language: Source Code
+      </a><ul>
+        <li><a href="sec-ecmascript-language-source-code#sec-source-text" title="10.1"> Source Text
+          </a><ul>
+            <li><a href="sec-ecmascript-language-source-code#sec-utf16encoding" title="10.1.1"> Static Semantics:  <var>UTF16Encoding ( cp
+                )</var></a></li>
+            <li><a href="sec-ecmascript-language-source-code#sec-utf16decode" title="10.1.2"> Static Semantics: UTF16Decode( lead, trail
+                )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-source-code#sec-types-of-source-code" title="10.2"> Types of Source Code
+          </a><ul>
+            <li><a href="sec-ecmascript-language-source-code#sec-strict-mode-code" title="10.2.1"> Strict Mode Code</a></li>
+            <li><a href="sec-ecmascript-language-source-code#sec-non-ecmascript-functions" title="10.2.2"> Non-ECMAScript Functions</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-language-lexical-grammar" title="11"> ECMAScript Language: Lexical Grammar
+      </a><ul>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-unicode-format-control-characters" title="11.1"> Unicode Format-Control
+            Characters</a></li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-white-space" title="11.2"> White Space</a></li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-line-terminators" title="11.3"> Line Terminators</a></li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-comments" title="11.4"> Comments</a></li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-tokens" title="11.5"> Tokens</a></li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-names-and-keywords" title="11.6"> Names and Keywords
+          </a><ul>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-identifier-names" title="11.6.1"> Identifier Names</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-reserved-words" title="11.6.2"> Reserved Words</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-punctuators" title="11.7"> Punctuators</a></li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-ecmascript-language-lexical-grammar-literals" title="11.8"> Literals
+          </a><ul>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-null-literals" title="11.8.1"> Null Literals</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-boolean-literals" title="11.8.2"> Boolean Literals</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-literals-numeric-literals" title="11.8.3"> Numeric Literals</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-literals-string-literals" title="11.8.4"> String Literals</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-literals-regular-expression-literals" title="11.8.5"> Regular Expression
+                Literals</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-template-literal-lexical-components" title="11.8.6"> Template Literal Lexical
+                Components</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-lexical-grammar#sec-automatic-semicolon-insertion" title="11.9"> Automatic Semicolon Insertion
+          </a><ul>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-rules-of-automatic-semicolon-insertion" title="11.9.1"> Rules of Automatic
+                Semicolon Insertion</a></li>
+            <li><a href="sec-ecmascript-language-lexical-grammar#sec-examples-of-automatic-semicolon-insertion" title="11.9.2"> Examples of
+                Automatic Semicolon Insertion</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-language-expressions" title="12"> ECMAScript Language: Expressions
+      </a><ul>
+        <li><a href="sec-ecmascript-language-expressions#sec-identifiers" title="12.1"> Identifiers
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifiers-static-semantics-early-errors" title="12.1.1"> Static Semantics:
+                Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifiers-static-semantics-boundnames" title="12.1.2"> Static Semantics:
+                BoundNames</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifiers-static-semantics-isvalidsimpleassignmenttarget" title="12.1.3">
+                Static Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifiers-static-semantics-stringvalue" title="12.1.4"> Static Semantics:
+                <span class="nt">StringValue</span></a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifiers-runtime-semantics-bindinginitialization" title="12.1.5"> Runtime
+                Semantics: BindingInitialization</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifiers-runtime-semantics-evaluation" title="12.1.6"> Runtime Semantics:
+                Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-primary-expression" title="12.2"> Primary Expression
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-primary-expression-semantics" title="12.2.1"> Semantics</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-this-keyword" title="12.2.2"> The <code>this</code> Keyword</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-identifier-reference" title="12.2.3"> Identifier Reference</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-primary-expression-literals" title="12.2.4"> Literals</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-array-initializer" title="12.2.5"> Array Initializer</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-object-initializer" title="12.2.6"> Object Initializer</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-function-defining-expressions" title="12.2.7"> Function Defining
+                Expressions</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-primary-expression-regular-expression-literals" title="12.2.8"> Regular
+                Expression Literals</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-template-literals" title="12.2.9"> Template Literals</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-grouping-operator" title="12.2.10"> The Grouping Operator</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-left-hand-side-expressions" title="12.3"> Left-Hand-Side Expressions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-static-semantics" title="12.3.1"> Static Semantics</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-property-accessors" title="12.3.2"> Property Accessors</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-new-operator" title="12.3.3"> The <code>new</code> Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-function-calls" title="12.3.4"> Function Calls</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-super-keyword" title="12.3.5"> The <code>super</code> Keyword</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-argument-lists" title="12.3.6"> Argument Lists</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-tagged-templates" title="12.3.7"> Tagged Templates</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-meta-properties" title="12.3.8"> Meta Properties</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-postfix-expressions" title="12.4"> Postfix Expressions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-postfix-expressions-static-semantics-early-errors" title="12.4.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-postfix-expressions-static-semantics-isfunctiondefinition" title="12.4.2">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-postfix-expressions-static-semantics-isvalidsimpleassignmenttarget" title="12.4.3"> Static Semantics:
+                IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-postfix-increment-operator" title="12.4.4"> Postfix Increment Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-postfix-decrement-operator" title="12.4.5"> Postfix Decrement Operator</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-unary-operators" title="12.5"> Unary Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-unary-operators-static-semantics-early-errors" title="12.5.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-unary-operators-static-semantics-isfunctiondefinition" title="12.5.2"> Static
+                Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-unary-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.5.3"> Static Semantics:
+                IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-delete-operator" title="12.5.4"> The <code>delete</code> Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-void-operator" title="12.5.5"> The <code>void</code> Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-typeof-operator" title="12.5.6"> The <code>typeof</code> Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-prefix-increment-operator" title="12.5.7"> Prefix Increment Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-prefix-decrement-operator" title="12.5.8"> Prefix Decrement Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-unary-plus-operator" title="12.5.9"> Unary <code>+</code> Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-unary-minus-operator" title="12.5.10"> Unary <code>-</code> Operator</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-bitwise-not-operator" title="12.5.11"> Bitwise NOT Operator ( <code>~</code>
+                )</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-logical-not-operator" title="12.5.12"> Logical NOT Operator ( <code>!</code>
+                )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-multiplicative-operators" title="12.6"> Multiplicative Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-multiplicative-operators-static-semantics-isfunctiondefinition" title="12.6.1"> Static Semantics:
+                IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-multiplicative-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.6.2"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-multiplicative-operators-runtime-semantics-evaluation" title="12.6.3">
+                Runtime Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-additive-operators" title="12.7"> Additive Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-additive-operators-static-semantics-isfunctiondefinition" title="12.7.1">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-additive-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.7.2"> Static Semantics:
+                IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-addition-operator-plus" title="12.7.3"> The Addition operator (
+                <code>+</code> )</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-subtraction-operator-minus" title="12.7.4"> The Subtraction Operator (
+                <code>-</code> )</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-applying-the-additive-operators-to-numbers" title="12.7.5"> Applying the
+                Additive Operators to Numbers</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-bitwise-shift-operators" title="12.8"> Bitwise Shift Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-bitwise-shift-operators-static-semantics-isfunctiondefinition" title="12.8.1"> Static Semantics:
+                IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-bitwise-shift-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.8.2"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-left-shift-operator" title="12.8.3"> The Left Shift Operator (
+                <code>&lt;&lt;</code> )</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-signed-right-shift-operator" title="12.8.4"> The Signed Right Shift Operator
+                ( <code>&gt;&gt;</code> )</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-unsigned-right-shift-operator" title="12.8.5"> The Unsigned Right Shift
+                Operator ( <code>&gt;&gt;&gt;</code> )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-relational-operators" title="12.9"> Relational Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-relational-operators-static-semantics-isfunctiondefinition" title="12.9.1">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-relational-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.9.2"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-relational-operators-runtime-semantics-evaluation" title="12.9.3"> Runtime
+                Semantics: Evaluation</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-instanceofoperator" title="12.9.4"> Runtime Semantics: InstanceofOperator(O,
+                C)</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-equality-operators" title="12.10"> Equality Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-equality-operators-static-semantics-isfunctiondefinition" title="12.10.1">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-equality-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.10.2"> Static Semantics:
+                IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-equality-operators-runtime-semantics-evaluation" title="12.10.3"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-binary-bitwise-operators" title="12.11"> Binary Bitwise Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-binary-bitwise-operators-static-semantics-isfunctiondefinition" title="12.11.1"> Static Semantics:
+                IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-binary-bitwise-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.11.2"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-binary-bitwise-operators-runtime-semantics-evaluation" title="12.11.3">
+                Runtime Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-binary-logical-operators" title="12.12"> Binary Logical Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-binary-logical-operators-static-semantics-isfunctiondefinition" title="12.12.1"> Static Semantics:
+                IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-binary-logical-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.12.2"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-binary-logical-operators-runtime-semantics-evaluation" title="12.12.3">
+                Runtime Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-conditional-operator" title="12.13"> Conditional Operator ( <code>? : )</code>
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-conditional-operator-static-semantics-isfunctiondefinition" title="12.13.1">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-conditional-operator-static-semantics-isvalidsimpleassignmenttarget" title="12.13.2"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-conditional-operator-runtime-semantics-evaluation" title="12.13.3"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-assignment-operators" title="12.14"> Assignment Operators
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-assignment-operators-static-semantics-early-errors" title="12.14.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-assignment-operators-static-semantics-isfunctiondefinition" title="12.14.2">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-assignment-operators-static-semantics-isvalidsimpleassignmenttarget" title="12.14.3"> Static
+                Semantics:  IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-assignment-operators-runtime-semantics-evaluation" title="12.14.4"> Runtime
+                Semantics: Evaluation</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-destructuring-assignment" title="12.14.5"> Destructuring Assignment</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-expressions#sec-comma-operator" title="12.15"> Comma Operator ( <code>, )</code>
+          </a><ul>
+            <li><a href="sec-ecmascript-language-expressions#sec-comma-operator-static-semantics-isfunctiondefinition" title="12.15.1"> Static
+                Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-comma-operator-static-semantics-isvalidsimpleassignmenttarget" title="12.15.2"> Static Semantics:
+                IsValidSimpleAssignmentTarget</a></li>
+            <li><a href="sec-ecmascript-language-expressions#sec-comma-operator-runtime-semantics-evaluation" title="12.15.3"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-language-statements-and-declarations" title="13"> ECMAScript Language:
+        Statements and Declarations
+      </a><ul>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics" title="13.1"> Statement Semantics
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-static-semantics-containsduplicatelabels" title="13.1.1">
+                Static Semantics: ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-static-semantics-containsundefinedbreaktarget" title="13.1.2"> Static Semantics:
+                ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-static-semantics-containsundefinedcontinuetarget" title="13.1.3"> Static
+                Semantics: ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-static-semantics-declarationpart" title="13.1.4"> Static Semantics:
+                DeclarationPart</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-static-semantics-vardeclarednames" title="13.1.5"> Static
+                Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-static-semantics-varscopeddeclarations" title="13.1.6">
+                Static Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-runtime-semantics-labelledevaluation" title="13.1.7">
+                Runtime Semantics: LabelledEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-statement-semantics-runtime-semantics-evaluation" title="13.1.8"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block" title="13.2"> Block
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-early-errors" title="13.2.1"> Static Semantics:  Early
+                Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-containsduplicatelabels" title="13.2.2"> Static
+                Semantics: ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-containsundefinedbreaktarget" title="13.2.3"> Static
+                Semantics: ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-containsundefinedcontinuetarget" title="13.2.4">
+                Static Semantics: ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-lexicallydeclarednames" title="13.2.5"> Static
+                Semantics:  LexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-lexicallyscopeddeclarations" title="13.2.6"> Static
+                Semantics:  LexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-toplevellexicallydeclarednames" title="13.2.7"> Static
+                Semantics:  TopLevelLexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-toplevellexicallyscopeddeclarations" title="13.2.8">
+                Static Semantics:  TopLevelLexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-toplevelvardeclarednames" title="13.2.9"> Static
+                Semantics:  TopLevelVarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-toplevelvarscopeddeclarations" title="13.2.10"> Static
+                Semantics:  TopLevelVarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-vardeclarednames" title="13.2.11"> Static Semantics:
+                VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-static-semantics-varscopeddeclarations" title="13.2.12"> Static
+                Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-block-runtime-semantics-evaluation" title="13.2.13"> Runtime Semantics:
+                Evaluation</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-blockdeclarationinstantiation" title="13.2.14"> Runtime Semantics:
+                BlockDeclarationInstantiation( code, env )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-declarations-and-the-variable-statement" title="13.3"> Declarations and the
+            Variable Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-let-and-const-declarations" title="13.3.1"> Let and Const Declarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-variable-statement" title="13.3.2"> Variable Statement</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-destructuring-binding-patterns" title="13.3.3"> Destructuring Binding
+                Patterns</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-empty-statement" title="13.4"> Empty Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-empty-statement-runtime-semantics-evaluation" title="13.4.1"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-expression-statement" title="13.5"> Expression Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-expression-statement-runtime-semantics-evaluation" title="13.5.1"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement" title="13.6"> The <code>if</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-static-semantics-early-errors" title="13.6.1"> Static Semantics:
+                Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-static-semantics-containsduplicatelabels" title="13.6.2"> Static
+                Semantics: ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-static-semantics-containsundefinedbreaktarget" title="13.6.3">
+                Static Semantics: ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-static-semantics-containsundefinedcontinuetarget" title="13.6.4"> Static Semantics:
+                ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-static-semantics-vardeclarednames" title="13.6.5"> Static
+                Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-static-semantics-varscopeddeclarations" title="13.6.6"> Static
+                Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-if-statement-runtime-semantics-evaluation" title="13.6.7"> Runtime Semantics:
+                Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-iteration-statements" title="13.7"> Iteration Statements
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-iteration-statements-semantics" title="13.7.1"> Semantics</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-do-while-statement" title="13.7.2"> The <code>do</code>-<code>while</code>
+                Statement</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-while-statement" title="13.7.3"> The <code>while</code> Statement</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-for-statement" title="13.7.4"> The <code>for</code> Statement</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-for-in-and-for-of-statements" title="13.7.5"> The
+                <code>for</code>-<code>in</code> and <code>for</code>-<code>of</code> Statements</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-continue-statement" title="13.8"> The <code>continue</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-continue-statement-static-semantics-early-errors" title="13.8.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-continue-statement-static-semantics-containsundefinedcontinuetarget" title="13.8.2"> Static
+                Semantics: ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-continue-statement-runtime-semantics-evaluation" title="13.8.3"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-break-statement" title="13.9"> The <code>break</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-break-statement-static-semantics-early-errors" title="13.9.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-break-statement-static-semantics-containsundefinedbreaktarget" title="13.9.2"> Static Semantics:
+                ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-break-statement-runtime-semantics-evaluation" title="13.9.3"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-return-statement" title="13.10"> The <code>return</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-return-statement-runtime-semantics-evaluation" title="13.10.1"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement" title="13.11"> The <code>with</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-static-semantics-early-errors" title="13.11.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-static-semantics-containsduplicatelabels" title="13.11.2">
+                Static Semantics: ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-static-semantics-containsundefinedbreaktarget" title="13.11.3"> Static Semantics:
+                ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-static-semantics-containsundefinedcontinuetarget" title="13.11.4"> Static Semantics:
+                ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-static-semantics-vardeclarednames" title="13.11.5"> Static
+                Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-static-semantics-varscopeddeclarations" title="13.11.6">
+                Static Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-with-statement-runtime-semantics-evaluation" title="13.11.7"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement" title="13.12"> The <code>switch</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-early-errors" title="13.12.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-containsduplicatelabels" title="13.12.2">
+                Static Semantics: ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-containsundefinedbreaktarget" title="13.12.3"> Static Semantics:
+                ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-containsundefinedcontinuetarget" title="13.12.4"> Static Semantics:
+                ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-lexicallydeclarednames" title="13.12.5">
+                Static Semantics:  LexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-lexicallyscopeddeclarations" title="13.12.6"> Static Semantics:
+                LexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-vardeclarednames" title="13.12.7"> Static
+                Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-static-semantics-varscopeddeclarations" title="13.12.8">
+                Static Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-runtime-semantics-caseblockevaluation" title="13.12.9"> Runtime Semantics:
+                CaseBlockEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-runtime-semantics-caseselectorevaluation" title="13.12.10"> Runtime
+                Semantics: CaseSelectorEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-switch-statement-runtime-semantics-evaluation" title="13.12.11"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements" title="13.13"> Labelled Statements
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-early-errors" title="13.13.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-containsduplicatelabels" title="13.13.2"> Static Semantics:
+                ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-containsundefinedbreaktarget" title="13.13.3"> Static Semantics:
+                ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-containsundefinedcontinuetarget" title="13.13.4"> Static
+                Semantics: ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-islabelledfunction" title="13.13.5"> Static Semantics:  IsLabelledFunction (
+                stmt )</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-lexicallydeclarednames" title="13.13.6">
+                Static Semantics:  LexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-lexicallyscopeddeclarations" title="13.13.7"> Static Semantics:
+                LexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-toplevellexicallydeclarednames" title="13.13.8"> Static
+                Semantics:  TopLevelLexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-toplevellexicallyscopeddeclarations" title="13.13.9"> Static
+                Semantics:  TopLevelLexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-toplevelvardeclarednames" title="13.13.10"> Static Semantics:
+                TopLevelVarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-toplevelvarscopeddeclarations" title="13.13.11"> Static
+                Semantics:  TopLevelVarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-vardeclarednames" title="13.13.12">
+                Static Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-static-semantics-varscopeddeclarations" title="13.13.13">
+                Static Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-runtime-semantics-labelledevaluation" title="13.13.14">
+                Runtime Semantics: LabelledEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-labelled-statements-runtime-semantics-evaluation" title="13.13.15"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-throw-statement" title="13.14"> The <code>throw</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-throw-statement-runtime-semantics-evaluation" title="13.14.1"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement" title="13.15"> The <code>try</code> Statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-static-semantics-early-errors" title="13.15.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-static-semantics-containsduplicatelabels" title="13.15.2">
+                Static Semantics: ContainsDuplicateLabels</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-static-semantics-containsundefinedbreaktarget" title="13.15.3">
+                Static Semantics: ContainsUndefinedBreakTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-static-semantics-containsundefinedcontinuetarget" title="13.15.4"> Static Semantics:
+                ContainsUndefinedContinueTarget</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-static-semantics-vardeclarednames" title="13.15.5"> Static
+                Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-static-semantics-varscopeddeclarations" title="13.15.6"> Static
+                Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-runtime-semantics-catchclauseevaluation" title="13.15.7"> Runtime Semantics:
+                CatchClauseEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-try-statement-runtime-semantics-evaluation" title="13.15.8"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-statements-and-declarations#sec-debugger-statement" title="13.16"> The <code>debugger</code> statement
+          </a><ul>
+            <li><a href="sec-ecmascript-language-statements-and-declarations#sec-debugger-statement-runtime-semantics-evaluation" title="13.16.1"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-language-functions-and-classes" title="14"> ECMAScript Language: Functions
+        and Classes
+      </a><ul>
+        <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions" title="14.1"> Function Definitions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-directive-prologues-and-the-use-strict-directive" title="14.1.1"> Directive
+                Prologues and the Use Strict Directive</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-early-errors" title="14.1.2"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-boundnames" title="14.1.3"> Static
+                Semantics:  BoundNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-contains" title="14.1.4"> Static
+                Semantics:  Contains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-containsexpression" title="14.1.5">
+                Static Semantics:  ContainsExpression</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-expectedargumentcount" title="14.1.6">
+                Static Semantics:  ExpectedArgumentCount</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-hasinitializer" title="14.1.7"> Static
+                Semantics:  HasInitializer</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-hasname" title="14.1.8"> Static
+                Semantics:  HasName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-isanonymousfunctiondefinition" title="14.1.9"> Static Semantics:
+                IsAnonymousFunctionDefinition ( production )</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-isconstantdeclaration" title="14.1.10">
+                Static Semantics:  IsConstantDeclaration</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-isfunctiondefinition" title="14.1.11">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-issimpleparameterlist" title="14.1.12">
+                Static Semantics:  IsSimpleParameterList</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-lexicallydeclarednames" title="14.1.13"> Static Semantics:
+                LexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-lexicallyscopeddeclarations" title="14.1.14"> Static Semantics:
+                LexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-vardeclarednames" title="14.1.15">
+                Static Semantics:  VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-static-semantics-varscopeddeclarations" title="14.1.16">
+                Static Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-runtime-semantics-evaluatebody" title="14.1.17"> Runtime
+                Semantics: EvaluateBody</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-runtime-semantics-iteratorbindinginitialization" title="14.1.18"> Runtime
+                Semantics: IteratorBindingInitialization</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-runtime-semantics-instantiatefunctionobject" title="14.1.19"> Runtime Semantics:
+                InstantiateFunctionObject</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-function-definitions-runtime-semantics-evaluation" title="14.1.20"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions" title="14.2"> Arrow Function Definitions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-early-errors" title="14.2.1">
+                Static Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-boundnames" title="14.2.2">
+                Static Semantics:  BoundNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-contains" title="14.2.3"> Static
+                Semantics:  Contains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-containsexpression" title="14.2.4"> Static Semantics:
+                ContainsExpression</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-expectedargumentcount" title="14.2.5"> Static Semantics:
+                ExpectedArgumentCount</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-hasinitializer" title="14.2.6">
+                Static Semantics:  HasInitializer</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-hasname" title="14.2.7"> Static
+                Semantics:  HasName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-issimpleparameterlist" title="14.2.8"> Static Semantics:
+                IsSimpleParameterList</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-coveredformalslist" title="14.2.9"> Static Semantics:
+                CoveredFormalsList</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-lexicallydeclarednames" title="14.2.10"> Static
+                Semantics:  LexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-lexicallyscopeddeclarations" title="14.2.11"> Static
+                Semantics:  LexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-vardeclarednames" title="14.2.12"> Static Semantics:
+                VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-static-semantics-varscopeddeclarations" title="14.2.13"> Static Semantics:
+                VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-runtime-semantics-iteratorbindinginitialization" title="14.2.14"> Runtime
+                Semantics: IteratorBindingInitialization</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-runtime-semantics-evaluatebody" title="14.2.15">
+                Runtime Semantics: EvaluateBody</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-arrow-function-definitions-runtime-semantics-evaluation" title="14.2.16">
+                Runtime Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions" title="14.3"> Method Definitions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-static-semantics-early-errors" title="14.3.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-static-semantics-computedpropertycontains" title="14.3.2">
+                Static Semantics:  ComputedPropertyContains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-static-semantics-expectedargumentcount" title="14.3.3">
+                Static Semantics:  ExpectedArgumentCount</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-static-semantics-hascomputedpropertykey" title="14.3.4">
+                Static Semantics:  HasComputedPropertyKey</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-static-semantics-hasdirectsuper" title="14.3.5"> Static
+                Semantics:  HasDirectSuper</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-static-semantics-propname" title="14.3.6"> Static
+                Semantics:  PropName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-specialmethod" title="14.3.7"> Static Semantics:
+                SpecialMethod</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-runtime-semantics-definemethod" title="14.3.8"> Runtime Semantics:
+                DefineMethod</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-method-definitions-runtime-semantics-propertydefinitionevaluation" title="14.3.9"> Runtime Semantics:
+                PropertyDefinitionEvaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions" title="14.4"> Generator Function Definitions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-early-errors" title="14.4.1">
+                Static Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-boundnames" title="14.4.2">
+                Static Semantics:  BoundNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-computedpropertycontains" title="14.4.3"> Static
+                Semantics:  ComputedPropertyContains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-contains" title="14.4.4">
+                Static Semantics:  Contains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-hascomputedpropertykey" title="14.4.5"> Static
+                Semantics:  HasComputedPropertyKey</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-hasdirectsuper" title="14.4.6"> Static Semantics:
+                HasDirectSuper</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-hasname" title="14.4.7">
+                Static Semantics:  HasName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-isconstantdeclaration" title="14.4.8"> Static
+                Semantics:  IsConstantDeclaration</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-isfunctiondefinition" title="14.4.9"> Static
+                Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-static-semantics-propname" title="14.4.10">
+                Static Semantics:  PropName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-runtime-semantics-evaluatebody" title="14.4.11"> Runtime Semantics:
+                EvaluateBody</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject" title="14.4.12"> Runtime
+                Semantics: InstantiateFunctionObject</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation" title="14.4.13">
+                Runtime Semantics: PropertyDefinitionEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-generator-function-definitions-runtime-semantics-evaluation" title="14.4.14">
+                Runtime Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions" title="14.5"> Class Definitions
+          </a><ul>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-early-errors" title="14.5.1"> Static
+                Semantics:  Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-boundnames" title="14.5.2"> Static
+                Semantics:  BoundNames</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-constructormethod" title="14.5.3"> Static Semantics:
+                ConstructorMethod</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-contains" title="14.5.4"> Static
+                Semantics:  Contains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-computedpropertycontains" title="14.5.5">
+                Static Semantics:  ComputedPropertyContains</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-hasname" title="14.5.6"> Static Semantics:
+                HasName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-isconstantdeclaration" title="14.5.7">
+                Static Semantics:  IsConstantDeclaration</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-isfunctiondefinition" title="14.5.8">
+                Static Semantics:  IsFunctionDefinition</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-isstatic" title="14.5.9"> Static Semantics:  IsStatic</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-nonconstructormethoddefinitions" title="14.5.10"> Static
+                Semantics:  NonConstructorMethodDefinitions</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-prototypepropertynamelist" title="14.5.11"> Static
+                Semantics:  PrototypePropertyNameList</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-static-semantics-propname" title="14.5.12"> Static
+                Semantics:  PropName</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-staticpropertynamelist" title="14.5.13"> Static Semantics:
+                StaticPropertyNameList</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-runtime-semantics-classdefinitionevaluation" title="14.5.14"> Runtime
+                Semantics: ClassDefinitionEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-runtime-semantics-bindingclassdeclarationevaluation" title="14.5.15"> Runtime
+                Semantics: BindingClassDeclarationEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-class-definitions-runtime-semantics-evaluation" title="14.5.16"> Runtime
+                Semantics: Evaluation</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-functions-and-classes#sec-tail-position-calls" title="14.6"> Tail Position Calls
+          </a><ul>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-isintailposition" title="14.6.1"> Static Semantics:
+                IsInTailPosition(nonterminal)</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-static-semantics-hasproductionintailposition" title="14.6.2"> Static
+                Semantics: HasProductionInTailPosition</a></li>
+            <li><a href="sec-ecmascript-language-functions-and-classes#sec-preparefortailcall" title="14.6.3"> Runtime Semantics: PrepareForTailCall (
+                )</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-language-scripts-and-modules" title="15"> ECMAScript Language: Scripts and
+        Modules
+      </a><ul>
+        <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scripts" title="15.1"> Scripts
+          </a><ul>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scripts-static-semantics-early-errors" title="15.1.1"> Static Semantics:
+                Early Errors</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-static-semantics-isstrict" title="15.1.2"> Static Semantics:  IsStrict</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scripts-static-semantics-lexicallydeclarednames" title="15.1.3"> Static
+                Semantics:  LexicallyDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scripts-static-semantics-lexicallyscopeddeclarations" title="15.1.4"> Static
+                Semantics:  LexicallyScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scripts-static-semantics-vardeclarednames" title="15.1.5"> Static Semantics:
+                VarDeclaredNames</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scripts-static-semantics-varscopeddeclarations" title="15.1.6"> Static
+                Semantics:  VarScopedDeclarations</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-runtime-semantics-scriptevaluation" title="15.1.7"> Runtime Semantics:
+                ScriptEvaluation</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-globaldeclarationinstantiation" title="15.1.8"> Runtime Semantics:
+                GlobalDeclarationInstantiation (script, env)</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-scriptevaluationjob" title="15.1.9"> Runtime Semantics: ScriptEvaluationJob (
+                sourceText )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-ecmascript-language-scripts-and-modules#sec-modules" title="15.2"> Modules
+          </a><ul>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-module-semantics" title="15.2.1"> Module Semantics</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-imports" title="15.2.2"> Imports</a></li>
+            <li><a href="sec-ecmascript-language-scripts-and-modules#sec-exports" title="15.2.3"> Exports</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-error-handling-and-language-extensions" title="16"> Error Handling and Language
+        Extensions
+      </a><ul>
+        <li><a href="sec-error-handling-and-language-extensions#sec-forbidden-extensions" title="16.1"> Forbidden Extensions</a></li>
+      </ul>
+    </li>
+    <li><a href="sec-ecmascript-standard-built-in-objects" title="17"> ECMAScript Standard Built-in
+        Objects</a></li>
+    <li><a href="sec-global-object" title="18"> The Global Object
+      </a><ul>
+        <li><a href="sec-global-object#sec-value-properties-of-the-global-object" title="18.1"> Value Properties of the
+            Global Object
+          </a><ul>
+            <li><a href="sec-global-object#sec-value-properties-of-the-global-object-infinity" title="18.1.1"> Infinity</a></li>
+            <li><a href="sec-global-object#sec-value-properties-of-the-global-object-nan" title="18.1.2"> NaN</a></li>
+            <li><a href="sec-global-object#sec-undefined" title="18.1.3"> undefined</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-global-object#sec-function-properties-of-the-global-object" title="18.2"> Function Properties of
+            the Global Object
+          </a><ul>
+            <li><a href="sec-global-object#sec-eval-x" title="18.2.1"> eval (x)</a></li>
+            <li><a href="sec-global-object#sec-isfinite-number" title="18.2.2"> isFinite (number)</a></li>
+            <li><a href="sec-global-object#sec-isnan-number" title="18.2.3"> isNaN (number)</a></li>
+            <li><a href="sec-global-object#sec-parsefloat-string" title="18.2.4"> parseFloat (string)</a></li>
+            <li><a href="sec-global-object#sec-parseint-string-radix" title="18.2.5"> parseInt (string , radix)</a></li>
+            <li><a href="sec-global-object#sec-uri-handling-functions" title="18.2.6"> URI Handling Functions</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object" title="18.3"> Constructor Properties
+            of the Global Object
+          </a><ul>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-array" title="18.3.1"> Array ( .
+                . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-arraybuffer" title="18.3.2">
+                ArrayBuffer ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-boolean" title="18.3.3"> Boolean
+                ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-dataview" title="18.3.4">
+                DataView ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-date" title="18.3.5"> Date ( . .
+                . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-error" title="18.3.6"> Error ( .
+                . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-evalerror" title="18.3.7">
+                EvalError ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-float32array" title="18.3.8"> Float32Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-float64array" title="18.3.9"> Float64Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-function" title="18.3.10">
+                Function ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-int8array" title="18.3.11"> Int8Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-int16array" title="18.3.12"> Int16Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-int32array" title="18.3.13"> Int32Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-map" title="18.3.14"> Map ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-number" title="18.3.15"> Number (
+                . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-object" title="18.3.16"> Object (
+                . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-proxy" title="18.3.17"> Proxy ( .
+                . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-promise" title="18.3.18"> Promise
+                ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-rangeerror" title="18.3.19">
+                RangeError ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-referenceerror" title="18.3.20">
+                ReferenceError ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-regexp" title="18.3.21"> RegExp (
+                . . . )</a></li>
+            <li><a href="sec-global-object#sec-set" title="18.3.22"> Set ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-string" title="18.3.23"> String (
+                . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-symbol" title="18.3.24"> Symbol (
+                . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-syntaxerror" title="18.3.25">
+                SyntaxError ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-typeerror" title="18.3.26">
+                TypeError ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-uint8array" title="18.3.27"> Uint8Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-uint8clampedarray" title="18.3.28"> Uint8ClampedArray ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-uint16array" title="18.3.29"> Uint16Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-uint32array" title="18.3.30"> Uint32Array ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-urierror" title="18.3.31">
+                URIError ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-weakmap" title="18.3.32"> WeakMap
+                ( . . . )</a></li>
+            <li><a href="sec-global-object#sec-constructor-properties-of-the-global-object-weakset" title="18.3.33"> WeakSet
+                ( . . . )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-global-object#sec-other-properties-of-the-global-object" title="18.4"> Other Properties of the
+            Global Object
+          </a><ul>
+            <li><a href="sec-global-object#sec-json" title="18.4.1"> JSON</a></li>
+            <li><a href="sec-global-object#sec-math" title="18.4.2"> Math</a></li>
+            <li><a href="sec-global-object#sec-reflect" title="18.4.3"> Reflect</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-fundamental-objects" title="19"> Fundamental Objects
+      </a><ul>
+        <li><a href="sec-fundamental-objects#sec-object-objects" title="19.1"> Object Objects
+          </a><ul>
+            <li><a href="sec-fundamental-objects#sec-object-constructor" title="19.1.1"> The Object Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-object-constructor" title="19.1.2"> Properties of the
+                Object Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-object-prototype-object" title="19.1.3"> Properties of the
+                Object Prototype Object</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-object-instances" title="19.1.4"> Properties of Object
+                Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-fundamental-objects#sec-function-objects" title="19.2"> Function Objects
+          </a><ul>
+            <li><a href="sec-fundamental-objects#sec-function-constructor" title="19.2.1"> The Function Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-function-constructor" title="19.2.2"> Properties of the
+                Function Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-function-prototype-object" title="19.2.3"> Properties of
+                the Function Prototype Object</a></li>
+            <li><a href="sec-fundamental-objects#sec-function-instances" title="19.2.4"> Function Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-fundamental-objects#sec-boolean-objects" title="19.3"> Boolean Objects
+          </a><ul>
+            <li><a href="sec-fundamental-objects#sec-boolean-constructor" title="19.3.1"> The Boolean Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-boolean-constructor" title="19.3.2"> Properties of the
+                Boolean Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-boolean-prototype-object" title="19.3.3"> Properties of the
+                Boolean Prototype Object</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-boolean-instances" title="19.3.4"> Properties of Boolean
+                Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-fundamental-objects#sec-symbol-objects" title="19.4"> Symbol Objects
+          </a><ul>
+            <li><a href="sec-fundamental-objects#sec-symbol-constructor" title="19.4.1"> The Symbol Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-symbol-constructor" title="19.4.2"> Properties of the
+                Symbol Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-symbol-prototype-object" title="19.4.3"> Properties of the
+                Symbol Prototype Object</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-symbol-instances" title="19.4.4"> Properties of Symbol
+                Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-fundamental-objects#sec-error-objects" title="19.5"> Error Objects
+          </a><ul>
+            <li><a href="sec-fundamental-objects#sec-error-constructor" title="19.5.1"> The Error Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-error-constructor" title="19.5.2"> Properties of the Error
+                Constructor</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-the-error-prototype-object" title="19.5.3"> Properties of the
+                Error Prototype Object</a></li>
+            <li><a href="sec-fundamental-objects#sec-properties-of-error-instances" title="19.5.4"> Properties of Error
+                Instances</a></li>
+            <li><a href="sec-fundamental-objects#sec-native-error-types-used-in-this-standard" title="19.5.5"> Native Error Types
+                Used in This Standard</a></li>
+            <li><a href="sec-fundamental-objects#sec-nativeerror-object-structure" title="19.5.6"> <i>NativeError</i> Object
+                Structure</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-numbers-and-dates" title="20"> Numbers and Dates
+      </a><ul>
+        <li><a href="sec-numbers-and-dates#sec-number-objects" title="20.1"> Number Objects
+          </a><ul>
+            <li><a href="sec-numbers-and-dates#sec-number-constructor" title="20.1.1"> The Number Constructor</a></li>
+            <li><a href="sec-numbers-and-dates#sec-properties-of-the-number-constructor" title="20.1.2"> Properties of the
+                Number Constructor</a></li>
+            <li><a href="sec-numbers-and-dates#sec-properties-of-the-number-prototype-object" title="20.1.3"> Properties of the
+                Number Prototype Object</a></li>
+            <li><a href="sec-numbers-and-dates#sec-properties-of-number-instances" title="20.1.4"> Properties of Number
+                Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-numbers-and-dates#sec-math-object" title="20.2"> The Math Object
+          </a><ul>
+            <li><a href="sec-numbers-and-dates#sec-value-properties-of-the-math-object" title="20.2.1"> Value Properties of the
+                Math Object</a></li>
+            <li><a href="sec-numbers-and-dates#sec-function-properties-of-the-math-object" title="20.2.2"> Function Properties
+                of the Math Object</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-numbers-and-dates#sec-date-objects" title="20.3"> Date Objects
+          </a><ul>
+            <li><a href="sec-numbers-and-dates#sec-overview-of-date-objects-and-definitions-of-abstract-operations" title="20.3.1"> Overview of Date
+                Objects and Definitions of Abstract Operations</a></li>
+            <li><a href="sec-numbers-and-dates#sec-date-constructor" title="20.3.2"> The Date Constructor</a></li>
+            <li><a href="sec-numbers-and-dates#sec-properties-of-the-date-constructor" title="20.3.3"> Properties of the Date
+                Constructor</a></li>
+            <li><a href="sec-numbers-and-dates#sec-properties-of-the-date-prototype-object" title="20.3.4"> Properties of the
+                Date Prototype Object</a></li>
+            <li><a href="sec-numbers-and-dates#sec-properties-of-date-instances" title="20.3.5"> Properties of Date
+                Instances</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-text-processing" title="21"> Text Processing
+      </a><ul>
+        <li><a href="sec-text-processing#sec-string-objects" title="21.1"> String Objects
+          </a><ul>
+            <li><a href="sec-text-processing#sec-string-constructor" title="21.1.1"> The String Constructor</a></li>
+            <li><a href="sec-text-processing#sec-properties-of-the-string-constructor" title="21.1.2"> Properties of the
+                String Constructor</a></li>
+            <li><a href="sec-text-processing#sec-properties-of-the-string-prototype-object" title="21.1.3"> Properties of the
+                String Prototype Object</a></li>
+            <li><a href="sec-text-processing#sec-properties-of-string-instances" title="21.1.4"> Properties of String
+                Instances</a></li>
+            <li><a href="sec-text-processing#sec-string-iterator-objects" title="21.1.5"> String Iterator Objects</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-text-processing#sec-regexp-regular-expression-objects" title="21.2"> RegExp (Regular Expression)
+            Objects
+          </a><ul>
+            <li><a href="sec-text-processing#sec-patterns" title="21.2.1"> Patterns</a></li>
+            <li><a href="sec-text-processing#sec-pattern-semantics" title="21.2.2"> Pattern Semantics</a></li>
+            <li><a href="sec-text-processing#sec-regexp-constructor" title="21.2.3"> The RegExp Constructor</a></li>
+            <li><a href="sec-text-processing#sec-properties-of-the-regexp-constructor" title="21.2.4"> Properties of the
+                RegExp Constructor</a></li>
+            <li><a href="sec-text-processing#sec-properties-of-the-regexp-prototype-object" title="21.2.5"> Properties of the
+                RegExp Prototype Object</a></li>
+            <li><a href="sec-text-processing#sec-properties-of-regexp-instances" title="21.2.6"> Properties of RegExp
+                Instances</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-indexed-collections" title="22"> Indexed Collections
+      </a><ul>
+        <li><a href="sec-indexed-collections#sec-array-objects" title="22.1"> Array Objects
+          </a><ul>
+            <li><a href="sec-indexed-collections#sec-array-constructor" title="22.1.1"> The Array Constructor</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-the-array-constructor" title="22.1.2"> Properties of the Array
+                Constructor</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-the-array-prototype-object" title="22.1.3"> Properties of the
+                Array Prototype Object</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-array-instances" title="22.1.4"> Properties of Array
+                Instances</a></li>
+            <li><a href="sec-indexed-collections#sec-array-iterator-objects" title="22.1.5"> Array Iterator Objects</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-indexed-collections#sec-typedarray-objects" title="22.2"> TypedArray Objects
+          </a><ul>
+            <li><a href="sec-indexed-collections#sec-%typedarray%-intrinsic-object" title="22.2.1"> The %TypedArray% Intrinsic
+                Object</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-the-%typedarray%-intrinsic-object" title="22.2.2"> Properties
+                of the %TypedArray% Intrinsic Object</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-the-%typedarrayprototype%-object" title="22.2.3"> Properties of
+                the %TypedArrayPrototype% Object</a></li>
+            <li><a href="sec-indexed-collections#sec-typedarray-constructors" title="22.2.4"> The <i>TypedArray</i>
+                Constructors</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-the-typedarray-constructors" title="22.2.5"> Properties of the
+                <i>TypedArray</i> Constructors</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-typedarray-prototype-objects" title="22.2.6"> Properties of
+                <i>TypedArray</i> Prototype Objects</a></li>
+            <li><a href="sec-indexed-collections#sec-properties-of-typedarray-instances" title="22.2.7"> Properties of
+                <i>TypedArray</i> Instances</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-keyed-collection" title="23"> Keyed Collection
+      </a><ul>
+        <li><a href="sec-keyed-collection#sec-map-objects" title="23.1"> Map Objects
+          </a><ul>
+            <li><a href="sec-keyed-collection#sec-map-constructor" title="23.1.1"> The Map Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-map-constructor" title="23.1.2"> Properties of the Map
+                Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-map-prototype-object" title="23.1.3"> Properties of the Map
+                Prototype Object</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-map-instances" title="23.1.4"> Properties of Map Instances</a></li>
+            <li><a href="sec-keyed-collection#sec-map-iterator-objects" title="23.1.5"> Map Iterator Objects</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-keyed-collection#sec-set-objects" title="23.2"> Set Objects
+          </a><ul>
+            <li><a href="sec-keyed-collection#sec-set-constructor" title="23.2.1"> The Set Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-set-constructor" title="23.2.2"> Properties of the Set
+                Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-set-prototype-object" title="23.2.3"> Properties of the Set
+                Prototype Object</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-set-instances" title="23.2.4"> Properties of Set Instances</a></li>
+            <li><a href="sec-keyed-collection#sec-set-iterator-objects" title="23.2.5"> Set Iterator Objects</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-keyed-collection#sec-weakmap-objects" title="23.3"> WeakMap Objects
+          </a><ul>
+            <li><a href="sec-keyed-collection#sec-weakmap-constructor" title="23.3.1"> The WeakMap Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-weakmap-constructor" title="23.3.2"> Properties of the
+                WeakMap Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-weakmap-prototype-object" title="23.3.3"> Properties of the
+                WeakMap Prototype Object</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-weakmap-instances" title="23.3.4"> Properties of WeakMap
+                Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-keyed-collection#sec-weakset-objects" title="23.4"> WeakSet Objects
+          </a><ul>
+            <li><a href="sec-keyed-collection#sec-weakset-constructor" title="23.4.1"> The WeakSet Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-weakset-constructor" title="23.4.2"> Properties of the
+                WeakSet Constructor</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-the-weakset-prototype-object" title="23.4.3"> Properties of the
+                WeakSet Prototype Object</a></li>
+            <li><a href="sec-keyed-collection#sec-properties-of-weakset-instances" title="23.4.4"> Properties of WeakSet
+                Instances</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-structured-data" title="24"> Structured Data
+      </a><ul>
+        <li><a href="sec-structured-data#sec-arraybuffer-objects" title="24.1"> ArrayBuffer Objects
+          </a><ul>
+            <li><a href="sec-structured-data#sec-abstract-operations-for-arraybuffer-objects" title="24.1.1"> Abstract
+                Operations For ArrayBuffer Objects</a></li>
+            <li><a href="sec-structured-data#sec-arraybuffer-constructor" title="24.1.2"> The ArrayBuffer Constructor</a></li>
+            <li><a href="sec-structured-data#sec-properties-of-the-arraybuffer-constructor" title="24.1.3"> Properties of the
+                ArrayBuffer Constructor</a></li>
+            <li><a href="sec-structured-data#sec-properties-of-the-arraybuffer-prototype-object" title="24.1.4"> Properties of
+                the ArrayBuffer Prototype Object</a></li>
+            <li><a href="sec-structured-data#sec-properties-of-the-arraybuffer-instances" title="24.1.5"> Properties of the
+                ArrayBuffer Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-structured-data#sec-dataview-objects" title="24.2"> DataView Objects
+          </a><ul>
+            <li><a href="sec-structured-data#sec-abstract-operations-for-dataview-objects" title="24.2.1"> Abstract Operations
+                For DataView Objects</a></li>
+            <li><a href="sec-structured-data#sec-dataview-constructor" title="24.2.2"> The DataView Constructor</a></li>
+            <li><a href="sec-structured-data#sec-properties-of-the-dataview-constructor" title="24.2.3"> Properties of the
+                DataView Constructor</a></li>
+            <li><a href="sec-structured-data#sec-properties-of-the-dataview-prototype-object" title="24.2.4"> Properties of
+                the DataView Prototype Object</a></li>
+            <li><a href="sec-structured-data#sec-properties-of-dataview-instances" title="24.2.5"> Properties of DataView
+                Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-structured-data#sec-json-object" title="24.3"> The JSON Object
+          </a><ul>
+            <li><a href="sec-structured-data#sec-json.parse" title="24.3.1"> JSON.parse ( text [ , reviver ] )</a></li>
+            <li><a href="sec-structured-data#sec-json.stringify" title="24.3.2"> JSON.stringify ( value [ , replacer [ , space
+                ] ] )</a></li>
+            <li><a href="sec-structured-data#sec-json-@@tostringtag" title="24.3.3"> JSON [ @@toStringTag ]</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-control-abstraction-objects" title="25"> Control Abstraction Objects
+      </a><ul>
+        <li><a href="sec-control-abstraction-objects#sec-iteration" title="25.1"> Iteration
+          </a><ul>
+            <li><a href="sec-control-abstraction-objects#sec-common-iteration-interfaces" title="25.1.1"> Common Iteration Interfaces</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-%iteratorprototype%-object" title="25.1.2"> The %IteratorPrototype%
+                Object</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-control-abstraction-objects#sec-generatorfunction-objects" title="25.2"> GeneratorFunction Objects
+          </a><ul>
+            <li><a href="sec-control-abstraction-objects#sec-generatorfunction-constructor" title="25.2.1"> The GeneratorFunction
+                Constructor</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-the-generatorfunction-constructor" title="25.2.2"> Properties
+                of the GeneratorFunction Constructor</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-the-generatorfunction-prototype-object" title="25.2.3">
+                Properties of the GeneratorFunction Prototype Object</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-generatorfunction-instances" title="25.2.4"> GeneratorFunction Instances</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-control-abstraction-objects#sec-generator-objects" title="25.3"> Generator Objects
+          </a><ul>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-generator-prototype" title="25.3.1"> Properties of Generator
+                Prototype</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-generator-instances" title="25.3.2"> Properties of Generator
+                Instances</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-generator-abstract-operations" title="25.3.3"> Generator Abstract
+                Operations</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-control-abstraction-objects#sec-promise-objects" title="25.4"> Promise Objects
+          </a><ul>
+            <li><a href="sec-control-abstraction-objects#sec-promise-abstract-operations" title="25.4.1"> Promise Abstract Operations</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-promise-jobs" title="25.4.2"> Promise Jobs</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-promise-constructor" title="25.4.3"> The Promise Constructor</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-the-promise-constructor" title="25.4.4"> Properties of the
+                Promise Constructor</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-the-promise-prototype-object" title="25.4.5"> Properties of the
+                Promise Prototype Object</a></li>
+            <li><a href="sec-control-abstraction-objects#sec-properties-of-promise-instances" title="25.4.6"> Properties of Promise
+                Instances</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-reflection" title="26"> Reflection
+      </a><ul>
+        <li><a href="sec-reflection#sec-reflect-object" title="26.1"> The Reflect Object
+          </a><ul>
+            <li><a href="sec-reflection#sec-reflect.apply" title="26.1.1"> Reflect.apply ( target, thisArgument,
+                argumentsList )</a></li>
+            <li><a href="sec-reflection#sec-reflect.construct" title="26.1.2"> Reflect.construct ( target, argumentsList
+                [, newTarget] )</a></li>
+            <li><a href="sec-reflection#sec-reflect.defineproperty" title="26.1.3"> Reflect.defineProperty ( target,
+                propertyKey, attributes )</a></li>
+            <li><a href="sec-reflection#sec-reflect.deleteproperty" title="26.1.4"> Reflect.deleteProperty ( target,
+                propertyKey )</a></li>
+            <li><a href="sec-reflection#sec-reflect.enumerate" title="26.1.5"> Reflect.enumerate ( target )</a></li>
+            <li><a href="sec-reflection#sec-reflect.get" title="26.1.6"> Reflect.get ( target, propertyKey [ , receiver
+                ])</a></li>
+            <li><a href="sec-reflection#sec-reflect.getownpropertydescriptor" title="26.1.7">
+                Reflect.getOwnPropertyDescriptor ( target, propertyKey )</a></li>
+            <li><a href="sec-reflection#sec-reflect.getprototypeof" title="26.1.8"> Reflect.getPrototypeOf ( target
+                )</a></li>
+            <li><a href="sec-reflection#sec-reflect.has" title="26.1.9"> Reflect.has ( target, propertyKey )</a></li>
+            <li><a href="sec-reflection#sec-reflect.isextensible" title="26.1.10"> Reflect.isExtensible (target)</a></li>
+            <li><a href="sec-reflection#sec-reflect.ownkeys" title="26.1.11"> Reflect.ownKeys ( target )</a></li>
+            <li><a href="sec-reflection#sec-reflect.preventextensions" title="26.1.12"> Reflect.preventExtensions (
+                target )</a></li>
+            <li><a href="sec-reflection#sec-reflect.set" title="26.1.13"> Reflect.set ( target, propertyKey, V [ ,
+                receiver ] )</a></li>
+            <li><a href="sec-reflection#sec-reflect.setprototypeof" title="26.1.14"> Reflect.setPrototypeOf ( target,
+                proto )</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-reflection#sec-proxy-objects" title="26.2"> Proxy Objects
+          </a><ul>
+            <li><a href="sec-reflection#sec-proxy-constructor" title="26.2.1"> The Proxy Constructor</a></li>
+            <li><a href="sec-reflection#sec-properties-of-the-proxy-constructor" title="26.2.2"> Properties of the Proxy
+                Constructor</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-reflection#sec-module-namespace-objects" title="26.3"> Module Namespace Objects
+          </a><ul>
+            <li><a href="sec-reflection#sec-@@tostringtag" title="26.3.1"> @@toStringTag</a></li>
+            <li><a href="sec-reflection#sec-@@iterator" title="26.3.2"> [ @@iterator ] (   )</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-grammar-summary" title="Annex&nbsp;A"> <span class="section-status">(informative)</span> Grammar Summary
+      </a><ul>
+        <li><a href="sec-grammar-summary#sec-lexical-grammar" title="A.1"> Lexical Grammar</a></li>
+        <li><a href="sec-grammar-summary#sec-expressions" title="A.2"> Expressions</a></li>
+        <li><a href="sec-grammar-summary#sec-statements" title="A.3"> Statements</a></li>
+        <li><a href="sec-grammar-summary#sec-functions-and-classes" title="A.4"> Functions and Classes</a></li>
+        <li><a href="sec-grammar-summary#sec-scripts-and-modules" title="A.5"> Scripts and Modules</a></li>
+        <li><a href="sec-grammar-summary#sec-number-conversions" title="A.6"> Number Conversions</a></li>
+        <li><a href="sec-grammar-summary#sec-universal-resource-identifier-character-classes" title="A.7"> Universal Resource
+            Identifier Character Classes</a></li>
+        <li><a href="sec-grammar-summary#sec-regular-expressions" title="A.8"> Regular Expressions</a></li>
+      </ul>
+    </li>
+    <li><a href="sec-additional-ecmascript-features-for-web-browsers" title="Annex&nbsp;B"> <span class="section-status">(normative)</span> Additional ECMAScript Features for Web Browsers
+      </a><ul>
+        <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-syntax" title="B.1"> Additional Syntax
+          </a><ul>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-syntax-numeric-literals" title="B.1.1"> Numeric Literals</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-syntax-string-literals" title="B.1.2"> String Literals</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-html-like-comments" title="B.1.3"> HTML-like Comments</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-regular-expressions-patterns" title="B.1.4"> Regular Expressions
+                Patterns</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-built-in-properties" title="B.2"> Additional Built-in Properties
+          </a><ul>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-properties-of-the-global-object" title="B.2.1"> Additional
+                Properties of the Global Object</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-properties-of-the-object.prototype-object" title="B.2.2">
+                Additional Properties of the Object.prototype Object</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-properties-of-the-string.prototype-object" title="B.2.3">
+                Additional Properties of the String.prototype Object</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-properties-of-the-date.prototype-object" title="B.2.4"> Additional
+                Properties of the Date.prototype Object</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-additional-properties-of-the-regexp.prototype-object" title="B.2.5">
+                Additional Properties of the RegExp.prototype Object</a></li>
+          </ul>
+        </li>
+        <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-other-additional-features" title="B.3"> Other Additional Features
+          </a><ul>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-__proto__-property-names-in-object-initializers" title="B.3.1"> __proto__
+                Property Names in Object Initializers</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-labelled-function-declarations" title="B.3.2"> Labelled Function
+                Declarations</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-block-level-function-declarations-web-legacy-compatibility-semantics" title="B.3.3"> Block-Level
+                Function Declarations Web Legacy Compatibility Semantics</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-functiondeclarations-in-ifstatement-statement-clauses" title="B.3.4">
+                FunctionDeclarations in IfStatement Statement Clauses</a></li>
+            <li><a href="sec-additional-ecmascript-features-for-web-browsers#sec-variablestatements-in-catch-blocks" title="B.3.5"> VariableStatements in
+                Catch blocks</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="sec-strict-mode-of-ecmascript" title="Annex&nbsp;C"> <span class="section-status">(informative)</span> The Strict Mode of ECMAScript</a></li>
+    <li><a href="sec-corrections-and-clarifications-in-ecmascript-2015-with-possible-compatibility-impact" title="Annex&nbsp;D">
+        <span class="section-status">(informative)</span> Corrections and Clarifications in ECMAScript 2015 with Possible
+        Compatibility Impact</a></li>
+    <li><a href="sec-additions-and-changes-that-introduce-incompatibilities-with-prior-editions" title="Annex&nbsp;E"> <span class="section-status">(informative)</span> Additions and Changes That Introduce Incompatibilities with Prior
+        Editions</a></li>
+    <li><a href="sec-biblio">Bibliography</a></li>
+  </ul>

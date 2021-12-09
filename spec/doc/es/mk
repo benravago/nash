@@ -1,0 +1,211 @@
+#!/usr/bin/python
+
+import os, re
+import xml.etree.ElementTree as ET
+
+src = 'org/6.0/index.html'
+tgt = '6.0'
+
+xref = {}
+
+def main():
+  t = load(src)  # load the source html
+  b = body(t)    # find the <body> text
+  b = xhtml(b)   # make it xml-ish
+  t = xml(b)     # text to xml
+  process(t)     # edit (x)html here
+
+def process(root):
+  intro(root)
+  map = sections(root)
+  index(map)
+  transform(map)
+
+def sections(root):
+  map = {}
+  for s in root.findall('./section'):
+    if 'id' in s.attrib: map[s.attrib['id']] = s
+  return map    
+
+def index(map):
+  for id, s in map.items():
+    for e in s.findall('.//*[@id]'):
+      xref[e.attrib['id']] = id
+  ##
+
+def transform(map):
+  for id, s in map.items():
+    if id == 'contents':
+      contents(s)
+    else:
+      section(s,id)
+  ##
+
+def intro(root):
+  s = root.find('./section/h1[.="Introduction"]/..')
+  s.attrib['id'] = 'sec-intro'
+  s = root.find('./section/h1[.="Bibliography"]/..')
+  s.attrib['id'] = 'sec-biblio'
+
+def sref(t):
+  if t == 'Introduction': return 'sec-intro';
+  elif t == 'Bibliography': return 'sec-biblio';
+  else: return None
+
+def contents(s):
+  ol = s.find('./ol')
+  ol.attrib['class'] = 'spec'
+  topic(ol)
+  t = html(ol)
+  t = re.sub(r'(<|</)ol',r'\1ul',t)
+  store(tgt+'/_toc',t)
+
+def topic(ol):
+  ol.attrib.pop('class')
+  for e in ol:
+    if e.tag == 'li':
+      primary(e)
+  ##
+
+def primary(li): # top level li element
+  secnum(li,None)
+  pref = ""
+  for e in li:
+    t = e.tag
+    if t == 'a':
+      pref = e.attrib['href']
+    elif t == 'ol':
+      subtopic(e,pref)
+    ##
+
+def subtopic(ol,pref):
+  ol.attrib.pop('class')
+  for e in ol:
+    if e.tag == 'li':
+      secondary(e,pref)
+  ##
+
+def secondary(li,pref):
+  secnum(li,pref)
+  for e in li:
+    if e.tag == 'ol':
+      subtopic(e,pref)
+  ##
+
+# <li><span class="secnum"><a href="...">...</a></span>... [<ol ...]</li>
+# or <li>...</li>
+
+def secnum(li,tip):
+  span = li.find('./span[@class="secnum"]')
+  if span:
+    li.remove(span)
+    a = span.find('./a')
+    li.insert(0,a)
+    href = a.attrib['href']
+    a.attrib['href'] = tip + href if tip else href[1:]
+    a.attrib['title'] = a.text
+    a.text = span.tail
+    adopt(a,li)
+  else:
+    t = li.text.strip()
+    li.text = None
+    a = ET.SubElement(li,'a',{'href':sref(t)})
+    a.text = t
+
+def adopt(a,li):
+  c = []
+  for e in li:
+    if e == a: continue
+    elif e.tag == 'ol': break
+    else: c.append(e)
+  for e in c:
+    li.remove(e)
+    a.append(e)
+  ##
+
+
+def section(s,id):
+  headings(s)
+  relative(s,id)
+  t = html(s)
+  store(tgt+'/'+id+'.t',t)
+
+# <div><h?><span class="secnum" id="..."><a ...>...</a></span>...</h?>
+
+def headings(x):
+  for div in x.findall('.//span[@class="secnum"]/a/../../..'):
+    h = div[0]
+    if h.tag[0] != 'h': continue
+    s = h[0]
+    a = s[0]
+    id = s.attrib['id']
+    title = a.text
+    hd = level(title)
+    div.remove(h)
+    e = ET.SubElement(a,hd,{'id':id,'title':title})
+    e.text = s.tail
+    div.insert(0,e)
+  ##
+
+def level(t):
+  n = t.count('.')
+  return 'h' + str(n + 1 if n < 6 else 6)
+
+def relative(x,id):
+  for e in x.findall('.//*[@href]'):
+    href = e.attrib['href']
+    if href[0] == '#': 
+      k = href[1:]
+      if k not in xref:
+        e.attrib['href'] = k
+      else:  
+        sec = xref[k]
+        if sec != id:
+          e.attrib['href'] = sec + href
+    ##    
+  ##
+
+###
+
+def body(s):
+  p = s.find('<body>')
+  q = s.rfind('</body>') + 7
+  return s[p:q]
+
+def xhtml(s):
+  s = s.replace('<br>','<br/>')
+  s = s.replace('<hr>','<hr/>')
+  s = re.sub(r'<img (.*?)>',r'<img \1/>',s)
+  return s
+
+def xml(s):
+  s = s.replace('&','&amp;')  # hide html entities
+  return ET.fromstring(s)     # text to xml
+
+def html(e):
+  s = ET.tostring(e,encoding='utf-8')
+  s = s.decode()                 # xml to text
+  return s.replace('&amp;','&')  # un-hide html entities
+
+###
+
+def load(fn):
+  f = open(fn,'r')
+  s = f.read()
+  f.close()
+  return s
+
+def store(fn,s):
+  p = fn.rfind('/')
+  if p > 0:
+    os.makedirs(fn[:p], exist_ok=True)
+  ##
+  f = open(fn,'w')
+  n = f.write(s)
+  f.close()
+  print(fn,n)
+  return n
+
+
+#__MAIN__#
+if __name__ == "__main__": main()

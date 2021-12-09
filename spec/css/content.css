@@ -1,0 +1,210 @@
+a.playground-link {
+  display: none; 
+}
+code {
+  color: black;
+}
+blockquote.bg-reading {
+  display: none;
+}
+
+pre {
+  background-color: #fff;
+  border-bottom: 1px solid #999;
+  border-left: 1px solid #999;
+  color: #000;
+  margin-bottom: 3rem;
+  padding: 12px;
+  position: relative;
+}
+pre,
+pre.shiki {
+  overflow-x: auto;
+}
+pre.shiki:hover .dim {
+  opacity: 1;
+}
+pre.shiki div.dim {
+  opacity: 0.5;
+}
+pre.shiki div.dim,
+pre.shiki div.highlight {
+  margin: 0;
+  padding: 0;
+}
+pre.shiki div.highlight {
+  background-color: #f1f8ff;
+  opacity: 1;
+}
+pre.shiki div.line {
+  min-height: 1rem;
+}
+pre.shiki .language-id {
+  display: none;
+}
+pre.twoslash {
+  border-color: #719af4;
+}
+pre.twoslash:hover data-lsp {
+  border-color: #747474;
+}
+pre.twoslash data-lsp:hover:before {
+  background-color: #3f3f3f;
+  border-radius: 2px;
+  color: #fff;
+  content: attr(lsp);
+  font-family: JetBrains Mono, Menlo, Monaco, Consolas, Courier New, monospace;
+  font-size: 14px;
+  padding: 5px 8px;
+  position: absolute;
+  text-align: left;
+  transform: translateY(1rem);
+  white-space: pre-wrap;
+  z-index: 100;
+}
+pre .code-container {
+  overflow: auto;
+}
+pre .code-container > a {
+  border: 1px solid #719af4;
+  border-radius: 4px;
+  bottom: 8px;
+  color: #719af4;
+  opacity: 0;
+  padding: 0 8px;
+  position: absolute;
+  right: 8px;
+  text-decoration: none;
+  transition-timing-function: ease;
+  transition: opacity 0.3s;
+}
+pre .code-container > a:hover {
+  background-color: #719af4;
+  color: #fff;
+}
+pre .code-container:hover a {
+  opacity: 1;
+}
+pre code {
+  -webkit-overflow-scrolling: touch;
+  font-family: JetBrains Mono, Menlo, Monaco, Consolas, Courier New, monospace;
+  font-size: 15px;
+  white-space: pre;
+}
+pre code a {
+  text-decoration: none;
+}
+pre .query {
+  color: #137998;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+pre .error,
+pre .error-behind {
+  display: block;
+  margin-bottom: 4px;
+  margin-left: -14px;
+  margin-top: 8px;
+  padding: 6px 6px 6px 14px;
+  white-space: pre-wrap;
+  width: calc(100% - 20px);
+}
+pre .error {
+  align-items: center;
+  background-color: #fee;
+  border-left: 2px solid #bf1818;
+  color: #000;
+  display: flex;
+  margin-right: -2px;
+  position: absolute;
+}
+pre .error .code {
+  display: none;
+}
+pre .error-behind {
+  color: #fee;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  visibility: transparent;
+}
+pre .arrow {
+  background-color: #eee;
+  border-left: 1px solid #eee;
+  border-top: 1px solid #eee;
+  height: 8px;
+  margin-left: 0.1rem;
+  position: relative;
+  top: -7px;
+  transform: translateY(25%) rotate(45deg);
+  width: 8px;
+}
+pre .popover {
+  background-color: #eee;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  padding: 0 0.5rem 0.6rem;
+}
+pre .inline-completions ul.dropdown {
+  background-color: #dcdcdc;
+  border-left: 4px solid #4b9edd;
+  color: gray;
+  display: inline-block;
+  font-family: var(--code-font);
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  width: 240px;
+}
+pre .inline-completions ul.dropdown:before {
+  background-color: #4b9edd;
+  content: " ";
+  left: -3px;
+  position: absolute;
+  top: -1.2rem;
+  width: 2px;
+}
+pre .inline-completions ul.dropdown li {
+  margin-bottom: 4px;
+  overflow-x: hidden;
+  padding-left: 4px;
+}
+pre .inline-completions ul.dropdown li.deprecated {
+  text-decoration: line-through;
+}
+pre .inline-completions ul.dropdown li span.result-found {
+  color: #4b9edd;
+}
+pre .inline-completions ul.dropdown li span.result {
+  color: #000;
+  display: inline-block;
+  width: 100px;
+}
+
+.popover-container {
+  position: relative;
+}
+.popover-container .examples {
+  overflow-y: auto;
+}
+.popover-container .examples > div.section-content .section-list {
+  width: 300px;
+}
+.popover-container.allow-hover #playground-samples-popover {
+  bottom: -10px;
+  opacity: 0;
+}
+.popover-container.allow-hover:hover #playground-samples-popover {
+  bottom: -5px;
+  opacity: 1;
+  visibility: visible;
+}
+.popover-container.allow-hover:hover .footer-icon:after {
+  content: "▼";
+}
+.popover-container .footer-icon:after {
+  content: "⊙";
+}

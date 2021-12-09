@@ -1,0 +1,210 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Spec</title>
+<link rel="stylesheet" href="css/bootstrap-5.1.3.css">
+<link rel="stylesheet" href="css/index.css">
+<link rel="stylesheet" href="css/content.css">
+</head>
+<body>
+
+<aside id="sidebar" class="sidebar flex-shrink-0 p-3 bg-white">
+  <select id="selector" class="form-select" required></select><p/>
+  <nav id="toc" class="toc py-2 mb-4"></nav>
+</aside>
+<div id="separator" class="divider" title="double click to toggle sidebar"></div>
+<div id="bside">
+  <nav id="tabs" class="nav nav-tabs"></nav>
+  <main id="content" class="tab-content"></main>
+</div>
+
+<script src="js/bootstrap-5.1.3.js"></script>
+<script>
+(function(){
+
+  function byId(id) { return document.getElementById(id); }
+  function onEvent(id,ev,fn) { byId(id).addEventListener(ev,fn); }
+  function load(p,fn) { fetch(p).then(r => r.text()).then(fn); }
+  function flip(e) { if (e) e.classList.toggle('hidden'); }
+
+  const check = "\u02713";
+  const cross = "\u02A2F";
+
+  onEvent('separator','dblclick', e => flip(byId('sidebar')));
+
+  onEvent('tabs','click', e => { e.preventDefault(); console.log(e); });
+  onEvent('content','click', e => { e.preventDefault(); console.log(e); });
+
+  onEvent('toc','click', e => {
+    e.preventDefault();
+    let a = e.target;
+    let ref = a.getAttribute("href");
+    if (ref) {
+      let ul = a.closest('ul.spec');
+      show_page(ul.id,ref,a.textContent);
+    }
+  });
+
+  onEvent('selector','change', e => {
+    let t = e.target;
+    let o = t.options[t.selectedIndex];
+    select_toc(o.value,o.title);
+  });
+
+  load('./doc/_toc', text => {
+    byId('selector').innerHTML = '<option value="" disabled selected>Specs ...</option>'+text
+  });
+
+  function select_toc(tag,path) {
+    let toc = byId('toc');
+    let ul = toc.querySelector('ul.spec#'+tag);
+    if (ul) {
+      select(toc,ul)
+    } else {
+      load('./doc/'+path+'/_toc', text => {
+        ul = fragment(text);
+        ul.id = tag;
+        toc_main(tag,ul);
+        toc.append(ul);
+        select(toc,ul);
+      });
+    }
+  }
+
+  function select(toc,ul) {
+    if (ul.classList.contains('hidden')) {
+      let ol = toc.querySelector('ul.spec:not(.hidden)');
+      flip(ol);
+      flip(ul);
+    }
+  }
+
+  function toc_main(tag,ul) {
+    const tip = {
+      index: 0,
+      next: function() { // not () =>
+        this.index += 1;
+        return tag + '_' + this.index;
+      }
+    };
+
+    ul.className = "nav flex-column spec hidden";
+    elements(ul, e => {
+      if (e.tagName === 'LI') {
+        e.className = "nav-item";
+        toc_item(tip,ul,e);
+      }
+    });
+  }
+
+  function toc_menu(tip,ul) {
+    ul.className = "submenu collapse";
+    ul.id = tip.next();
+    elements(ul, e => {
+      if (e.tagName === 'LI') {
+        toc_item(tip,ul,e);
+      }
+    });
+  }
+
+  function toc_item(tip,p,li) {
+    let a = li.firstElementChild;
+    let ul = a.nextElementSibling;
+    if (ul) {
+      toc_menu(tip,ul);
+      a.setAttribute('data-bs-toggle','collapse');
+      a.setAttribute('data-bs-target','#'+ul.id);
+      a.className = "nav-link submenu collapsed";
+    } else {
+      a.className = "nav-link";
+    }
+  }
+
+  function refId(tag,ref) {
+    let [page,href] = ref.split('#');
+    let s = tag+','+page;
+    let h = hash(s);
+    let x = h.toString(16);
+    return [ page, href, s, h < 0 ? 'q'+x.substring(1) : 'p'+x ];
+  }
+
+  function path(tag) {
+    let op = byId('selector').querySelector('option[value="'+tag+'"]');
+    return op.title;
+  }
+
+  function show_page(tag,ref,label) {
+    let [page,href,tab,id] = refId(tag,ref);
+    let tabs = byId('tabs');
+    let a = tabs.querySelector('a[data-bs-target="#'+id+'"]');
+    if (a) {
+      bootstrap.Tab.getInstance(a).show();
+      view(tabs,id,href);
+    } else {
+      load('./doc/'+path(tag)+'/'+page+'.t', text => {
+        let main = byId('content');
+        attach(main,id,text,tabs.hasChildNodes())
+        show(main,id,label,tabs,href); 
+        view(tabs,id,href);
+      });
+    }
+  }
+
+  function attach(main,id,text,sa) {
+    let t = 'tab-pane fade ' + sa ? 'show active' : '';
+    t = '<section class="'+t+'" id="'+id+'">'+text+'</section>';
+    let section = fragment(t);
+    // section.firstElementChild.className = "card";
+    main.append(section);
+  }
+
+  function show(main,id,label,tabs,href) {
+    let tab = null;
+    let a = tabs.querySelector('a.spec');
+    if (a) {
+      let t = a.getAttribute('data-bs-target');
+      let s = main.querySelector('section'+t);
+      s.parentNode.removeChild(s);
+      tab = bootstrap.Tab.getInstance(a);
+    } else {
+      [tab,a] = default_tab();
+      tabs.prepend(a);
+    }
+    a.setAttribute('data-bs-target','#'+id);
+    a.firstElementChild.textContent = label;
+    tab.show();
+  }
+
+  function view(tabs,id,href) {
+    let sel = 'section#'+id + (href ? ' #'+href : '');
+    tabs.nextElementSibling.querySelector(sel).scrollIntoView();
+  }
+
+  function default_tab() {
+    let t = '<a class="nav-link spec" data-bs-toggle="tab"><span></span><sub>&check;</sub></a>';
+    let a = fragment(t);
+    //  a.firstElementChild.addEventListener('click', e => {
+    //    e.preventDefault()
+    //    bootstrap.Tab.getInstance(e.target.parentElement).show();
+    //  });
+    return [new bootstrap.Tab(a), a];
+  }
+
+  function fragment(html) {
+    return document.createRange().createContextualFragment(html).firstElementChild;
+  }
+
+  function elements(p,fn) {
+    for (let c = p.firstElementChild; c; c = c.nextElementSibling) fn(c);
+  }
+
+  function hash(s) {
+    return s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
+  }
+
+})();
+</script>
+
+</body>
+</html>

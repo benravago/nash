@@ -1,0 +1,180 @@
+#!/usr/bin/python
+
+import os, re
+import xml.etree.ElementTree as ET
+
+src = 'org/1.8/index.html'
+tgt = '1.8'
+
+xref = {}
+
+def main():
+  t = load(src)  # load the source html
+  b = body(t)    # find the <body> text
+  b = reduce(b)  # remove unwanted bits
+  b = xhtml(b)   # make it xml-ish
+  t = xml(b)     # text to xml
+  process(t)     # edit (x)html here
+
+
+def process(t):
+  user_content(t)
+  headings(t)
+  index(t)
+  b = html(t)
+  w = ET.SubElement(t,'section')
+  for c in t[0]: # <body><article ...
+    if c.tag == 'h1' and w:
+      transform(w)
+      w.clear()
+    ##
+    w.append(c)
+  ##
+  transform(w)
+
+def index(t):
+  for h in t.findall('.//*[@title]'):
+    id = h.attrib['id']
+    p = id.find('-')
+    h.attrib['id'] = id[p+1:] + '-' + id[0:p]
+    xref['#'+h.attrib['title']] = '#'+id
+  ##
+
+def sect(r):
+  i = r.find('.')
+  s = xref[ r if i < 0 else r[0:i] ]
+  return 'sec' + s[s.find('-'):]
+
+def para(r):
+  r = xref[r]
+  i = r.find('-')
+  return '#' + r[i+1:] + '-' + r[1:i]
+
+def transform(t):
+  h = t[0]
+  if h.attrib['id'] == 'typescript-language-specification':
+    contents(t)
+  else:
+    section(t)
+  ##
+
+def contents(s):
+  ul = s.find('ul')
+  ul.attrib['class'] = 'spec'
+  topics(ul)
+  t = html(ul)
+  store(tgt+'/_toc',t)
+
+def section(s):
+  h = s[0]
+  id = h.attrib['id']
+  id = 'sec-' + id[0:id.rfind('-')]
+  s.attrib['id'] = id
+  links(s,h.attrib['title'])
+  t = html(s)
+  store(tgt+'/'+id+'.t',t)
+
+
+def reduce(s):
+  # erase
+  s = re.sub(r' dir="auto"','',s)
+  s = re.sub(r'(?s)<clipboard-copy[ |>].*?</clipboard-copy>','',s)
+  s = re.sub(r'><a id="user-content-(.*?)" class="anchor" aria-hidden="true" href="(.*?)"><svg class="octicon .*?</svg></a>',r' id="\1" a="\2">',s)
+  # replace
+  s = re.sub(r'<td align="center">','<td>',s)
+  s = re.sub(r'/microsoft/TypeScript/raw/main/doc/images/','./img/',s)
+  # user-content
+  s = re.sub(r'<a name="user-content-[^"]*"></a>','',s)
+  s = re.sub(r'<a name="user-content-[^"]*">([^<]*)</a>',r'\1',s)
+  s = re.sub(r'<a name=("user-content-[^"]*")>',r'<section id=\1/><a s=\1>',s)
+  return s
+
+def user_content(t):
+  for e in t.findall('.//a[@s]/..'):
+    for a in e.findall('a[@s]'):
+      k = a.attrib['s']
+      s = e.find('section[@id="'+k+'"]')
+      for c in a:
+        s.append(c);
+      e.remove(a)
+  ##
+
+def headings(t):
+  for h in t.findall('.//*[@a]'):
+    if h.attrib.pop('a')[1] == 't': continue
+    t = h.text
+    i = t.find(' ')
+    k = t[0:i]
+    h.text = t[i:]
+    h.attrib['title'] = k
+  ##
+
+def topics(s):
+  for l in s.findall('.//li'):
+    a = l[0]
+    t = a.text
+    r = t.find(' ')
+    a.text = t[r:]
+    a.attrib['title'] = t[0:r]
+    r = a.attrib['href']
+    t = sect(r)
+    if '.' in r: t += para(r)
+    a.attrib['href'] = t
+  ##
+
+def links(s,p):
+  p = '#'+p+'.'
+  for a in s.findall('.//a[@href]'):
+    r = a.attrib['href']
+    if r[0] == '#':
+      t = para(r)
+      if not r.startswith(p):
+        t = sect(r) + t
+      a.attrib['href'] = t
+  ##
+
+###
+
+def body(s):
+  p = s.find('<body>')
+  q = s.rfind('</body>') + 7
+  return s[p:q]
+
+def xhtml(s):
+  s = s.replace('<br>','<br/>')
+  s = s.replace('<hr>','<hr/>')
+  s = re.sub(r'<img (.*?)>',r'<img \1/>',s)
+  return s
+
+def xml(s):
+  s = s.replace('&','&amp;')  # hide html entities
+  return ET.fromstring(s)     # text to xml
+
+def html(e):
+  s = ET.tostring(e,encoding='utf-8')
+  s = s.decode()                 # xml to text
+  return s.replace('&amp;','&')  # un-hide html entities
+
+###
+
+def load(fn):
+  f = open(fn,'r')
+  s = f.read()
+  f.close()
+  return s
+
+def store(fn,s):
+  p = fn.rfind('/')
+  if p > 0:
+    os.makedirs(fn[:p], exist_ok=True)
+  ##
+  f = open(fn,'w')
+  n = f.write(s)
+  f.close()
+  print(fn,n)
+  return n
+
+
+#__MAIN__#
+if __name__ == "__main__": main()
+
