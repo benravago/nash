@@ -2215,8 +2215,8 @@ public final class Global extends Scope {
     var global = Global.instanceFrom(self);
     var sc = global.currentContext();
     return stdout
-      ? (sc != null ? sc.getWriter() : global.getContext().getEnv().getOut())
-      : (sc != null ? sc.getErrorWriter() : global.getContext().getEnv().getErr());
+      ? (sc != null ? sc.getWriter() : global.getContext().getEnv().out)
+      : (sc != null ? sc.getErrorWriter() : global.getContext().getEnv().err);
   }
   
   <T extends ScriptObject> T initConstructor(String name, Class<T> type) {

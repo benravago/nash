@@ -117,7 +117,7 @@ public class Parser extends AbstractParser {
     this.lc = new ParserContext();
     this.defaultNames = new ArrayDeque<>();
     this.env = env;
-    this.namespace = new Namespace(env.getNamespace());
+    this.namespace = new Namespace(env.namespace);
   }
 
   /**

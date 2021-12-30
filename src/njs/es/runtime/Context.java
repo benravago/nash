@@ -398,7 +398,7 @@ public final class Context {
    * @return output print writer
    */
   public PrintWriter getOut() {
-    return env.getOut();
+    return env.out;
   }
 
   /**
@@ -406,7 +406,7 @@ public final class Context {
    * @return error print writer
    */
   public PrintWriter getErr() {
-    return env.getErr();
+    return env.err;
   }
 
   /**

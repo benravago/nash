@@ -35,6 +35,7 @@ import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.Symbol;
 import es.runtime.arrays.ArrayLikeIterator;
+import es.runtime.options.Option;
 import es.runtime.options.Options;
 
 import nash.scripting.NashornException;
@@ -128,8 +129,8 @@ public class Shell {
     var global = context.createGlobal();
     var env = context.getEnv();
 
-    var files = env.getFiles();
-    if (files.isEmpty()) {
+    var files = args;
+    if (files.length == 0) {
       return readEvalPrint(context, global);
     }
 
@@ -159,30 +160,32 @@ public class Shell {
     // Set up error handler.
     var errors = new ErrorManager(werr);
     // Set up options.
-    var options = new Options("nashorn", werr);
+    var options = new Options(Option::getProperty);
 
-    // parse options
-    if (args != null) {
-      try {
-        var prepArgs = preprocessArgs(args);
-        options.process(prepArgs);
-      } catch (IllegalArgumentException e) {
-        werr.println(bundle.getString("shell.usage"));
-        // options.displayHelp(e);
-        return null;
-      }
-    }
+//  // parse options
+//  if (args != null) {
+//    try {
+//      var prepArgs = preprocessArgs(args);
+//      options.process(prepArgs);
+//    } catch (IllegalArgumentException e) {
+//      werr.println(bundle.getString("shell.usage"));
+//      // options.displayHelp(e);
+//      return null;
+//    }
+//  }
+    
+    var scripting = false;
 
     // detect scripting mode by any source's first character being '#'
-    if (!options.getBoolean("scripting")) {
-      for (var fileName : options.getFiles()) {
+    if (!scripting) {
+      for (var fileName : args) { // options.getFiles()
         var firstFile = new File(fileName);
         if (firstFile.isFile()) {
           try (var fr = new FileReader(firstFile)) {
             var firstChar = fr.read();
             // starts with '#
             if (firstChar == '#') {
-              options.set("scripting", true);
+              scripting = true;
               break;
             }
           } catch (IOException e) {
@@ -308,7 +311,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  private static int compileScripts(Context context, Global global, List<String> files) throws IOException {
+  private static int compileScripts(Context context, Global global, String... files) throws IOException {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     var env = context.getEnv();
@@ -334,8 +337,8 @@ public class Shell {
         }
       }
     } finally {
-      env.getOut().flush();
-      env.getErr().flush();
+      env.out.flush();
+      env.err.flush();
       if (globalChanged) {
         Context.setGlobal(oldGlobal);
       }
@@ -354,7 +357,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  int runScripts(Context context, Global global, List<String> files) throws IOException {
+  int runScripts(Context context, Global global, String... files) throws IOException {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     try {

@@ -414,7 +414,7 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
   FunctionNode deserialize(byte[] serializedAst) {
     var env = installer.getContext().getEnv();
     var t1 = System.nanoTime();
-      return AstDeserializer.deserialize(serializedAst).initializeDeserialized(source, new Namespace(env.getNamespace()));
+      return AstDeserializer.deserialize(serializedAst).initializeDeserialized(source, new Namespace(env.namespace));
   }
 
   FunctionNode cloneSymbols(FunctionNode fn) {

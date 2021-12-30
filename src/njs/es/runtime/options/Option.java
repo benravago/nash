@@ -25,4 +25,8 @@ public interface Option {
     return System.getProperty(prefix+key, def);
   }
   
+  static String getProperty(String key) {
+    return System.getProperty(prefix+key);
+  }
+
 }

@@ -15,16 +15,13 @@ import es.runtime.options.Options;
 public final class ScriptEnvironment {
 
   // Output writer for this environment
-  private final PrintWriter out;
+  public final PrintWriter out;
 
   // Error writer for this environment
-  private final PrintWriter err;
+  public final PrintWriter err;
 
   // Top level namespace.
-  private final Namespace namespace;
-
-  // Current Options object.
-  private final Options options;
+  public final Namespace namespace;
 
   /** Size of the per-global Class cache size */
   public final int _class_cache_size;
@@ -89,81 +86,26 @@ public final class ScriptEnvironment {
     this.out = out;
     this.err = err;
     this.namespace = new Namespace();
-    this.options = options;
-    _class_cache_size = options.getInteger("class.cache.size");
-    _classpath = options.getString("classpath");
-    _compile_only = options.getBoolean("compile.only");
-    _early_lvalue_error = options.getBoolean("early.lvalue.error");
-    _empty_statements = options.getBoolean("empty.statements");
-    _global_per_engine = options.getBoolean("global.per.engine");
-    _optimistic_types = options.getBoolean("optimistic.types");
-    _lazy_compilation = _optimistic_types ? true : options.getBoolean("lazy.compilation");
-    _loader_per_compile = options.getBoolean("loader.per.compile");
-    _module_path = options.getString("module.path");
-    _add_modules = options.getString("add.modules");
-    _no_typed_arrays = options.getBoolean("no.typed.arrays");
-    _parse_only = options.getBoolean("parse.only");
-    var configuredUrt = options.getInteger("unstable.relink.threshold");
-    // The default for this property is -1, so we can easily detect when it is not specified on command line.
-    if (configuredUrt < 1) {
-      // In this case, use a default of 8, or 16 for optimistic types.
-      // Optimistic types come with dual fields, and in order to get performance on benchmarks with a lot of object instantiation and then field reassignment, it can take slightly more relinks to become stable with type changes swapping out an entire property map and making a map guard fail.
-      _unstable_relink_threshold = _optimistic_types ? 16 : 8;
-    } else {
-      _unstable_relink_threshold = configuredUrt;
-    }
-    var timezoneOption = options.get("timezone");
-    if (timezoneOption != null) {
-      this._timezone = (TimeZone) timezoneOption.getValue();
-    } else {
-      this._timezone = TimeZone.getDefault();
-    }
-    var localeOption = options.get("locale");
-    if (localeOption != null) {
-      this._locale = (Locale) localeOption.getValue();
-    } else {
-      this._locale = Locale.getDefault();
-    }
-  }
-
-  /**
-   * Get the output stream for this environment
-   * @return output print writer
-   */
-  public PrintWriter getOut() {
-    return out;
-  }
-
-  /**
-   * Get the error stream for this environment
-   * @return error print writer
-   */
-  public PrintWriter getErr() {
-    return err;
-  }
-
-  /**
-   * Get the namespace for this environment
-   * @return namespace
-   */
-  public Namespace getNamespace() {
-    return namespace;
-  }
-
-  /**
-   * Return the JavaScript files passed to the program
-   * @return a list of files
-   */
-  public List<String> getFiles() {
-    return options.getFiles();
-  }
-
-  /**
-   * Return the user arguments to the program, i.e. those trailing "--" after the filename
-   * @return a list of user arguments
-   */
-  public List<String> getArguments() {
-    return options.getArguments();
+    _class_cache_size = options.get("class.cache.size", 50);
+    _classpath = options.get("classpath", null);
+    _compile_only = options.get("compile.only", false);
+    _early_lvalue_error = options.get("early.lvalue.error", true);
+    _empty_statements = options.get("empty.statements", false);
+    _global_per_engine = options.get("global.per.engine", false);
+    _optimistic_types = options.get("optimistic.types", false);
+    _lazy_compilation = _optimistic_types ? true : options.get("lazy.compilation", true);
+    _loader_per_compile = options.get("loader.per.compile", true);
+    _module_path = options.get("module.path", null);
+    _add_modules = options.get("add.modules", null);
+    _no_typed_arrays = options.get("no.typed.arrays", false);
+    _parse_only = options.get("parse.only", false);
+    // use a default of 8, or 16 for optimistic types.
+    _unstable_relink_threshold = options.get("unstable.relink.threshold", _optimistic_types ? 16 : 8);
+    // Optimistic types come with dual fields, and in order to get performance on benchmarks with a lot of object instantiation and then field reassignment, it can take slightly more relinks to become stable with type changes swapping out an entire property map and making a map guard fail.
+    var tz = options.get("timezone", null);
+    _timezone = tz != null ? TimeZone.getTimeZone(tz) : TimeZone.getDefault();
+    var id = options.get("locale", null);
+    _locale = id != null ? new Locale(id) : Locale.getDefault();
   }
 
 }

@@ -80,7 +80,7 @@ final class SplitIntoFunctions extends NodeVisitor<BlockLexicalContext> {
         return block;
       }
     });
-    namespace = new Namespace(compiler.getScriptEnvironment().getNamespace());
+    namespace = new Namespace(compiler.getScriptEnvironment().namespace);
   }
 
   @Override

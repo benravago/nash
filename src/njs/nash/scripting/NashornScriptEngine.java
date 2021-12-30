@@ -28,6 +28,7 @@ import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
 import es.runtime.Source;
 import es.runtime.linker.JavaAdapterFactory;
+import es.runtime.options.Option;
 import es.runtime.options.Options;
 import static es.runtime.Source.sourceFor;
 
@@ -73,8 +74,8 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
   NashornScriptEngine(NashornScriptEngineFactory factory, String[] args, ClassLoader appLoader, ClassFilter classFilter) {
     assert args != null : "null argument array";
     this.factory = factory;
-    var options = new Options("nashorn");
-    options.process(args);
+    // TODO: allow alternative option sources
+    var options = new Options(Option::getProperty);
 
     // throw ParseException on first error from script
     var errMgr = new Context.ThrowErrorManager();

@@ -215,7 +215,7 @@ abstract class CompilationPhase {
     FunctionNode transform(Compiler compiler, CompilationPhases phases, FunctionNode fn) {
       var newFunctionNode = transformFunction(fn, new LocalVariableTypesCalculator(compiler, compiler.getReturnType()));
       var senv = compiler.getScriptEnvironment();
-      var err = senv.getErr();
+      var err = senv.err;
       // TODO separate phase for the debug printouts for abstraction and clarity
       return newFunctionNode;
     }
