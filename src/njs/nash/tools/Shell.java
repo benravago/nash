@@ -17,9 +17,9 @@ import es.parser.Parser;
 import es.runtime.Context;
 import es.runtime.ErrorManager;
 import es.runtime.JSType;
-import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
 import es.runtime.ScriptRuntime;
+import es.runtime.Source;
 import es.runtime.Symbol;
 import es.runtime.arrays.ArrayLikeIterator;
 import es.runtime.options.Option;
@@ -52,9 +52,6 @@ public class Shell {
   // Exit code for command line tool - internal error
   public static final int INTERNAL_ERROR = 104;
 
-  // Constructor
-  protected Shell() {}
-
   /**
    * Main entry point with the default input, output and error streams.
    *
@@ -62,7 +59,7 @@ public class Shell {
    */
   public static void main(String... args) throws Exception {
     try {
-      var exitCode = main(System.in, System.out, System.err, args);
+      var exitCode = run(System.in, System.out, System.err, args);
       if (exitCode != SUCCESS) {
         System.exit(exitCode);
       }
@@ -74,19 +71,21 @@ public class Shell {
 
   /**
    * Starting point for executing a {@code Shell}.
-   * Starts a shell with the given arguments and streams and lets it run until exit.
+   * Starts a shell with the given source and lets it run until exit.
    *
    * @param in input stream for Shell
    * @param out output stream for Shell
    * @param err error stream for Shell
-   * @param args arguments to Shell
-   *
-   * @return exit code
-   *
-   * @throws IOException if there's a problem setting up the streams
+   * @param name name of script
+   * @param content text of script
    */
-  public static int main(InputStream in, OutputStream out, OutputStream err, String... args) throws IOException {
-    return new Shell().run(in, out, err, args);
+  public static void eval(InputStream in, OutputStream out, OutputStream err, String name, String text) {
+    var context = makeContext(in, out, err);
+    var global = context.createGlobal();
+    ShellFunctions.init(global);
+    var source = Source.sourceFor(name, text.toCharArray());
+    var script = context.compileScript(source, global);
+    ScriptRuntime.apply(script, global);
   }
 
   /**
@@ -101,8 +100,8 @@ public class Shell {
    *
    * @throws IOException if there's a problem setting up the streams
    */
-  protected final int run(InputStream in, OutputStream out, OutputStream err, String[] args) throws IOException {
-    var context = makeContext(in, out, err, args);
+  static int run(InputStream in, OutputStream out, OutputStream err, String[] args) throws IOException {
+    var context = makeContext(in, out, err);
     if (context == null) {
       return COMMANDLINE_ERROR;
     }
@@ -123,7 +122,7 @@ public class Shell {
    *
    * @return null if there are problems with option parsing.
    */
-  static Context makeContext(InputStream in, OutputStream out, OutputStream err, String... args) {
+  static Context makeContext(InputStream in, OutputStream out, OutputStream err) {
 
     var wout = printer(out);
     var werr = printer(err);
@@ -150,7 +149,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  private static int compileScripts(Context context, Global global, String... files) throws IOException {
+  static int compileScripts(Context context, Global global, String... files) throws IOException {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     var env = context.getEnv();
@@ -196,7 +195,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  int runScripts(Context context, Global global, String... files) throws IOException {
+  static int runScripts(Context context, Global global, String... files) throws IOException {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     try {
@@ -225,7 +224,7 @@ public class Shell {
         }
 
         try {
-          apply(script, global);
+          ScriptRuntime.apply(script, global);
         } catch (NashornException e) {
           errors.error(e.toString());
 
@@ -244,26 +243,13 @@ public class Shell {
   }
 
   /**
-   * Hook to ScriptFunction "apply".
-   * A performance metering shell may introduce enter/exit timing here.
-   *
-   * @param target target function for apply
-   * @param self self reference for apply
-   *
-   * @return result of the function apply
-   */
-  protected Object apply(ScriptFunction target, Object self) {
-    return ScriptRuntime.apply(target, self);
-  }
-
-  /**
    * read-eval-print loop for Nash shell.
    *
    * @param context the nashorn context
    * @param global  global scope object to use
    * @return return code
    */
-  protected int readEvalPrint(Context context, Global global) {
+  static int readEvalPrint(Context context, Global global) {
     var prompt = "nash>";
     var in = new BufferedReader(new InputStreamReader(System.in));
     var err = context.getErr();
@@ -320,7 +306,7 @@ public class Shell {
    * @param global the global object
    * @return the string representation
    */
-  protected static String toString(Object result, Global global) {
+  static String toString(Object result, Global global) {
     if (result instanceof Symbol) {
       // Normal implicit conversion of symbol to string would throw TypeError
       return result.toString();
