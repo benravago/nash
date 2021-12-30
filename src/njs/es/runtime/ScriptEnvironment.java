@@ -14,9 +14,6 @@ import es.runtime.options.Options;
  */
 public final class ScriptEnvironment {
 
-  // Primarily intended to be used in test environments so that eager compilation tests work without an error when tested with optimistic compilation.
-  private static final boolean ALLOW_EAGER_COMPILATION_SILENT_OVERRIDE = Options.getBooleanProperty("nashorn.options.allowEagerCompilationSilentOverride", false);
-
   // Output writer for this environment
   private final PrintWriter out;
 
@@ -52,33 +49,6 @@ public final class ScriptEnvironment {
 
   /** Argument passed to compile only if optimistic compilation should take place */
   public static final String COMPILE_ONLY_OPTIMISTIC_ARG = "optimistic";
-
-  /**
-   * Behavior when encountering a function declaration in a lexical context where only statements are acceptable
-   * (function declarations are source elements, but not statements).
-   */
-  public enum FunctionStatementBehavior {
-    /**
-     * Accept the function declaration silently and treat it as if it were a function expression assigned to a local
-     * variable.
-     */
-    ACCEPT,
-    /**
-     * Log a parser warning, but accept the function declaration and treat it as if it were a function expression
-     * assigned to a local variable.
-     */
-    WARNING,
-    /**
-     * Raise a {@code SyntaxError}.
-     */
-    ERROR
-  }
-
-  /**
-   * Behavior when encountering a function declaration in a lexical context where only statements are acceptable
-   * (function declarations are source elements, but not statements).
-   */
-  public final FunctionStatementBehavior _function_statement;
 
   /** Should lazy compilation take place */
   public final boolean _lazy_compilation;
@@ -125,24 +95,9 @@ public final class ScriptEnvironment {
     _compile_only = options.getBoolean("compile.only");
     _early_lvalue_error = options.getBoolean("early.lvalue.error");
     _empty_statements = options.getBoolean("empty.statements");
-    if (options.getBoolean("function.statement.error")) {
-      _function_statement = FunctionStatementBehavior.ERROR;
-    } else if (options.getBoolean("function.statement.warning")) {
-      _function_statement = FunctionStatementBehavior.WARNING;
-    } else {
-      _function_statement = FunctionStatementBehavior.ACCEPT;
-    }
     _global_per_engine = options.getBoolean("global.per.engine");
     _optimistic_types = options.getBoolean("optimistic.types");
-    var lazy_compilation = options.getBoolean("lazy.compilation");
-    if (!lazy_compilation && _optimistic_types) {
-      if (!ALLOW_EAGER_COMPILATION_SILENT_OVERRIDE) {
-        throw new IllegalStateException(ECMAErrors.getMessage("config.error.eagerCompilationConflictsWithOptimisticTypes", options.getOptionTemplateByKey("lazy.compilation").getName(), options.getOptionTemplateByKey("optimistic.types").getName()));
-      }
-      _lazy_compilation = true;
-    } else {
-      _lazy_compilation = lazy_compilation;
-    }
+    _lazy_compilation = _optimistic_types ? true : options.getBoolean("lazy.compilation");
     _loader_per_compile = options.getBoolean("loader.per.compile");
     _module_path = options.getString("module.path");
     _add_modules = options.getString("add.modules");
@@ -150,12 +105,10 @@ public final class ScriptEnvironment {
     _parse_only = options.getBoolean("parse.only");
     var configuredUrt = options.getInteger("unstable.relink.threshold");
     // The default for this property is -1, so we can easily detect when it is not specified on command line.
-    if (configuredUrt < 0) {
+    if (configuredUrt < 1) {
       // In this case, use a default of 8, or 16 for optimistic types.
       // Optimistic types come with dual fields, and in order to get performance on benchmarks with a lot of object instantiation and then field reassignment, it can take slightly more relinks to become stable with type changes swapping out an entire property map and making a map guard fail.
-      // Also, honor the "nashorn.*" system property for now.
-      // It was documented in DEVELOPER_README so we should recognize it for the time being.
-      _unstable_relink_threshold = Options.getIntProperty("nashorn.unstable.relink.threshold", _optimistic_types ? 16 : 8);
+      _unstable_relink_threshold = _optimistic_types ? 16 : 8;
     } else {
       _unstable_relink_threshold = configuredUrt;
     }

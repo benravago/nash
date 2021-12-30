@@ -38,7 +38,7 @@ public final class Options {
   private final List<String> arguments;
 
   // The options map of enabled options
-  private final TreeMap<String, Option<?>> options;
+  private final TreeMap<String, Value<?>> options;
 
   // System property that can be used to prepend options to the explicitly specified command line.
   private static final String NASHORN_ARGS_PREPEND_PROPERTY = "nashorn.args.prepend";
@@ -176,7 +176,7 @@ public final class Options {
    * @param key key for option
    * @return an option value
    */
-  public Option<?> get(String key) {
+  public Value<?> get(String key) {
     return options.get(key(key));
   }
 
@@ -225,7 +225,7 @@ public final class Options {
    * @param key    option key
    * @param option option
    */
-  public void set(String key, Option<?> option) {
+  public void set(String key, Value<?> option) {
     options.put(key(key), option);
   }
 
@@ -236,7 +236,7 @@ public final class Options {
    * @param option option
    */
   public void set(String key, boolean option) {
-    set(key, new Option<>(option));
+    set(key, new Value<>(option));
   }
 
   /**
@@ -246,7 +246,7 @@ public final class Options {
    * @param option option
    */
   public void set(String key, String option) {
-    set(key, new Option<>(option));
+    set(key, new Value<>(option));
   }
 
   /**
@@ -407,7 +407,7 @@ public final class Options {
         var value = options.containsKey(key)
           ? (options.get(key).getValue() + "," + parg.value)
           : Objects.toString(parg.value);
-        options.put(key, new Option<>(value));
+        options.put(key, new Value<>(value));
       } else {
         set(parg.template.getKey(), createOption(parg.template, parg.value));
       }
@@ -454,18 +454,18 @@ public final class Options {
     return null;
   }
 
-  static Option<?> createOption(OptionTemplate t, String value) {
+  static Value<?> createOption(OptionTemplate t, String value) {
     return switch (t.getType()) {
 
-      case "string" -> new Option<>(value); // default value null
-      case "timezone" -> new Option<>(TimeZone.getTimeZone(value)); // default value "TimeZone.getDefault()"
-      case "locale" -> new Option<>(Locale.forLanguageTag(value));
-      case "keyvalues" -> new KeyValueOption(value);
-      case "boolean" -> new Option<>(value != null && Boolean.parseBoolean(value));
+      case "string" -> new Value<>(value); // default value null
+      case "timezone" -> new Value<>(TimeZone.getTimeZone(value)); // default value "TimeZone.getDefault()"
+      case "locale" -> new Value<>(Locale.forLanguageTag(value));
+      case "keyvalues" -> new KeyValue(value);
+      case "boolean" -> new Value<>(value != null && Boolean.parseBoolean(value));
 
       case "integer" -> {
         try {
-          yield new Option<>(value == null ? 0 : Integer.parseInt(value));
+          yield new Value<>(value == null ? 0 : Integer.parseInt(value));
         } catch (NumberFormatException nfe) {
           throw new IllegalOptionException(t);
         }
@@ -473,7 +473,7 @@ public final class Options {
 
       case "properties" -> {
         // swallow the properties and set them
-        initProps(new KeyValueOption(value));
+        initProps(new KeyValue(value));
         yield null;
       }
 
@@ -484,7 +484,7 @@ public final class Options {
 
   }
 
-  static void initProps(KeyValueOption kv) {
+  static void initProps(KeyValue kv) {
     for (var entry : kv.getValues().entrySet()) {
       System.setProperty(entry.getKey(), entry.getValue());
     }

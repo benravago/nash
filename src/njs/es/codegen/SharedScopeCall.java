@@ -9,7 +9,7 @@ import es.codegen.types.Type;
 import es.ir.Symbol;
 import es.runtime.ScriptObject;
 import es.runtime.UnwarrantedOptimismException;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 
 /**
  * A scope call or get operation that can be shared by several call sites.
@@ -28,13 +28,13 @@ import es.runtime.options.Options;
 class SharedScopeCall {
 
   /** Threshold for using shared scope function calls. */
-  public static final int SHARED_CALL_THRESHOLD = Options.getIntProperty("nashorn.shared.scope.call.threshold", 5);
+  public static final int SHARED_CALL_THRESHOLD = Option.get("shared.scope.call.threshold", 5);
 
   /**
    * Threshold for using shared scope variable getter.
    * This is higher than for calls as lower values degrade performance on many scripts.
    */
-  public static final int SHARED_GET_THRESHOLD = Options.getIntProperty("nashorn.shared.scope.get.threshold", 100);
+  public static final int SHARED_GET_THRESHOLD = Option.get("shared.scope.get.threshold", 100);
 
   private static final CompilerConstants.Call REPLACE_PROGRAM_POINT = virtualCallNoLookup(UnwarrantedOptimismException.class, "replaceProgramPoint", UnwarrantedOptimismException.class, int.class);
 

@@ -18,8 +18,6 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.net.URL;
-
 import java.security.CodeSigner;
 import java.security.CodeSource;
 
@@ -57,19 +55,6 @@ public final class Context {
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
   private static final MethodType CREATE_PROGRAM_FUNCTION_TYPE = MethodType.methodType(ScriptFunction.class, ScriptObject.class);
-
-  // Should scripts use only object slots for fields, or dual long/object slots? The default behaviour is to couple this to optimistic types, using dual representation if optimistic types are enabled and single field representation otherwise.
-  // This can be overridden by setting either the "nashorn.fields.objects" or "nashorn.fields.dual" system property.
-  private final FieldMode fieldMode;
-
-  private static enum FieldMode { // TODO: deprecated; use default behaviour as above
-    /** Value for automatic field representation depending on optimistic types setting */
-    AUTO,
-    /** Value for object field representation regardless of optimistic types setting */
-    OBJECTS,
-    /** Value for dual primitive/object field representation regardless of optimistic types setting */
-    DUAL
-  }
 
   // Keeps track of which builtin prototypes and properties have been relinked. Currently we are conservative and associate the name of a builtin class with all its properties, so it's enough to invalidate a property to break all assumptions about a prototype.
   // This can be changed to a more fine grained approach, but no one ever needs this, given the very rare occurrence of swapping out only parts of a builtin v.s. the entire builtin object
@@ -373,13 +358,6 @@ public final class Context {
     if (cacheSize > 0) {
       classCache = new ClassCache(this, cacheSize);
     }
-    if (Options.getBooleanProperty("nashorn.fields.dual")) {
-      fieldMode = FieldMode.DUAL;
-    } else if (Options.getBooleanProperty("nashorn.fields.objects")) {
-      fieldMode = FieldMode.OBJECTS;
-    } else {
-      fieldMode = FieldMode.AUTO; // TODO: always do this
-    }
   }
 
   /**
@@ -432,11 +410,12 @@ public final class Context {
   }
 
   /**
-   * Should scripts compiled by this context use dual field representation?
+   * Should scripts use only object slots for fields, or dual long/object slots?
+   * The default behaviour is to couple this to optimistic types, using dual representation if optimistic types are enabled and single field representation otherwise.
    * @return true if using dual fields, false for object-only fields
    */
   public boolean useDualFields() {
-    return fieldMode == FieldMode.DUAL || (fieldMode == FieldMode.AUTO && env._optimistic_types);
+    return env._optimistic_types;
   }
 
   /**

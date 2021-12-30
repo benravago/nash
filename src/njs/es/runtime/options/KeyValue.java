@@ -11,14 +11,14 @@ import java.util.StringTokenizer;
  * It comes on the format such as:
  * {@code --log=module1:level1,module2:level2... }
  */
-public class KeyValueOption extends Option<String> {
+class KeyValue extends Value<String> {
 
   /**
    * Map of keys given
    */
   protected Map<String, String> map;
 
-  KeyValueOption(String value) {
+  KeyValue(String value) {
     super(value);
     initialize();
   }

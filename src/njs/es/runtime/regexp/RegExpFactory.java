@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import es.runtime.ParserException;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 
 /**
  * Factory class for regular expressions.
@@ -27,7 +27,7 @@ public class RegExpFactory {
     Collections.synchronizedMap(new WeakHashMap<String, RegExp>());
 
   static {
-    var impl = Options.getStringProperty("nashorn.regexp.impl", JDK);
+    var impl = Option.get("regexp.impl", JDK);
     switch (impl) {
       case JDK -> instance = new RegExpFactory();
       default -> {

@@ -15,7 +15,7 @@ import es.runtime.Property;
 import es.runtime.PropertyMap;
 import es.runtime.ScriptFunction;
 import es.runtime.ScriptObject;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import static es.lookup.Lookup.MH;
 
 /**
@@ -32,7 +32,7 @@ public final class NashornGuards {
   // TODO - maybe put this back in ScriptFunction instead of the ClassCastException.class relinkage
   // private static final MethodHandle IS_SCRIPTFUNCTION = findOwnMH("isScriptFunction", boolean.class, Object.class);
 
-  private static final boolean CCE_ONLY = Options.getBooleanProperty("nashorn.cce");
+  private static final boolean CCE_ONLY = Option.get("cce.only",false);
 
   /**
    * Given a callsite descriptor and a link request, determine whether we should use an instanceof check explicitly for the guard if needed, or if we should link it with a try/catch ClassCastException combinator as its relink criteria - i.e. relink when CCE is thrown.

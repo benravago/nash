@@ -1,34 +1,28 @@
 package es.runtime.options;
 
 /**
- * This is an option class that at its most primitive level just wraps a boolean or String.
-
- * However, it is conceivable that the option, when set should run some initializations
- * (for example, the logger system) or carry some other kind of payload, arrays, Collections, etc.
- * In that case, this should be sub-classed
- *
- * @param <T> option value type, for example a boolean or something more complex
+ * A simple facade for System.getProperties().
+ * It's main function is to add a standard prefix to the supplied key and require a default value.
  */
-public class Option<T> {
-
-  // the option value
-  protected T value;
-
-  Option(T value) {
-    this.value = value;
+public interface Option {
+  
+  static final String prefix = "nash.";
+  
+  static boolean get(String key, boolean def) {
+    key = prefix+key;
+    return System.getProperties().contains(key) ? Boolean.getBoolean(key) : def;
+  }
+  
+  static int get(String key, int def) {
+    return Integer.getInteger(prefix+key, def);
   }
 
-  /**
-   * Return the value of an option
-   * @return the option value
-   */
-  public T getValue() {
-    return value;
+  static long get(String key, long def) {
+    return Long.getLong(prefix+key, def);
   }
 
-  @Override
-  public String toString() {
-    return getValue() + " [" + getValue().getClass() + "]";
+  static String get(String key, String def) {
+    return System.getProperty(prefix+key, def);
   }
-
+  
 }

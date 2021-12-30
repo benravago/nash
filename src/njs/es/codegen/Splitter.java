@@ -18,7 +18,7 @@ import es.ir.Statement;
 import es.ir.VarNode;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.runtime.Context;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import static es.codegen.CompilerConstants.SPLIT_PREFIX;
 
 /**
@@ -39,7 +39,7 @@ final class Splitter extends SimpleNodeVisitor {
   private final Map<Node, Long> weightCache = new HashMap<>();
 
   // Weight threshold for when to start a split.
-  public static final long SPLIT_THRESHOLD = Options.getIntProperty("nashorn.compiler.splitter.threshold", 32 * 1024);
+  public static final long SPLIT_THRESHOLD = Option.get("compiler.splitter.threshold", 32 * 1024L);
 
   /**
    * Constructor.

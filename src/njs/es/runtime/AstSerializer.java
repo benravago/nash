@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 import es.ir.FunctionNode;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 
 /**
  * This static utility class performs serialization of FunctionNode ASTs to a byte array.
@@ -17,7 +17,7 @@ import es.runtime.options.Options;
 final class AstSerializer {
 
   // Experimentally, we concluded that compression level 4 gives a good tradeoff between serialization speed and size.
-  private static final int COMPRESSION_LEVEL = Options.getIntProperty("nashorn.serialize.compression", 4);
+  private static final int COMPRESSION_LEVEL = Option.get("serialize.compression", 4);
 
   static byte[] serialize(FunctionNode fn) {
     var out = new ByteArrayOutputStream();

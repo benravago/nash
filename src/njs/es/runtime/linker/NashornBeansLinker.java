@@ -30,7 +30,7 @@ import nash.scripting.ScriptUtils;
 import es.runtime.ConsString;
 import es.runtime.Context;
 import es.runtime.ScriptObject;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import static es.lookup.Lookup.MH;
 
 /**
@@ -42,7 +42,7 @@ import static es.lookup.Lookup.MH;
 public class NashornBeansLinker implements GuardingDynamicLinker {
 
   // System property to control whether to wrap ScriptObject->ScriptObjectMirror for Object type arguments of Java method calls, field set and array set.
-  private static final boolean MIRROR_ALWAYS = Options.getBooleanProperty("nashorn.mirror.always", true);
+  private static final boolean MIRROR_ALWAYS = Option.get("mirror.always", true);
 
   private static final Operation GET_METHOD = StandardOperation.GET.withNamespace(StandardNamespace.METHOD);
   private static final MethodType GET_METHOD_TYPE = MethodType.methodType(Object.class, Object.class);

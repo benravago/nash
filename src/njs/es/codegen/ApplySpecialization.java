@@ -19,7 +19,7 @@ import es.ir.IdentNode;
 import es.ir.Node;
 import es.ir.visitor.SimpleNodeVisitor;
 import es.objects.Global;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import static es.codegen.CompilerConstants.*;
 
 /**
@@ -51,7 +51,7 @@ import static es.codegen.CompilerConstants.*;
  */
 public final class ApplySpecialization extends SimpleNodeVisitor {
 
-  private static final boolean USE_APPLY2CALL = Options.getBooleanProperty("nashorn.apply2call", true);
+  private static final boolean USE_APPLY2CALL = Option.get("use.apply.to.call", true);
 
   private final Compiler compiler;
 

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 
 /**
  * Immutable hash map implementation for properties.
@@ -84,7 +84,7 @@ public final class PropertyHashMap implements Map<Object, Property> {
   private static final int LIST_THRESHOLD = 8;
 
   // Threshold before adding new elements to queue instead of directly adding to hash bins.
-  private static final int QUEUE_THRESHOLD = Options.getIntProperty("nashorn.propmap.queue.threshold", 500);
+  private static final int QUEUE_THRESHOLD = Option.get("propmap.queue.threshold", 500);
 
   /** Initial map. */
   public static final PropertyHashMap EMPTY_HASHMAP = new PropertyHashMap();

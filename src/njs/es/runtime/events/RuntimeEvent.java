@@ -1,7 +1,7 @@
 package es.runtime.events;
 
 import java.util.logging.Level;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 
 /**
  * Class for representing a runtime event, giving less global dependencies than logger.
@@ -12,7 +12,7 @@ import es.runtime.options.Options;
 public class RuntimeEvent<T> {
 
   // Queue size for the runtime event buffer
-  public static final int RUNTIME_EVENT_QUEUE_SIZE = Options.getIntProperty("nashorn.runtime.event.queue.size", 1024);
+  public static final int RUNTIME_EVENT_QUEUE_SIZE = Option.get("runtime.event.queue.size", 1024);
 
   private final Level level;
   private final T value;

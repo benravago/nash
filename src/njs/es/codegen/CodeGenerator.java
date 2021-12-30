@@ -89,7 +89,7 @@ import es.runtime.Undefined;
 import es.runtime.UnwarrantedOptimismException;
 import es.runtime.arrays.ArrayData;
 import es.runtime.linker.LinkerCallSite;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import es.util.Hex;
 import static es.codegen.CompilerConstants.*;
 import static es.runtime.UnwarrantedOptimismException.INVALID_PROGRAM_POINT;
@@ -166,7 +166,7 @@ final class CodeGenerator extends NodeOperatorVisitor<CodeGeneratorLexicalContex
   private CompileUnit unit;
 
   // From what size should we use spill instead of fields for JavaScript objects?
-  static final int OBJECT_SPILL_THRESHOLD = Options.getIntProperty("nashorn.spill.threshold", 256);
+  static final int OBJECT_SPILL_THRESHOLD = Option.get("spill.threshold", 256);
 
   private final Set<String> emittedMethods = new HashSet<>();
 

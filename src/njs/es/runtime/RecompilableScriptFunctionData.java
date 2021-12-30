@@ -44,7 +44,7 @@ import es.parser.Parser;
 import es.parser.Token;
 import es.parser.TokenType;
 import es.runtime.linker.NameCodec;
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import static es.lookup.Lookup.MH;
 
 /**
@@ -381,7 +381,7 @@ public final class RecompilableScriptFunctionData extends ScriptFunctionData {
    * @return an executor service with above described characteristics.
    */
   static ExecutorService createAstSerializerExecutorService() {
-    var threads = Math.max(1, Options.getIntProperty("nashorn.serialize.threads", Runtime.getRuntime().availableProcessors() / 2));
+    var threads = Math.max(1, Option.get("serialize.threads", Runtime.getRuntime().availableProcessors() / 2));
     var service = new ThreadPoolExecutor(threads, threads, 1, TimeUnit.MINUTES, new LinkedBlockingDeque<>(), (r) -> {
       var t = new Thread(r, "Nashorn AST Serializer");
       t.setDaemon(true);

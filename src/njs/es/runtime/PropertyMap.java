@@ -17,7 +17,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 
-import es.runtime.options.Options;
+import es.runtime.options.Option;
 import es.scripts.JO;
 import es.util.Hex;
 import static es.runtime.PropertyHashMap.EMPTY_HASHMAP;
@@ -35,7 +35,7 @@ import static es.runtime.arrays.ArrayIndex.isValidArrayIndex;
  */
 public class PropertyMap implements Iterable<Object>, Serializable {
 
-  private static final int INITIAL_SOFT_REFERENCE_DERIVATION_LIMIT = Math.max(0, Options.getIntProperty("nashorn.propertyMap.softReferenceDerivationLimit", 32));
+  private static final int INITIAL_SOFT_REFERENCE_DERIVATION_LIMIT = Math.max(0, Option.get("propmap.softref.limit", 32));
 
   // Used for non extensible PropertyMaps, negative logic as the normal case is extensible. See {@link ScriptObject#preventExtensions()}
   private static final int NOT_EXTENSIBLE = 0b0000_0001;
