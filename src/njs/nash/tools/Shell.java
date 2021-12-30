@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import es.codegen.Compiler;
@@ -124,15 +125,18 @@ public class Shell {
    */
   static Context makeContext(InputStream in, OutputStream out, OutputStream err, String... args) {
 
-    // TODO: make PrintStream wrapper
-    var wout = new PrintWriter(out, true);
-    var werr = new PrintWriter(err, true);
+    var wout = printer(out);
+    var werr = printer(err);
     // Set up error handler.
     var errors = new ErrorManager(werr);
     // Set up options.
     var options = new Options(Option::getProperty);
 
     return new Context(options, errors, wout, werr, Thread.currentThread().getContextClassLoader());
+  }
+  
+  static PrintWriter printer(OutputStream os) {
+    return (os instanceof PrintStream ps) ? new PrintStreamWriter(ps) : new PrintWriter(os,true);
   }
 
   /**
