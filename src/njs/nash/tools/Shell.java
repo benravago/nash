@@ -82,8 +82,11 @@ public class Shell {
   public static void eval(InputStream in, OutputStream out, OutputStream err, String name, String text) {
     var context = makeContext(in, out, err);
     var global = context.createGlobal();
+    if (Context.getGlobal() != global) {
+      Context.setGlobal(global);
+    }
     ShellFunctions.init(global);
-    var source = Source.sourceFor(name, text.toCharArray());
+    var source = Source.sourceFor(name, text);
     var script = context.compileScript(source, global);
     ScriptRuntime.apply(script, global);
   }
@@ -227,7 +230,6 @@ public class Shell {
           ScriptRuntime.apply(script, global);
         } catch (NashornException e) {
           errors.error(e.toString());
-
           return RUNTIME_ERROR;
         }
       }
