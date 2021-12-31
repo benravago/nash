@@ -1180,7 +1180,7 @@ public class Parser extends AbstractParser {
       varFlags |= VarNode.IS_CONST;
     }
     var forResult = isStatement ? null : new ForVariableDeclarationListResult();
-    assert forResult != null;
+    // assert forResult != null;
     for (;;) {
       // Get name of var.
       if (type == YIELD && inGeneratorFunction()) {

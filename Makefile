@@ -1,10 +1,10 @@
 #
 
-JDK="/opt/jdk17"
+JDK = /opt/jdk17
 
-JAVAC="$(JDK)/bin/javac"
-JAVA="$(JDK)/bin/java"
-JAR="$(JDK)/bin/jar"
+JAVAC = $(JDK)/bin/javac
+JAVA = $(JDK)/bin/java
+JAR = $(JDK)/bin/jar
 
 njs: lib/njs.jar
 

@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 
 import es.codegen.Compiler;
 import es.codegen.Compiler.CompilationPhases;
@@ -26,8 +27,6 @@ import es.runtime.options.Option;
 import es.runtime.options.Options;
 
 import nash.scripting.NashornException;
-
-import static es.runtime.Source.sourceFor;
 
 /**
  * Command line Shell for processing JavaScript files.
@@ -58,15 +57,8 @@ public class Shell {
    * @param args The command line arguments
    */
   public static void main(String... args) throws Exception {
-    try {
-      var exitCode = run(System.in, System.out, System.err, args);
-      if (exitCode != SUCCESS) {
-        System.exit(exitCode);
-      }
-    } catch (IOException e) {
-      System.err.println(e); // bootstrapping, Context.err may not exist
-      System.exit(IO_ERROR);
-    }
+    var exitCode = run(System.in, System.out, System.err, args);
+    System.exit(exitCode);
   }
 
   /**
@@ -103,7 +95,7 @@ public class Shell {
    *
    * @throws IOException if there's a problem setting up the streams
    */
-  static int run(InputStream in, OutputStream out, OutputStream err, String[] args) throws IOException {
+  static int run(InputStream in, OutputStream out, OutputStream err, String[] args) {
     var context = makeContext(in, out, err);
     if (context == null) {
       return COMMANDLINE_ERROR;
@@ -152,7 +144,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  static int compileScripts(Context context, Global global, String... files) throws IOException {
+  static int compileScripts(Context context, Global global, String... files) {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     var env = context.getEnv();
@@ -164,7 +156,9 @@ public class Shell {
 
       // For each file on the command line.
       for (var fileName : files) {
-        var functionNode = new Parser(env, sourceFor(fileName, new File(fileName)), errors, 0).parse();
+        var file = new File(fileName);
+        var source = Source.sourceFor(fileName, file);
+        var functionNode = new Parser(env, source, errors, 0).parse();
 
         if (errors.getNumberOfErrors() != 0) {
           return COMPILATION_ERROR;
@@ -177,6 +171,8 @@ public class Shell {
           return COMPILATION_ERROR;
         }
       }
+    } catch (IOException ioe) {
+      throw new UncheckedIOException(ioe); 
     } finally {
       env.out.flush();
       env.err.flush();
@@ -198,7 +194,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  static int runScripts(Context context, Global global, String... files) throws IOException {
+  static int runScripts(Context context, Global global, String... files) {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     try {
@@ -218,7 +214,8 @@ public class Shell {
         }
 
         var file = new File(fileName);
-        var script = context.compileScript(sourceFor(fileName, file), global);
+        var source = Source.sourceFor(fileName, file);
+        var script = context.compileScript(source, global);
         if (script == null || errors.getNumberOfErrors() != 0) {
           if (context.getEnv()._parse_only && !errors.hasErrors()) {
             continue; // No error, continue to consume all files in list
@@ -227,12 +224,14 @@ public class Shell {
         }
 
         try {
-          ScriptRuntime.apply(script, global);
+          ScriptRuntime.apply(script, global);        
         } catch (NashornException e) {
           errors.error(e.toString());
           return RUNTIME_ERROR;
         }
       }
+    } catch (IOException ioe) {
+      throw new UncheckedIOException(ioe); 
     } finally {
       context.getOut().flush();
       context.getErr().flush();
