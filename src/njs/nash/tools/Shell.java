@@ -83,7 +83,7 @@ public class Shell {
     var env = context.getEnv();
     if (args.length == 0) { 
       readEvalPrint(context, global);
-    } else if (env._compile_only) {
+    } else if (env._compile_only || env._parse_only) {
       compileScripts(context, global, args);
     } else {
       runScripts(context, global, args);
@@ -142,6 +142,9 @@ public class Shell {
           err.println(">>> "+errors.getNumberOfErrors()+" parse errors");
           break;
         }
+        if (env._parse_only) {
+          continue;
+        }
         Compiler.forNoInstallerCompilation(context, functionNode.getSource())
                 .compile(functionNode, CompilationPhases.COMPILE_ALL_NO_INSTALL);
         if (errors.hasErrors()) {
@@ -189,18 +192,17 @@ public class Shell {
         var file = new File(fileName);
         var source = Source.sourceFor(fileName, file);
         var script = context.compileScript(source, global);
-        if (script == null || errors.hasErrors()) {
-          if (context.getEnv()._parse_only && !errors.hasErrors()) {
-            continue; // No error, continue to consume all files in list
-          }
+        if (errors.hasErrors()) {
           err.println(">>> "+errors.getNumberOfErrors()+" errors");
           break;
         }
-        try {
-          ScriptRuntime.apply(script, global);        
-        } catch (NashornException e) {
-          errors.error(e.toString());
-          break;
+        if (script != null) {
+          try {
+            ScriptRuntime.apply(script, global);        
+          } catch (NashornException e) {
+            errors.error(e.toString());
+            break;
+          }
         }
       }
     } catch (IOException ioe) {
