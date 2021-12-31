@@ -24,7 +24,6 @@ import es.runtime.Source;
 import es.runtime.Symbol;
 import es.runtime.arrays.ArrayLikeIterator;
 import es.runtime.options.Option;
-import es.runtime.options.Options;
 
 import nash.scripting.NashornException;
 
@@ -102,15 +101,11 @@ public class Shell {
    * @return null if there are problems with option parsing.
    */
   static Context makeContext(InputStream in, OutputStream out, OutputStream err) {
-
     var wout = printer(out);
     var werr = printer(err);
-    // Set up error handler.
     var errors = new ErrorManager(werr);
-    // Set up options.
-    var options = new Options(Option::getProperty);
-
-    return new Context(options, errors, wout, werr, Thread.currentThread().getContextClassLoader());
+    return new Context(Thread.currentThread().getContextClassLoader(), null,
+      errors, wout, werr, Option::getProperty);
   }
   
   static PrintWriter printer(OutputStream os) {
@@ -129,6 +124,7 @@ public class Shell {
    * @throws IOException when any script file read results in I/O error
    */
   static void compileScripts(Context context, Global global, String... files) {
+    var err = context.getErr();
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     var env = context.getEnv();
@@ -143,13 +139,13 @@ public class Shell {
         var source = Source.sourceFor(fileName, file);
         var functionNode = new Parser(env, source, errors, 0).parse();
         if (errors.hasErrors()) {
-          System.err.println(">>> "+errors.getNumberOfErrors()+" errors while parsing");
+          err.println(">>> "+errors.getNumberOfErrors()+" parse errors");
           break;
         }
         Compiler.forNoInstallerCompilation(context, functionNode.getSource())
                 .compile(functionNode, CompilationPhases.COMPILE_ALL_NO_INSTALL);
         if (errors.hasErrors()) {
-          System.err.println(">>> "+errors.getNumberOfErrors()+" errors while compiling");
+          err.println(">>> "+errors.getNumberOfErrors()+" compile errors");
           break;
         }
       }
@@ -175,6 +171,7 @@ public class Shell {
    * @throws IOException when any script file read results in I/O error
    */
   static void runScripts(Context context, Global global, String... files) {
+    var err = context.getErr();
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     try {
@@ -192,17 +189,18 @@ public class Shell {
         var file = new File(fileName);
         var source = Source.sourceFor(fileName, file);
         var script = context.compileScript(source, global);
-        if (script == null || errors.getNumberOfErrors() != 0) {
+        if (script == null || errors.hasErrors()) {
           if (context.getEnv()._parse_only && !errors.hasErrors()) {
             continue; // No error, continue to consume all files in list
           }
-          System.err.println(">>> "+errors.getNumberOfErrors()+" errors found");
+          err.println(">>> "+errors.getNumberOfErrors()+" errors");
+          break;
         }
         try {
           ScriptRuntime.apply(script, global);        
         } catch (NashornException e) {
           errors.error(e.toString());
-          return;
+          break;
         }
       }
     } catch (IOException ioe) {

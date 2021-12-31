@@ -29,8 +29,9 @@ import es.runtime.ScriptRuntime;
 import es.runtime.Source;
 import es.runtime.linker.JavaAdapterFactory;
 import es.runtime.options.Option;
-import es.runtime.options.Options;
 import static es.runtime.Source.sourceFor;
+
+import nash.tools.PrintStreamWriter;
 
 /**
  * JSR-223 compliant script engine for Nashorn.
@@ -74,17 +75,15 @@ public final class NashornScriptEngine extends AbstractScriptEngine implements C
   NashornScriptEngine(NashornScriptEngineFactory factory, String[] args, ClassLoader appLoader, ClassFilter classFilter) {
     assert args != null : "null argument array";
     this.factory = factory;
-    // TODO: allow alternative option sources
-    var options = new Options(Option::getProperty);
-
-    // throw ParseException on first error from script
-    var errMgr = new Context.ThrowErrorManager();
     // create new Nashorn Context
-    this.nashornContext = new Context(options, errMgr, appLoader, classFilter);
-
+    this.nashornContext = new Context(
+      appLoader, classFilter,
+      new Context.ThrowErrorManager(), // throw ParseException on first error from script
+      new PrintStreamWriter(System.out), new PrintStreamWriter(System.err),
+      Option::getProperty // use System output and properties
+    );
     // cache this option that is used often
     this._global_per_engine = nashornContext.getEnv()._global_per_engine;
-
     // create new global object
     this.global = createNashornGlobal();
     // set the default ENGINE_SCOPE object for the default context

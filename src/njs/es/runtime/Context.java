@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -290,52 +291,16 @@ public final class Context {
   /**
    * Constructor
    *
-   * @param options options from command line or Context creator
+   * @param appLoader  application class loader
+   * @param classFilter  class filter to use
    * @param errors  error manger
-   * @param appLoader application class loader
+   * @param out  output writer for this Context
+   * @param err  error writer for this Context
+   * @param options  option value provider
    */
-  public Context(Options options, ErrorManager errors, ClassLoader appLoader) {
-    this(options, errors, appLoader, null);
-  }
-
-  /**
-   * Constructor
-   *
-   * @param options options from command line or Context creator
-   * @param errors  error manger
-   * @param appLoader application class loader
-   * @param classFilter class filter to use
-   */
-  public Context(Options options, ErrorManager errors, ClassLoader appLoader, ClassFilter classFilter) {
-    this(options, errors, new PrintWriter(System.out, true), new PrintWriter(System.err, true), appLoader, classFilter);
-  }
-
-  /**
-   * Constructor
-   *
-   * @param options options from command line or Context creator
-   * @param errors  error manger
-   * @param out     output writer for this Context
-   * @param err     error writer for this Context
-   * @param appLoader application class loader
-   */
-  public Context(Options options, ErrorManager errors, PrintWriter out, PrintWriter err, ClassLoader appLoader) {
-    this(options, errors, out, err, appLoader, (ClassFilter) null);
-  }
-
-  /**
-   * Constructor
-   *
-   * @param options options from command line or Context creator
-   * @param errors  error manger
-   * @param out     output writer for this Context
-   * @param err     error writer for this Context
-   * @param appLoader application class loader
-   * @param classFilter class filter to use
-   */
-  public Context(Options options, ErrorManager errors, PrintWriter out, PrintWriter err, ClassLoader appLoader, ClassFilter classFilter) {
+  public Context(ClassLoader appLoader, ClassFilter classFilter, ErrorManager errors, PrintWriter out, PrintWriter err, Function<String,String> options) {
     this.classFilter = classFilter;
-    this.env = new ScriptEnvironment(options, out, err);
+    this.env = new ScriptEnvironment(new Options(options), out, err);
     if (env._loader_per_compile) {
       this.scriptLoader = null;
       this.uniqueScriptId = null;
