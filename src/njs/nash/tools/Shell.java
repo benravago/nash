@@ -33,32 +33,11 @@ import nash.scripting.NashornException;
  */
 public class Shell {
 
-  // Exit code for command line tool - successful
-  public static final int SUCCESS = 0;
-
-  // Exit code for command line tool - error on command line
-  public static final int COMMANDLINE_ERROR = 100;
-
-  // Exit code for command line tool - error compiling script
-  public static final int COMPILATION_ERROR = 101;
-
-  // Exit code for command line tool - error during runtime
-  public static final int RUNTIME_ERROR = 102;
-
-  // Exit code for command line tool - i/o error
-  public static final int IO_ERROR = 103;
-
-  // Exit code for command line tool - internal error
-  public static final int INTERNAL_ERROR = 104;
-
   /**
    * Main entry point with the default input, output and error streams.
-   *
-   * @param args The command line arguments
    */
   public static void main(String... args) throws Exception {
-    var exitCode = run(System.in, System.out, System.err, args);
-    System.exit(exitCode);
+    run(System.in, System.out, System.err, args);
   }
 
   /**
@@ -95,16 +74,21 @@ public class Shell {
    *
    * @throws IOException if there's a problem setting up the streams
    */
-  static int run(InputStream in, OutputStream out, OutputStream err, String[] args) {
+  static void run(InputStream in, OutputStream out, OutputStream err, String[] args) {
     var context = makeContext(in, out, err);
     if (context == null) {
-      return COMMANDLINE_ERROR;
+      System.err.println(">>> error creating script context");
+      return;
     }
     var global = context.createGlobal();
     var env = context.getEnv();
-    return args.length == 0 ? readEvalPrint(context, global)
-         : env._compile_only ? compileScripts(context, global, args)
-                             : runScripts(context, global, args);
+    if (args.length == 0) { 
+      readEvalPrint(context, global);
+    } else if (env._compile_only) {
+      compileScripts(context, global, args);
+    } else {
+      runScripts(context, global, args);
+    }
   }
 
   /**
@@ -144,7 +128,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  static int compileScripts(Context context, Global global, String... files) {
+  static void compileScripts(Context context, Global global, String... files) {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     var env = context.getEnv();
@@ -153,22 +137,20 @@ public class Shell {
         Context.setGlobal(global);
       }
       var errors = context.getErrorManager();
-
       // For each file on the command line.
       for (var fileName : files) {
         var file = new File(fileName);
         var source = Source.sourceFor(fileName, file);
         var functionNode = new Parser(env, source, errors, 0).parse();
-
-        if (errors.getNumberOfErrors() != 0) {
-          return COMPILATION_ERROR;
+        if (errors.hasErrors()) {
+          System.err.println(">>> "+errors.getNumberOfErrors()+" errors while parsing");
+          break;
         }
-
         Compiler.forNoInstallerCompilation(context, functionNode.getSource())
                 .compile(functionNode, CompilationPhases.COMPILE_ALL_NO_INSTALL);
-
-        if (errors.getNumberOfErrors() != 0) {
-          return COMPILATION_ERROR;
+        if (errors.hasErrors()) {
+          System.err.println(">>> "+errors.getNumberOfErrors()+" errors while compiling");
+          break;
         }
       }
     } catch (IOException ioe) {
@@ -180,8 +162,6 @@ public class Shell {
         Context.setGlobal(oldGlobal);
       }
     }
-
-    return SUCCESS;
   }
 
   /**
@@ -194,7 +174,7 @@ public class Shell {
    * @return error code
    * @throws IOException when any script file read results in I/O error
    */
-  static int runScripts(Context context, Global global, String... files) {
+  static void runScripts(Context context, Global global, String... files) {
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
     try {
@@ -206,13 +186,9 @@ public class Shell {
       // For each file on the command line.
       for (var fileName : files) {
         if ("-".equals(fileName)) {
-          var res = readEvalPrint(context, global);
-          if (res != SUCCESS) {
-            return res;
-          }
+          readEvalPrint(context, global);
           continue;
         }
-
         var file = new File(fileName);
         var source = Source.sourceFor(fileName, file);
         var script = context.compileScript(source, global);
@@ -220,14 +196,13 @@ public class Shell {
           if (context.getEnv()._parse_only && !errors.hasErrors()) {
             continue; // No error, continue to consume all files in list
           }
-          return COMPILATION_ERROR;
+          System.err.println(">>> "+errors.getNumberOfErrors()+" errors found");
         }
-
         try {
           ScriptRuntime.apply(script, global);        
         } catch (NashornException e) {
           errors.error(e.toString());
-          return RUNTIME_ERROR;
+          return;
         }
       }
     } catch (IOException ioe) {
@@ -239,8 +214,6 @@ public class Shell {
         Context.setGlobal(oldGlobal);
       }
     }
-
-    return SUCCESS;
   }
 
   /**
@@ -250,13 +223,12 @@ public class Shell {
    * @param global  global scope object to use
    * @return return code
    */
-  static int readEvalPrint(Context context, Global global) {
+  static void readEvalPrint(Context context, Global global) {
     var prompt = "nash>";
     var in = new BufferedReader(new InputStreamReader(System.in));
     var err = context.getErr();
     var oldGlobal = Context.getGlobal();
     var globalChanged = (oldGlobal != global);
-
     try {
       if (globalChanged) {
         Context.setGlobal(global);
@@ -265,22 +237,18 @@ public class Shell {
       for (;;) {
         err.print(prompt);
         err.flush();
-
         var source = "";
         try {
           source = in.readLine();
         } catch (IOException ioe) {
           err.println(ioe.toString());
         }
-
         if (source == null) {
           break;
         }
-
         if (source.isEmpty()) {
           continue;
         }
-
         try {
           var res = context.eval(global, source, global, "<shell>");
           if (res != ScriptRuntime.UNDEFINED) {
@@ -295,8 +263,6 @@ public class Shell {
         Context.setGlobal(oldGlobal);
       }
     }
-
-    return SUCCESS;
   }
 
   /**
@@ -312,31 +278,24 @@ public class Shell {
       // Normal implicit conversion of symbol to string would throw TypeError
       return result.toString();
     }
-
     if (result instanceof NativeSymbol) {
       return JSType.toPrimitive(result).toString();
     }
-
     if (isArrayWithDefaultToString(result, global)) {
       // This should yield the same string as Array.prototype.toString but will not throw if the array contents include symbols.
       var sb = new StringBuilder();
       var iter = ArrayLikeIterator.arrayLikeIterator(result, true);
-
       while (iter.hasNext()) {
         var obj = iter.next();
-
         if (obj != null && obj != ScriptRuntime.UNDEFINED) {
           sb.append(toString(obj, global));
         }
-
         if (iter.hasNext()) {
           sb.append(',');
         }
       }
-
       return sb.toString();
     }
-
     return JSType.toString(result);
   }
 
